@@ -1,4 +1,5 @@
 // Trellis configuration: version, language mode and feature detection.
+// Copyright (c) 2026 Aryan Patel
 // SPDX-License-Identifier: BSL-1.0
 //
 // This is the only header that defines macros (all prefixed TRELLIS_). Code that uses a feature

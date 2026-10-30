@@ -1,4 +1,5 @@
 // Trellis: header-only C++20 dependency injection. The umbrella header: includes the public API.
+// Copyright (c) 2026 Aryan Patel
 // SPDX-License-Identifier: BSL-1.0
 #ifndef TRELLIS_TRELLIS_HPP
 #define TRELLIS_TRELLIS_HPP

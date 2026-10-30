@@ -67,4 +67,13 @@ CI gives the property tests seeds that local runs never use, through `TRELLIS_PR
 
 - Formatting is clang-format-18 with `.clang-format`; editors pick up `.editorconfig`. Lint with `scripts/tidy.sh`.
 - Every public header compiles on its own and is warning-free with `-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual` (`/W4 /permissive-` on MSVC).
+- New files carry the same two-line header as the headers in `include/`, at the top and in the file's own comment syntax (`#` in Python, shell and CMake): the copyright line directly above the SPDX line. `include/trellis/config.hpp` starts:
+
+  ```cpp
+  // Trellis configuration: version, language mode and feature detection.
+  // Copyright (c) 2026 Aryan Patel
+  // SPDX-License-Identifier: BSL-1.0
+  ```
+
+  Files that can't hold comments, such as JSON files and goldens, have no header.
 - Commit subjects are imperative and at most 72 characters. The body says what changed and why.
