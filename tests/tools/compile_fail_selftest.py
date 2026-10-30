@@ -15,7 +15,7 @@ Four kinds of case:
     stub and its child down before it exits.
   - The invocation check runs the runner, with stub_compiler.INHERITED in its environment, on the
     stub that reports its arguments and environment. The compiler must get LC_ALL=C and none of
-    the inherited variables, and the output users see (colours off, but quoted source and carets
+    the inherited variables, and the output users see (colors off, but quoted source and carets
     kept, as expect-max-lines counts them).
 CASES and STUB_CASES are checked against the runner's verdict (its first output line) and exit
 status. CTest runs this as tools.compile_fail_selftest with the build's --config.
@@ -175,8 +175,10 @@ def check_invocation(config, scratch):
                                 FIXTURES / "passes.cpp", env=env)
     if not check(label, status, report, 0, "PASS "):
         return False
-    log = scratch / "compile_fail" / "tests" / "tools" / "compile_fail_fixtures" / "passes.log"
-    arguments, environment = reported_invocation(log.read_text(encoding="utf-8"))
+    # The runner logs the compiler's output to <binary_dir>/compile_fail/<snippet name>.log.
+    log = scratch / "compile_fail" / (FIXTURES / "passes.log").relative_to(ROOT)
+    arguments, environment = reported_invocation(
+        log.read_text(encoding="utf-8") if log.is_file() else "")
     if arguments is None or environment is None:
         print(f"FAIL {label}: the stub's report is missing from {log}")
         return False

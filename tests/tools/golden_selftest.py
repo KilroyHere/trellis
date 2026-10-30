@@ -91,7 +91,7 @@ class NormalizeTest(unittest.TestCase):
         self.assertEqual(golden.normalize(line, "/work/trellis"), line)
 
     def test_colours_and_hyperlinks_are_stripped(self):
-        # GCC's colours (ESC[01m ESC[K ... ESC[m ESC[K) and Clang's (ESC[0;1;31m), and OSC-8
+        # GCC's colors (ESC[01m ESC[K ... ESC[m ESC[K) and Clang's (ESC[0;1;31m), and OSC-8
         # hyperlinks around warning options, which GCC ends with BEL by default and with ESC \
         # when GCC_URLS=st.
         output = (

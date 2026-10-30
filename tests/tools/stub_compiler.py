@@ -35,7 +35,7 @@ SCENARIOS = {
 }
 
 # What the self-tests add to a runner's environment before a report-invocation run: include paths,
-# colour, URL and terminal-width settings, a translation, options that GCC, Clang and MSVC take
+# color, URL and terminal-width settings, a translation, options that GCC, Clang and MSVC take
 # from the environment, and a variable that no compiler needs. None of them may reach the compiler.
 INHERITED = {
     "CPATH": "inherited", "C_INCLUDE_PATH": "inherited", "CPLUS_INCLUDE_PATH": "inherited",
