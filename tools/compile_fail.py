@@ -64,12 +64,15 @@ ERROR_ID = re.compile(r"^TRL-[ER]\d{3}$")
 # around warning options when URLs are on. The link text stays.
 ANSI_ESCAPE = re.compile(
     r"\x1b\[[0-?]*[ -/]*[@-~]|\x1b\]8;[^;\x07\x1b]*;[^\x07\x1b]*(?:\x07|\x1b\\)")
-# The only environment variables a compiler inherits. PATH: the driver's helper programs. TMPDIR,
-# TMP and TEMP: scratch files. SYSTEMROOT, SYSTEMDRIVE and WINDIR: Windows programs need them to
-# start. INCLUDE, LIB and LIBPATH: where MSVC finds the standard library and the Windows SDK, as the
-# developer prompt (vcvars64.bat) sets them. DEVELOPER_DIR: on macOS, the Xcode whose clang
-# /usr/bin/clang++ runs. Everything else is dropped.
-KEPT_VARIABLES = ("PATH", "TMPDIR", "TMP", "TEMP", "SYSTEMROOT", "SYSTEMDRIVE", "WINDIR",
+# The only environment variables a compiler inherits: what it needs to start, nothing that changes
+# what it includes or how it reports. PATH: the driver's helper programs. LD_LIBRARY_PATH and
+# macOS's DYLD_LIBRARY_PATH and DYLD_FALLBACK_LIBRARY_PATH: shared libraries of a toolchain (or a
+# Python) installed outside the system prefix. TMPDIR, TMP and TEMP: scratch files. SYSTEMROOT,
+# SYSTEMDRIVE and WINDIR: Windows programs need them to start. INCLUDE, LIB and LIBPATH: where MSVC
+# finds the standard library and the Windows SDK, as the developer prompt (vcvars64.bat) sets them.
+# DEVELOPER_DIR: on macOS, the Xcode whose clang /usr/bin/clang++ runs. Everything else is dropped.
+KEPT_VARIABLES = ("PATH", "LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH", "DYLD_FALLBACK_LIBRARY_PATH",
+                  "TMPDIR", "TMP", "TEMP", "SYSTEMROOT", "SYSTEMDRIVE", "WINDIR",
                   "INCLUDE", "LIB", "LIBPATH", "DEVELOPER_DIR")
 # Golden runs ask for the plainest output (spike S3). GCC's -fdiagnostics-plain-output (GCC 11 or
 # later) turns off colors, URLs, quoted source, carets and line-number margins. Clang 18 and 20
@@ -384,8 +387,13 @@ def evaluate(spec, result, timeout=DEFAULT_TIMEOUT):
     return problems
 
 
+def log_path(config, name):
+    """Where the full output of the snippet NAME (see snippet_name) goes."""
+    return Path(config["binary_dir"]) / "compile_fail" / f"{name}.log"
+
+
 def write_log(config, name, result):
-    log = Path(config["binary_dir"]) / "compile_fail" / f"{name}.log"
+    log = log_path(config, name)
     log.parent.mkdir(parents=True, exist_ok=True)
     log.write_text("$ " + " ".join(result.command) + "\n" + result.output, encoding="utf-8")
     return log

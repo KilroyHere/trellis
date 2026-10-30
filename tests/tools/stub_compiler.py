@@ -58,6 +58,17 @@ def report_invocation(compiler_args):
         for name, value in sorted(os.environ.items())), flush=True)
 
 
+def read_report(text):
+    """The arguments and the environment entries that report_invocation wrote into TEXT, as two
+    lists; either is None when its line is missing."""
+    found = {}
+    for line in text.splitlines():
+        for key in ("arguments", "environment"):
+            if line.startswith(f"stub {key}: "):
+                found[key] = line.split(": ", 1)[1].split()
+    return found.get("arguments"), found.get("environment")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--scenario", required=True,

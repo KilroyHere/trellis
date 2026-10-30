@@ -30,12 +30,14 @@ import tempfile
 import time
 from pathlib import Path
 
-sys.dont_write_bytecode = True  # keep tests/tools free of __pycache__
+sys.dont_write_bytecode = True  # keep tests/ and tools/ free of __pycache__
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE))
-import stub_compiler  # noqa: E402  (INHERITED: what the invocation check adds to the environment)
-
 ROOT = HERE.parent.parent
+sys.path.insert(0, str(HERE))
+sys.path.insert(0, str(ROOT / "tools"))
+import compile_fail  # noqa: E402  (where the runner logs a snippet's output)
+import stub_compiler  # noqa: E402  (what the invocation check adds to the environment)
+
 RUNNER = ROOT / "tools" / "compile_fail.py"
 FIXTURES = HERE / "compile_fail_fixtures"
 STUB = HERE / "stub_compiler.py"
@@ -156,35 +158,24 @@ def check_processes_died(label, pid_file):
     return False
 
 
-def reported_invocation(text):
-    """The arguments and the environment entries that the report-invocation stub printed."""
-    found = {}
-    for line in text.splitlines():
-        for key in ("arguments", "environment"):
-            if line.startswith(f"stub {key}: "):
-                found[key] = line.split(": ", 1)[1].split()
-    return found.get("arguments"), found.get("environment")
-
-
 def check_invocation(config, scratch):
     """A compile-fail run starts the compiler with LC_ALL=C, nothing of the runner's own environment
     beyond what a compiler needs to start, and the usual diagnostics flags (no plain output)."""
     label = "invocation"
     env = dict(os.environ, LANG="de_DE.UTF-8", **stub_compiler.INHERITED)
-    status, report = run_runner(stub_config(config, scratch, "report-invocation"),
-                                FIXTURES / "passes.cpp", env=env)
+    source = FIXTURES / "passes.cpp"
+    status, report = run_runner(stub_config(config, scratch, "report-invocation"), source, env=env)
     if not check(label, status, report, 0, "PASS "):
         return False
-    # The runner logs the compiler's output to <binary_dir>/compile_fail/<snippet name>.log.
-    log = scratch / "compile_fail" / (FIXTURES / "passes.log").relative_to(ROOT)
-    arguments, environment = reported_invocation(
+    log = compile_fail.log_path({"binary_dir": scratch}, compile_fail.snippet_name(source))
+    arguments, environment = stub_compiler.read_report(
         log.read_text(encoding="utf-8") if log.is_file() else "")
     if arguments is None or environment is None:
         print(f"FAIL {label}: the stub's report is missing from {log}")
         return False
     names = {entry.split("=", 1)[0] for entry in environment}
     problems = [f"{name} was passed on" for name in sorted(set(stub_compiler.INHERITED) & names)]
-    problems += [f"{entry} is missing" for entry in ("LC_ALL=C", "LANG=C")
+    problems += [f"{entry} is missing" for entry in ("LC_ALL=C", "LANG=C", "PATH")
                  if entry not in environment]
     if "-fdiagnostics-color=never" not in arguments:
         problems.append("-fdiagnostics-color=never is missing")

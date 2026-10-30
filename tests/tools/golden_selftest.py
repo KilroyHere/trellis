@@ -182,6 +182,44 @@ class NormalizeTest(unittest.TestCase):
             "<src>/d.cpp:L:C: error: TRL-E000: a:1 size(3): b:2:3\n")
         self.assertEqual(golden.normalize(output, "/work/trellis"), expected)
 
+    def test_normalized_paths_are_not_rewritten_again(self):
+        # A directory name that ends in '+' doesn't make the rest of the path a new one.
+        output = (
+            "/work/trellis/include/c++/13/x.hpp:1:1: note: q\n"
+            "/usr/include/c++/13/ext/a+/b/c.h:2:3: note: r\n")
+        expected = (
+            "<src>/include/c++/13/x.hpp:L:C: note: q\n"
+            "<std>/ext/a+/b/c.h:L:C: note: r\n")
+        self.assertEqual(golden.normalize(output, "/work/trellis"), expected)
+
+    def test_locations_in_clang_pseudo_files(self):
+        output = (
+            "<scratch space>:2:1: note: expanded from here\n"
+            "<command line>:1:9: note: previous definition is here\n"
+            "<built-in>:1:10: note: x\n")
+        expected = (
+            "<scratch space>:L:C: note: expanded from here\n"
+            "<command line>:L:C: note: previous definition is here\n"
+            "<built-in>:L:C: note: x\n")
+        self.assertEqual(golden.normalize(output, "/work/trellis"), expected)
+
+    def test_only_include_chains_are_dropped(self):
+        # Indented text that starts with "from" but names no file and line stays.
+        output = "   from 'x',\n   from here:\n"
+        self.assertEqual(golden.normalize(output, "/work/trellis"), output)
+
+    def test_quoted_paths_may_contain_spaces(self):
+        output = (
+            "C:\\src\\trellis\\tests\\a.cpp(3): fatal error C1083: Cannot open include file: "
+            "'C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\std lib.h': "
+            "No such file or directory\n"
+            "C:\\src\\trellis\\tests\\b.cpp(4): error: '/' and '/ x' stay\n")
+        expected = (
+            "<src>/tests/a.cpp(L,C): fatal error C1083: Cannot open include file: "
+            "'<external>/std lib.h': No such file or directory\n"
+            "<src>/tests/b.cpp(L,C): error: '/' and '/ x' stay\n")
+        self.assertEqual(golden.normalize(output, "C:\\src\\trellis"), expected)
+
 
 class InvocationTest(unittest.TestCase):
     """golden.py compiles with LC_ALL=C, in an environment that keeps nothing of its own beyond
@@ -219,19 +257,16 @@ class InvocationTest(unittest.TestCase):
         # There is no golden, so the run fails, but only after it saved the normalized output.
         self.assertIn("no golden", result.stdout, result.stdout + result.stderr)
         saved = (scratch / "golden" / f"{SAMPLE}.txt").read_text(encoding="utf-8")
-        found = {}
-        for line in saved.splitlines():
-            for key in ("arguments", "environment"):
-                if line.startswith(f"stub {key}: "):
-                    found[key] = line.split(": ", 1)[1].split()
-        self.assertEqual(sorted(found), ["arguments", "environment"], saved)
-        return found["arguments"], found["environment"]
+        arguments, environment = stub_compiler.read_report(saved)
+        self.assertIsNotNone(arguments, saved)
+        self.assertIsNotNone(environment, saved)
+        return arguments, environment
 
     def assert_clean(self, environment):
         names = {entry.split("=", 1)[0] for entry in environment}
         self.assertEqual(sorted(set(stub_compiler.INHERITED) & names), [], environment)
-        self.assertIn("LC_ALL=C", environment)
-        self.assertIn("LANG=C", environment)
+        for entry in ("LC_ALL=C", "LANG=C", "PATH"):
+            self.assertIn(entry, environment)
 
     def test_gcc(self):
         arguments, environment = self.invocation("GNU")

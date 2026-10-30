@@ -34,8 +34,9 @@ the path separator everywhere, applied in this order:
   4. paths: the build directory becomes <build>/, the source directory <src>/, the standard
      library's include directory <std>/ (libstdc++, libc++ or MSVC's), and any other absolute
      path <external>/<file name>; what follows a placeholder uses '/', also on Windows;
-  5. the line and column after a path become :L:C, and MSVC's (line,column) (L,C), also when
-     the compiler printed only a line;
+  5. the line and column after a path (or after Clang's <built-in>, <command line> and
+     <scratch space>) become :L:C, and MSVC's (line,column) (L,C), also when the compiler
+     printed only a line;
   6. trailing whitespace goes, and so do blank lines at the start and the end.
 
 --update writes the goldens (new ones only for the NAMEs given) and appends the reason to
@@ -71,8 +72,9 @@ TYPOGRAPHIC_QUOTES = str.maketrans({"‘": "'", "’": "'", "“": '"', "”": '
 # "     |   ^~~~".
 QUOTED_SOURCE = compile_fail.SOURCE_EXCERPT
 # Include chains: Clang's "In file included from a.hpp:3:", one line per level, and GCC's
-# "In file included from a.hpp:3," followed by "                 from b.cpp:1:" lines.
-INCLUDE_CHAIN = re.compile(r"^(?:In file included from |\s+from ).*[:,]$")
+# "In file included from a.hpp:3," followed by "                 from b.cpp:1:" lines. Each names
+# a file and a line; other text that starts with "from" stays.
+INCLUDE_CHAIN = re.compile(r"^(?:In file included from |\s+from ).+:\d+[:,]$")
 # Clang's count of what it reported: "1 error generated.", "1 warning and 2 errors generated."
 ERROR_COUNT = re.compile(r"^\d+ (?:warning|error)s?(?: and \d+ (?:warning|error)s?)? generated\.$")
 # Version banners, which some drivers print (MSVC without /nologo; GCC and Clang with -v).
@@ -86,8 +88,11 @@ BANNER = re.compile(
 # Rule 4, paths. One directory of a path: anything but a separator, whitespace or the punctuation
 # that ends a path in a diagnostic.
 _DIRECTORY = r"[^\s\\/:'\"(),<>\[\]]+"
-# Not inside a longer path or word: what may precede the start of a path.
-_PATH_START = r"(?<![\w.~/\\:>-])"
+# Where a path may start: at the start of a line, or after whitespace, a quote, a parenthesis, a
+# bracket, a comma or '='. (?<![^...]) reads "not after a character outside this set". So no path
+# starts inside another one, even after a directory name that ends in '+', nor right after a
+# placeholder such as "<src>", nor inside a word.
+_PATH_START = r"(?<![^\s'\"(),=\[\]])"
 # The standard library's include directory, whatever the installation prefix: libstdc++'s
 # .../include/c++/13/ and its target-specific .../include/x86_64-linux-gnu/c++/13/, and libc++'s
 # .../include/c++/v1/. GCC and Clang spell the prefix differently, for example /usr/include/c++/14/
@@ -100,19 +105,26 @@ STD_DIR = re.compile(
 # ("C:\Program Files (x86)\..."), so its directories may contain anything a Windows file name can;
 # the fixed tail VC\Tools\MSVC\<version>\include\ anchors the match.
 MSVC_STD_DIR = re.compile(
-    r"(?<![\w])[A-Za-z]:[\\/](?:[^\\/:*?\"<>|\r\n]+[\\/])*?"
+    rf"{_PATH_START}[A-Za-z]:[\\/](?:[^\\/:*?\"<>|\r\n]+[\\/])*?"
     r"VC[\\/]Tools[\\/]MSVC[\\/][^\\/:*?\"<>|\r\n]+[\\/]include[\\/]", re.IGNORECASE)
-# Other absolute paths, POSIX and Windows style. The last group is the file name, which is kept.
-# (A "/" right after a placeholder such as "<build>" starts no path.)
+# Other absolute paths. The last group is the file name, which is kept. In quotes, a path may
+# contain spaces and parentheses, as in MSVC's "Cannot open include file: 'C:\Program Files
+# (x86)\...\x.h'"; it needs a directory, so that a quoted '/' or '/ x' stays. Unquoted, POSIX and
+# Windows paths end at whitespace.
+QUOTED_PATH = re.compile(
+    r"(?<=['\"])(?:[A-Za-z]:)?[\\/](?:[^'\"\\/\r\n]+[\\/])+([^'\"\\/\r\n]+)(?=['\"])")
 POSIX_PATH = re.compile(rf"{_PATH_START}/(?:{_DIRECTORY}/)+({_DIRECTORY})")
 WINDOWS_PATH = re.compile(
-    r"(?<![\w])[A-Za-z]:[\\/](?:[^\s\\/:'\"(),<>]+[\\/])*([^\s\\/:'\"(),<>]+)")
+    rf"{_PATH_START}[A-Za-z]:[\\/](?:[^\s\\/:'\"(),<>]+[\\/])*([^\s\\/:'\"(),<>]+)")
 # A normalized path: a placeholder and what follows it, up to the punctuation that ends a path.
 NORMALIZED_PATH = r"<(?:src|build|std|external)>/[^\s:'\"(),<>]*"
+# Clang's locations in no file: macros defined on the command line or predefined, and the scratch
+# buffer that pasted tokens live in. GCC spells the first one <command-line>.
+PSEUDO_FILE = r"<(?:built-in|command[ -]line|scratch space)>"
 
-# Rule 5, locations. ":12:5" or ":12" after a normalized path: "file:12:5: error",
-# "(lambda at file:12:5)".
-LINE_COLUMN = re.compile(rf"({NORMALIZED_PATH}):\d+(?::\d+)?")
+# Rule 5, locations. ":12:5" or ":12" after a normalized path or a pseudo-file:
+# "file:12:5: error", "(lambda at file:12:5)", "<scratch space>:2:1: note".
+LINE_COLUMN = re.compile(rf"({NORMALIZED_PATH}|{PSEUDO_FILE}):\d+(?::\d+)?")
 # MSVC locations at the start of a line, "file(12,5): error" and "file(12): note". The file may
 # contain spaces and parentheses ("C:\Program Files (x86)\..."), but not ": ", which on a GCC or
 # Clang line comes before any message text that could hold "(3): ".
@@ -160,6 +172,7 @@ def _normalize_paths(line, prefix_rules):
     line = MSVC_STD_DIR.sub("<std>/", line)
     line = STD_DIR.sub("<std>/", line)
     line = MSVC_LOCATION.sub(_msvc_location, line)
+    line = QUOTED_PATH.sub(r"<external>/\1", line)  # before POSIX_PATH, which stops at a space
     line = POSIX_PATH.sub(r"<external>/\1", line)
     line = WINDOWS_PATH.sub(r"<external>/\1", line)
     line = re.sub(NORMALIZED_PATH, lambda m: m.group(0).replace("\\", "/"), line)
