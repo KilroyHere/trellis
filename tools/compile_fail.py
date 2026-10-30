@@ -10,8 +10,12 @@ compile_fail (`ctest --preset clang-18-debug -L compile_fail`).
 The compiler and flags are the build's, from trellis_compiler.json, which CMake writes at configure
 time (cmake/TrellisTesting.cmake): the preset's compiler, CMAKE_CXX_FLAGS and build-type flags,
 -std=c++20, the include directory and the project warnings. -Werror is left out, and -Wno-error is
-added, because misuse must be a hard error even without it (plan NFR-07). The compiler is called
-directly, never through ccache, with LC_ALL=C so its messages don't depend on the locale.
+added, because misuse must be a hard error even without it (plan NFR-07). Colors are turned off;
+otherwise the output is what users see. The compiler is called directly, never through ccache, with
+LC_ALL=C and a clean environment (spike S3): it keeps only what a compiler needs to start (PATH,
+the temporary directory, and what Windows, MSVC and Xcode need), so that nothing inherited, such
+as CPATH, CPLUS_INCLUDE_PATH, GCC_COLORS, GCC_URLS or MSVC's CL, changes what it includes or how
+it reports. tools/golden.py compiles the same way, with plainer output (see compile_source).
 
 Directives, in the comment block at the top of the file:
 
@@ -55,7 +59,26 @@ DEFAULT_MEMORY_MB = 6000  # address-space cap per compile (POSIX only), as CLAUD
 DIRECTIVE_LIKE = re.compile(r"//\s*((?:compile|expect)[\w-]*)\s*:(.*)$", re.IGNORECASE)
 KNOWN_DIRECTIVES = ("compile-fail", "expect-id", "expect-regex", "expect-max-lines")
 ERROR_ID = re.compile(r"^TRL-[ER]\d{3}$")
-ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
+# Terminal escapes: colors and other CSI sequences (ESC [ params final, as in GCC's ESC[01m ESC[K),
+# and OSC-8 hyperlinks (ESC ] 8 ; params ; URL, then BEL, GCC's default, or ESC \), which GCC puts
+# around warning options when URLs are on. The link text stays.
+ANSI_ESCAPE = re.compile(
+    r"\x1b\[[0-?]*[ -/]*[@-~]|\x1b\]8;[^;\x07\x1b]*;[^\x07\x1b]*(?:\x07|\x1b\\)")
+# The only environment variables a compiler inherits. PATH: the driver's helper programs. TMPDIR,
+# TMP and TEMP: scratch files. SYSTEMROOT, SYSTEMDRIVE and WINDIR: Windows programs need them to
+# start. INCLUDE, LIB and LIBPATH: where MSVC finds the standard library and the Windows SDK, as the
+# developer prompt (vcvars64.bat) sets them. DEVELOPER_DIR: on macOS, the Xcode whose clang
+# /usr/bin/clang++ runs. Everything else is dropped.
+KEPT_VARIABLES = ("PATH", "TMPDIR", "TMP", "TEMP", "SYSTEMROOT", "SYSTEMDRIVE", "WINDIR",
+                  "INCLUDE", "LIB", "LIBPATH", "DEVELOPER_DIR")
+# Golden runs ask for the plainest output (spike S3). GCC's -fdiagnostics-plain-output (GCC 11 or
+# later) turns off colors, URLs, quoted source, carets and line-number margins. Clang 18 and 20
+# reject it as an unknown argument, so colors and carets go separately there.
+PLAIN_OUTPUT_FLAGS = {
+    "GNU": ["-fdiagnostics-plain-output"],
+    "Clang": ["-fno-color-diagnostics", "-fno-caret-diagnostics"],
+    "AppleClang": ["-fno-color-diagnostics", "-fno-caret-diagnostics"],
+}
 # A line reporting an error: "file:1:2: error: ...", "error: ..." or MSVC's
 # "file(1): error C2338: ...". "trellis::error::E001" in a type name doesn't count.
 ERROR_LINE = re.compile(r"(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: ")
@@ -184,7 +207,8 @@ def parse_directives(text):
 
 
 class Result:
-    """What one compile produced. output is decoded, without colors and with \\n line ends."""
+    """What one compile produced. output is decoded, without terminal escapes (colors, hyperlinks)
+    and with \\n line ends."""
 
     def __init__(self, command, returncode=None, output="", timed_out=False, launch_error=None):
         self.command = command
@@ -219,19 +243,40 @@ def _memory_limiter(megabytes):
     return limit
 
 
-def compile_source(config, source, timeout=DEFAULT_TIMEOUT, memory_mb=DEFAULT_MEMORY_MB):
-    """Compile one file syntax-only with the build's compiler and flags."""
-    source = Path(source).resolve()  # the compiler runs in a scratch directory
+def compiler_environment(config):
+    """The clean environment a compile runs in: KEPT_VARIABLES, and English messages with plain
+    quotes. GCC prints typographic quotes in UTF-8 locales and translates its messages in others;
+    LC_ALL=C stops both. VSLANG=1033 is MSVC's counterpart."""
+    env = {name: os.environ[name] for name in KEPT_VARIABLES if name in os.environ}
+    env.update(LC_ALL="C", LANG="C")
     if config["frontend"] == "MSVC":
-        command = [config["compiler"], "/nologo", *config["flags"], "/WX-", "/Zs", str(source)]
-    else:
-        command = [config["compiler"], *config["flags"], "-Wno-error",
-                   "-fdiagnostics-color=never", "-fsyntax-only", str(source)]
+        env["VSLANG"] = "1033"
+    return env
+
+
+def compile_command(config, source, plain=False):
+    """The syntax-only compile of SOURCE with the build's compiler and flags. Colors are off, but
+    the output is otherwise what users see, as the line budget counts it. plain, for golden runs,
+    asks for PLAIN_OUTPUT_FLAGS instead: no quoted source or carets."""
+    if config["frontend"] == "MSVC":
+        return [config["compiler"], "/nologo", *config["flags"], "/WX-", "/Zs", str(source)]
+    diagnostics = ["-fdiagnostics-color=never"]
+    if plain:
+        diagnostics = PLAIN_OUTPUT_FLAGS.get(config.get("compiler_id"), diagnostics)
+    return [config["compiler"], *config["flags"], "-Wno-error", *diagnostics, "-fsyntax-only",
+            str(source)]
+
+
+def compile_source(config, source, timeout=DEFAULT_TIMEOUT, memory_mb=DEFAULT_MEMORY_MB,
+                   plain=False):
+    """Compile one file syntax-only with the build's compiler and flags, in the clean environment.
+    plain: the plainest output the compiler offers, for golden runs (see compile_command)."""
+    source = Path(source).resolve()  # the compiler runs in a scratch directory
+    command = compile_command(config, source, plain)
     # Run in a scratch directory, so that stray outputs (such as -ftime-trace files) stay there.
     work_dir = Path(config["binary_dir"]) / "compile_fail" / "work"
     work_dir.mkdir(parents=True, exist_ok=True)
-    env = dict(os.environ, LC_ALL="C", LANG="C")
-    env.pop("LANGUAGE", None)
+    env = compiler_environment(config)
     # A new session makes the compiler the leader of its own process group, so that a timeout can
     # kill the driver together with the cc1plus or clang -cc1 it started (POSIX only).
     session = {"start_new_session": True} if os.name == "posix" else {}

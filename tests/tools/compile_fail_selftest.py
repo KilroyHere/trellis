@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Self-test of tools/compile_fail.py: run it on fixtures whose outcome is known.
 
-Three kinds of case:
+Four kinds of case:
   - CASES compile each fixture in compile_fail_fixtures/ with the build's compiler. Each fixture
     breaks one rule of the runner (passes.cpp breaks none), so a file that compiles, or one that
     misses an expectation or has a bad directive, must be reported as a failure for that reason.
@@ -13,6 +13,10 @@ Three kinds of case:
     itself, with SIGINT as Ctrl-C does and with SIGTERM as an outer `timeout` does. The compiler
     runs in its own process group, which these signals don't reach, so the runner must take the
     stub and its child down before it exits.
+  - The invocation check runs the runner, with stub_compiler.INHERITED in its environment, on the
+    stub that reports its arguments and environment. The compiler must get LC_ALL=C and none of
+    the inherited variables, and the output users see (colours off, but quoted source and carets
+    kept, as expect-max-lines counts them).
 CASES and STUB_CASES are checked against the runner's verdict (its first output line) and exit
 status. CTest runs this as tools.compile_fail_selftest with the build's --config.
 """
@@ -26,7 +30,11 @@ import tempfile
 import time
 from pathlib import Path
 
+sys.dont_write_bytecode = True  # keep tests/tools free of __pycache__
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import stub_compiler  # noqa: E402  (INHERITED: what the invocation check adds to the environment)
+
 ROOT = HERE.parent.parent
 RUNNER = ROOT / "tools" / "compile_fail.py"
 FIXTURES = HERE / "compile_fail_fixtures"
@@ -71,11 +79,11 @@ if os.name == "posix":
     INTERRUPTS = [(signal.SIGINT, 130), (signal.SIGTERM, 128 + signal.SIGTERM)]
 
 
-def run_runner(config, source, *extra):
+def run_runner(config, source, *extra, env=None):
     """Run the runner from the repository root with a relative path, as people do."""
     relative = Path(source).relative_to(ROOT).as_posix()
     command = [sys.executable, "-I", str(RUNNER), "--config", str(config), *extra, relative]
-    proc = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, check=False)
+    proc = subprocess.run(command, cwd=ROOT, env=env, capture_output=True, text=True, check=False)
     return proc.returncode, proc.stdout + proc.stderr
 
 
@@ -148,6 +156,48 @@ def check_processes_died(label, pid_file):
     return False
 
 
+def reported_invocation(text):
+    """The arguments and the environment entries that the report-invocation stub printed."""
+    found = {}
+    for line in text.splitlines():
+        for key in ("arguments", "environment"):
+            if line.startswith(f"stub {key}: "):
+                found[key] = line.split(": ", 1)[1].split()
+    return found.get("arguments"), found.get("environment")
+
+
+def check_invocation(config, scratch):
+    """A compile-fail run starts the compiler with LC_ALL=C, nothing of the runner's own environment
+    beyond what a compiler needs to start, and the usual diagnostics flags (no plain output)."""
+    label = "invocation"
+    env = dict(os.environ, LANG="de_DE.UTF-8", **stub_compiler.INHERITED)
+    status, report = run_runner(stub_config(config, scratch, "report-invocation"),
+                                FIXTURES / "passes.cpp", env=env)
+    if not check(label, status, report, 0, "PASS "):
+        return False
+    log = scratch / "compile_fail" / "tests" / "tools" / "compile_fail_fixtures" / "passes.log"
+    arguments, environment = reported_invocation(log.read_text(encoding="utf-8"))
+    if arguments is None or environment is None:
+        print(f"FAIL {label}: the stub's report is missing from {log}")
+        return False
+    names = {entry.split("=", 1)[0] for entry in environment}
+    problems = [f"{name} was passed on" for name in sorted(set(stub_compiler.INHERITED) & names)]
+    problems += [f"{entry} is missing" for entry in ("LC_ALL=C", "LANG=C")
+                 if entry not in environment]
+    if "-fdiagnostics-color=never" not in arguments:
+        problems.append("-fdiagnostics-color=never is missing")
+    problems += [f"{flag} must stay off: expect-max-lines counts the lines users see"
+                 for flag in ("-fdiagnostics-plain-output", "-fno-caret-diagnostics")
+                 if flag in arguments]
+    if problems:
+        print(f"FAIL {label}: {'; '.join(problems)}")
+        print(f"     arguments: {' '.join(arguments)}")
+        print(f"     environment: {' '.join(environment)}")
+        return False
+    print(f"ok   {label}: LC_ALL=C, no inherited variable, arguments {' '.join(arguments)}")
+    return True
+
+
 def check_interrupt(config, scratch, signum, expected_status):
     """Interrupt the runner itself while the stub hangs; it must stop the stub before exiting."""
     label = f"runner interrupted by {signal.Signals(signum).name}"
@@ -212,6 +262,7 @@ def main():
                                  expected_text))
             if pid_file:
                 results.append(check_processes_died("hang", pid_file))
+        results.append(check_invocation(config, scratch))
         for signum, expected_status in INTERRUPTS:
             results.extend(check_interrupt(config, scratch, signum, expected_status))
 

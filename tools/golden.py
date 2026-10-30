@@ -8,7 +8,9 @@
 NAME is a compile-fail test: its path under tests/compile_fail/ without .cpp, for example
 sample/static_assert_message. Its golden is tests/diagnostics_golden/<compiler>-<major>/NAME.txt,
 where <compiler>-<major> names the build's compiler (gcc-13, clang-18, ...). Compiler, flags and
-environment are those of tools/compile_fail.py.
+the clean environment with LC_ALL=C are those of tools/compile_fail.py, plus the plainest output
+the compiler offers: -fdiagnostics-plain-output on GCC, -fno-color-diagnostics and
+-fno-caret-diagnostics on Clang.
 
 tests/golden_manifest.txt says which tests have goldens, for which compilers. Without NAME, every
 test it lists for the build's compiler is used. CTest registers one golden test per listed test
@@ -22,11 +24,19 @@ does that, because libc++ spells standard-library names differently from the lib
 clang-18 goldens were made with.
 
 Normalization keeps what the compiler says and drops what depends on the machine or on unrelated
-edits:
-  - paths in the repository become repository-relative, paths in the build directory start with
-    <build>/, and other absolute paths become <external>/<file name>;
-  - line and column numbers go, including those in the margin of quoted source lines;
-  - colors, compiler banners and trailing whitespace go, and typographic quotes become plain ones.
+edits. These are the rules of spike S3 (docs/spikes/S3-diagnostics.md, section 3.7), with '/' as
+the path separator everywhere, applied in this order:
+  1. terminal escapes go: colors and OSC-8 hyperlinks;
+  2. typographic quotes become plain ones;
+  3. lines go: quoted source, carets and fix-it hints ("  12 |   code", "     |   ^~~"), include
+     chains ("In file included from ..." and GCC's "                 from ..."), Clang's
+     "N errors generated.", GCC's "compilation terminated." and compiler version banners;
+  4. paths: the build directory becomes <build>/, the source directory <src>/, the standard
+     library's include directory <std>/ (libstdc++, libc++ or MSVC's), and any other absolute
+     path <external>/<file name>; what follows a placeholder uses '/', also on Windows;
+  5. the line and column after a path become :L:C, and MSVC's (line,column) (L,C), also when
+     the compiler printed only a line;
+  6. trailing whitespace goes, and so do blank lines at the start and the end.
 
 --update writes the goldens (new ones only for the NAMEs given) and appends the reason to
 docs/golden-changes.md. Golden changes need the owner's approval; see the update-golden skill.
@@ -54,27 +64,59 @@ MAX_DIFF_LINES = 40
 # A manifest line: a test name, then one or more compiler names such as clang-18.
 MANIFEST_LINE = re.compile(r"^(?P<name>[\w./-]+)(?P<compilers>(?:\s+[a-z][a-z-]*-\d+)+)$")
 
-ANSI_ESCAPE = compile_fail.ANSI_ESCAPE
+ANSI_ESCAPE = compile_fail.ANSI_ESCAPE  # rule 1: colors and OSC-8 hyperlinks
+TYPOGRAPHIC_QUOTES = str.maketrans({"‘": "'", "’": "'", "“": '"', "”": '"'})  # rule 2
+
+# Rule 3, the lines that go. Quoted source, carets and fix-it hints: "  12 |   code",
+# "     |   ^~~~".
+QUOTED_SOURCE = compile_fail.SOURCE_EXCERPT
+# Include chains: Clang's "In file included from a.hpp:3:", one line per level, and GCC's
+# "In file included from a.hpp:3," followed by "                 from b.cpp:1:" lines.
+INCLUDE_CHAIN = re.compile(r"^(?:In file included from |\s+from ).*[:,]$")
+# Clang's count of what it reported: "1 error generated.", "1 warning and 2 errors generated."
+ERROR_COUNT = re.compile(r"^\d+ (?:warning|error)s?(?: and \d+ (?:warning|error)s?)? generated\.$")
+# Version banners, which some drivers print (MSVC without /nologo; GCC and Clang with -v).
 BANNER = re.compile(
     r"^(?:Microsoft \(R\) C/C\+\+ Optimizing Compiler Version .*"
     r"|Copyright \(C\) Microsoft Corporation\..*"
     r"|(?:\S+ )*clang version \d.*|Target: .*|Thread model: .*|InstalledDir: .*"
     r"|gcc version \d.*|Using built-in specs\.|COLLECT_GCC=.*|COLLECT_LTO_WRAPPER=.*"
     r"|Configured with: .*)$")
-# Absolute paths outside the repository and the build directory, POSIX and Windows style. The
-# last group is the file name, which is kept. (A "/" right after "<build>" starts no path.)
-POSIX_PATH = re.compile(r"(?<![\w.~/:>-])/(?:[^\s/:'\"(),<>\[\]]+/)+([^\s/:'\"(),<>\[\]]+)")
+
+# Rule 4, paths. One directory of a path: anything but a separator, whitespace or the punctuation
+# that ends a path in a diagnostic.
+_DIRECTORY = r"[^\s\\/:'\"(),<>\[\]]+"
+# Not inside a longer path or word: what may precede the start of a path.
+_PATH_START = r"(?<![\w.~/\\:>-])"
+# The standard library's include directory, whatever the installation prefix: libstdc++'s
+# .../include/c++/13/ and its target-specific .../include/x86_64-linux-gnu/c++/13/, and libc++'s
+# .../include/c++/v1/. GCC and Clang spell the prefix differently, for example /usr/include/c++/14/
+# and /usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/. The lazy *? stops at
+# the first include/c++/<version>/, so nothing after it is swallowed.
+STD_DIR = re.compile(
+    rf"{_PATH_START}(?:[A-Za-z]:)?(?:[\\/]{_DIRECTORY})*?[\\/]include(?:[\\/]{_DIRECTORY})?"
+    r"[\\/]c\+\+[\\/](?:v1|\d+(?:\.\d+)*)[\\/]")
+# MSVC's STL: <drive>:\...\VC\Tools\MSVC\<version>\include\. Its prefix has spaces and parentheses
+# ("C:\Program Files (x86)\..."), so its directories may contain anything a Windows file name can;
+# the fixed tail VC\Tools\MSVC\<version>\include\ anchors the match.
+MSVC_STD_DIR = re.compile(
+    r"(?<![\w])[A-Za-z]:[\\/](?:[^\\/:*?\"<>|\r\n]+[\\/])*?"
+    r"VC[\\/]Tools[\\/]MSVC[\\/][^\\/:*?\"<>|\r\n]+[\\/]include[\\/]", re.IGNORECASE)
+# Other absolute paths, POSIX and Windows style. The last group is the file name, which is kept.
+# (A "/" right after a placeholder such as "<build>" starts no path.)
+POSIX_PATH = re.compile(rf"{_PATH_START}/(?:{_DIRECTORY}/)+({_DIRECTORY})")
 WINDOWS_PATH = re.compile(
     r"(?<![\w])[A-Za-z]:[\\/](?:[^\s\\/:'\"(),<>]+[\\/])*([^\s\\/:'\"(),<>]+)")
-# ":12:5" or ":12" after a file name: "file:12:5: error", "(lambda at file:12:5)",
-# "In file included from file:12,".
-LINE_COLUMN = re.compile(r"(?<=[^\s:])(?::\d+){1,2}(?=[:,)\s]|$)")
+# A normalized path: a placeholder and what follows it, up to the punctuation that ends a path.
+NORMALIZED_PATH = r"<(?:src|build|std|external)>/[^\s:'\"(),<>]*"
+
+# Rule 5, locations. ":12:5" or ":12" after a normalized path: "file:12:5: error",
+# "(lambda at file:12:5)".
+LINE_COLUMN = re.compile(rf"({NORMALIZED_PATH}):\d+(?::\d+)?")
 # MSVC locations at the start of a line, "file(12,5): error" and "file(12): note". The file may
-# contain spaces and parentheses ("C:\Program Files (x86)\...").
-MSVC_LOCATION = re.compile(r"^(?P<file>.+?)\(\d+(?:,\d+)?\)(?=\s?: )")
-# The margin of a quoted source line: "   12 |   code" and "      |   ^~~~" both become " |".
-EXCERPT_MARGIN = re.compile(r"^ *\d* \|")
-TYPOGRAPHIC_QUOTES = str.maketrans({"‘": "'", "’": "'", "“": '"', "”": '"'})
+# contain spaces and parentheses ("C:\Program Files (x86)\..."), but not ": ", which on a GCC or
+# Clang line comes before any message text that could hold "(3): ".
+MSVC_LOCATION = re.compile(r"^(?P<file>(?:(?!: ).)+?)\(\d+(?:,\d+)?\)(?=\s?: )")
 
 
 def _spellings(directory):
@@ -86,41 +128,54 @@ def _spellings(directory):
     return sorted(spellings, key=len, reverse=True)
 
 
-def _replace_prefix(text, directory, replacement):
-    for spelling in _spellings(directory):
-        windows = re.match(r"^[A-Za-z]:", spelling) is not None
-        pattern = re.escape(spelling) + r"[\\/]"
-        text = re.sub(pattern, lambda _: replacement, text, flags=re.IGNORECASE if windows else 0)
-    return text
+def _prefix_rules(source_dir, binary_dir):
+    """(pattern, placeholder) pairs for the build and the source directory. The build directory,
+    usually inside the source directory, comes first, and longer spellings before shorter ones.
+    Windows spellings ignore case, since MSVC may print a drive letter in either case."""
+    rules = []
+    for directory, placeholder in ((binary_dir, "<build>/"), (source_dir, "<src>/")):
+        if not directory:
+            continue
+        for spelling in _spellings(directory):
+            windows = re.match(r"^[A-Za-z]:", spelling) is not None
+            pattern = re.compile(_PATH_START + re.escape(spelling) + r"[\\/]",
+                                 re.IGNORECASE if windows else 0)
+            rules.append((pattern, placeholder))
+    return rules
 
 
 def _msvc_location(match):
-    """An MSVC location without its (line,column); an absolute file becomes <external>/name."""
+    """An MSVC location with (L,C) for its (line,column); an absolute file outside the known
+    directories becomes <external>/name."""
     file = match.group("file")
-    if re.match(r"^[A-Za-z]:[\\/]", file):
+    if re.match(r"^(?:[A-Za-z]:)?[\\/]", file):
         file = "<external>/" + re.split(r"[\\/]", file)[-1]
-    return file
+    return file + "(L,C)"
+
+
+def _normalize_paths(line, prefix_rules):
+    """Rules 4 and 5 on one line."""
+    for pattern, placeholder in prefix_rules:
+        line = pattern.sub(lambda _, p=placeholder: p, line)
+    line = MSVC_STD_DIR.sub("<std>/", line)
+    line = STD_DIR.sub("<std>/", line)
+    line = MSVC_LOCATION.sub(_msvc_location, line)
+    line = POSIX_PATH.sub(r"<external>/\1", line)
+    line = WINDOWS_PATH.sub(r"<external>/\1", line)
+    line = re.sub(NORMALIZED_PATH, lambda m: m.group(0).replace("\\", "/"), line)
+    return LINE_COLUMN.sub(r"\1:L:C", line)
 
 
 def normalize(output, source_dir, binary_dir=None):
-    """Compiler output in the machine-independent form that goldens store."""
+    """Compiler output in the machine-independent form that goldens store (the rules above)."""
     text = ANSI_ESCAPE.sub("", output).replace("\r\n", "\n").translate(TYPOGRAPHIC_QUOTES)
-    if binary_dir:
-        text = _replace_prefix(text, binary_dir, "<build>/")
-    text = _replace_prefix(text, source_dir, "")
+    prefix_rules = _prefix_rules(source_dir, binary_dir)
     lines = []
     for line in text.split("\n"):
-        if BANNER.match(line):
+        if (QUOTED_SOURCE.match(line) or INCLUDE_CHAIN.match(line) or ERROR_COUNT.match(line)
+                or BANNER.match(line) or line.startswith("compilation terminated.")):
             continue
-        margin = EXCERPT_MARGIN.match(line)
-        if margin:  # quoted source: keep the code as it is, drop the line number
-            line = " |" + line[margin.end():]
-        else:
-            line = MSVC_LOCATION.sub(_msvc_location, line)
-            line = POSIX_PATH.sub(r"<external>/\1", line)
-            line = WINDOWS_PATH.sub(r"<external>/\1", line)
-            line = LINE_COLUMN.sub("", line)
-        lines.append(line.rstrip())
+        lines.append(_normalize_paths(line, prefix_rules).rstrip())
     while lines and not lines[0]:
         lines.pop(0)
     while lines and not lines[-1]:
@@ -205,7 +260,7 @@ def run_one(config, name, golden_dir, args, changed, listed):
     """Compare (or with --update, write) one golden. Returns True unless it failed."""
     show = compile_fail.display
     compiler = config["golden_name"]
-    result = compile_fail.compile_source(config, compile_fail.TESTS_DIR / f"{name}.cpp")
+    result = compile_fail.compile_source(config, compile_fail.TESTS_DIR / f"{name}.cpp", plain=True)
     problem = compile_fail.compile_problem(result)
     if problem:
         print(f"FAIL golden {name} ({compiler}): {problem}")
