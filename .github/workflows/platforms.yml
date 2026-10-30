@@ -1,0 +1,121 @@
+# macOS with Apple Clang and Windows with the newest MSVC (and Ninja): weekly on the default branch,
+# and on demand: gh workflow run platforms.yml --ref <branch> [-f os=macos|windows]. On a private
+# repository a macOS minute costs ten Linux minutes and a Windows minute two, so these don't run on
+# every push. Each job configures, builds and tests one CMake preset, as ci.yml does on Linux. A
+# failed scheduled run opens an issue (plan §9.2, risk R12).
+name: platforms
+
+on:
+  schedule:
+    - cron: '53 4 * * 1' # Mondays at 04:53 UTC
+  workflow_dispatch:
+    inputs:
+      os:
+        description: Which platforms to run
+        type: choice
+        options: [both, macos, windows]
+        default: both
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    if: github.event_name != 'workflow_dispatch' || inputs.os != 'windows'
+    name: macos (Apple Clang)
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Tools
+        run: |
+          sw_vers
+          /usr/bin/clang++ --version
+          cmake --version | head -n 1
+          echo "ninja $(ninja --version)"
+
+      - name: Configure
+        run: cmake --preset appleclang-debug
+
+      - name: Build
+        run: cmake --build --preset appleclang-debug -j "$(sysctl -n hw.ncpu)"
+
+      - name: Test
+        run: ctest --preset appleclang-debug -j "$(sysctl -n hw.ncpu)"
+
+  windows:
+    if: github.event_name != 'workflow_dispatch' || inputs.os != 'macos'
+    name: windows (MSVC)
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # What a Visual Studio developer prompt sets (vcvars64.bat: cl, link and the Windows SDK on
+      # PATH, INCLUDE and LIB), exported to the later steps through GITHUB_ENV.
+      - name: Set up the MSVC developer environment
+        run: |
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+          $vs = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if (-not $vs) { throw 'vswhere found no Visual Studio with the x64 C++ tools' }
+          "Visual Studio: $vs"
+          $before = @{}
+          Get-ChildItem env: | ForEach-Object { $before[$_.Name] = $_.Value }
+          $vcvars = Join-Path $vs 'VC\Auxiliary\Build\vcvars64.bat'
+          $after = cmd /c "`"$vcvars`" >nul && set"
+          if ($LASTEXITCODE -ne 0) { throw "$vcvars failed with exit code $LASTEXITCODE" }
+          foreach ($line in $after) {
+            if ($line -match '^([^=]+)=(.*)$' -and $before[$Matches[1]] -cne $Matches[2]) {
+              "$($Matches[1])=$($Matches[2])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+            }
+          }
+
+      - name: Tools
+        run: |
+          (Get-Command cl).Source
+          cmake --version | Select-Object -First 1
+          "ninja $(ninja --version)"
+
+      - name: Configure
+        run: cmake --preset msvc-debug
+
+      - name: Build
+        run: cmake --build --preset msvc-debug -j $env:NUMBER_OF_PROCESSORS
+
+      - name: Test
+        run: ctest --preset msvc-debug -j $env:NUMBER_OF_PROCESSORS
+
+  report:
+    name: report a failed scheduled run
+    needs: [macos, windows]
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      # One open issue collects the failures until someone closes it.
+      - name: Open an issue, or comment on the open one
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TITLE: The weekly macOS and Windows CI run failed
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SHA: ${{ github.sha }}
+        run: |
+          number=$(gh issue list --state open --search "\"$TITLE\" in:title" --json number,title \
+            --jq 'map(select(.title == env.TITLE)) | .[0].number // empty')
+          if [[ -n $number ]]; then
+            gh issue comment "$number" --body "It failed again on $SHA: $RUN_URL"
+          else
+            gh issue create --title "$TITLE" \
+              --body "The scheduled macOS and Windows run failed on $SHA: $RUN_URL. Close this issue once it passes again."
+          fi
