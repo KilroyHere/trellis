@@ -1,0 +1,81 @@
+In file included from /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:16:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:850:30: error: return type 'decltype(di::make<typename std::remove_cvref_t<decltype(t)>::value_type>(t))' (aka 'demo::IRepository') is an abstract class
+  850 | [[nodiscard]] constexpr auto make(auto&& t)
+      |                              ^
+/home/user/cpp-di-research/experiments/qlibs_di/main.cpp:48:49: note: in instantiation of function template specialization 'di::make<di::provider<demo::IRepository, std::integral_constant<unsigned long, 0>, di::provider<std::shared_ptr<demo::IRepository>, std::integral_constant<unsigned long, 1>, di::provider<std::unique_ptr<demo::Service>, std::integral_constant<unsigned long, 0>, di::provider<demo::App, std::integral_constant<unsigned long, 0>, di::overload<(lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:31:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:32:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:42:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:45:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:48:7)>>>>> &>' requested here
+   48 |       [](auto t) -> decltype(auto) { return di::make(t); },  // everything else
+      |                                                 ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:831:49: note: in instantiation of function template specialization '(anonymous namespace)::make_injector(Scope &, const Config &)::(anonymous class)::operator()<di::provider<demo::IRepository, std::integral_constant<unsigned long, 0>, di::provider<std::shared_ptr<demo::IRepository>, std::integral_constant<unsigned long, 1>, di::provider<std::unique_ptr<demo::Service>, std::integral_constant<unsigned long, 0>, di::provider<demo::App, std::integral_constant<unsigned long, 0>, di::overload<(lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:31:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:32:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:42:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:45:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:48:7)>>>>>>' requested here
+  831 |       if constexpr (requires { ctor_traits<R>{}(t(provider<Ts, std::integral_constant<std::size_t, Ns>, std::remove_cvref_t<decltype(t)>>{std::forward<decltype(t)>(t)})...); }) {
+      |                                                 ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:831:32: note: in instantiation of requirement here
+  831 |       if constexpr (requires { ctor_traits<R>{}(t(provider<Ts, std::integral_constant<std::size_t, Ns>, std::remove_cvref_t<decltype(t)>>{std::forward<decltype(t)>(t)})...); }) {
+      |                                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:830:12: note: in instantiation of function template specialization 'di::make(di::provider<std::shared_ptr<demo::IRepository>, std::integral_constant<unsigned long, 1>, di::provider<std::unique_ptr<demo::Service>, std::integral_constant<unsigned long, 0>, di::provider<demo::App, std::integral_constant<unsigned long, 0>, di::overload<(lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:31:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:32:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:42:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:45:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:48:7)>>>> &)::(anonymous class)::operator()(type_list<IRepository>)::(anonymous class)::operator()<0UL>' requested here
+  830 |     return [&]<std::size_t... Ns>(std::index_sequence<Ns...>) -> decltype(auto) {
+      |            ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:844:14: note: in instantiation of function template specialization 'di::make(di::provider<std::shared_ptr<demo::IRepository>, std::integral_constant<unsigned long, 1>, di::provider<std::unique_ptr<demo::Service>, std::integral_constant<unsigned long, 0>, di::provider<demo::App, std::integral_constant<unsigned long, 0>, di::overload<(lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:31:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:32:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:42:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:45:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:48:7)>>>> &)::(anonymous class)::operator()<di::detail::type_list, demo::IRepository>' requested here
+  844 |       return make(typename ctor_traits<R>::type{});
+      |              ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:851:19: note: (skipping 7 contexts in backtrace; use -ftemplate-backtrace-limit=0 to see all)
+  851 |   -> decltype(di::make<typename std::remove_cvref_t<decltype(t)>::value_type>(t)) {
+      |                   ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:831:49: note: in instantiation of function template specialization '(anonymous namespace)::make_injector(Scope &, const Config &)::(anonymous class)::operator()<di::provider<std::unique_ptr<demo::Service>, std::integral_constant<unsigned long, 0>, di::provider<demo::App, std::integral_constant<unsigned long, 0>, di::overload<(lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:31:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:32:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:42:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:45:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:48:7)>>>>' requested here
+  831 |       if constexpr (requires { ctor_traits<R>{}(t(provider<Ts, std::integral_constant<std::size_t, Ns>, std::remove_cvref_t<decltype(t)>>{std::forward<decltype(t)>(t)})...); }) {
+      |                                                 ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:831:32: note: in instantiation of requirement here
+  831 |       if constexpr (requires { ctor_traits<R>{}(t(provider<Ts, std::integral_constant<std::size_t, Ns>, std::remove_cvref_t<decltype(t)>>{std::forward<decltype(t)>(t)})...); }) {
+      |                                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:830:12: note: in instantiation of function template specialization 'di::make(di::overload<(lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:31:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:32:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:42:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:45:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:48:7)> &)::(anonymous class)::operator()(type_list<unique_ptr<Service, default_delete<Service>>, shared_ptr<ILogger>>)::(anonymous class)::operator()<0UL, 1UL>' requested here
+  830 |     return [&]<std::size_t... Ns>(std::index_sequence<Ns...>) -> decltype(auto) {
+      |            ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:847:12: note: in instantiation of function template specialization 'di::make(di::overload<(lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:31:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:32:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:42:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:45:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:48:7)> &)::(anonymous class)::operator()<di::detail::type_list, std::unique_ptr<demo::Service>, std::shared_ptr<demo::ILogger>>' requested here
+  847 |     return make(typename ctor_traits<R>::type{});
+      |            ^
+/home/user/cpp-di-research/experiments/qlibs_di/main.cpp:86:15: note: in instantiation of function template specialization 'di::make<demo::App, di::overload<(lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:31:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:32:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:42:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:45:7), (lambda at /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:48:7)> &>' requested here
+   86 |   App a = di::make<App>(injector);
+      |               ^
+/home/user/cpp-di-research/experiments/common/domain.hpp:41:16: note: unimplemented pure virtual method 'add' in 'IRepository'
+   41 |   virtual void add(int value) = 0;
+      |                ^
+/home/user/cpp-di-research/experiments/common/domain.hpp:42:23: note: unimplemented pure virtual method 'size' in 'IRepository'
+   42 |   virtual std::size_t size() const = 0;
+      |                       ^
+In file included from /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:16:
+In file included from /tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:695:
+In file included from /usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/memory:66:
+In file included from /usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_tempbuf.h:61:
+/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_construct.h:115:4: error: no matching function for call to 'construct_at'
+  115 |           std::construct_at(__p, std::forward<_Args>(__args)...);
+      |           ^~~~~~~~~~~~~~~~~
+/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/alloc_traits.h:661:9: note: in instantiation of function template specialization 'std::_Construct<demo::IRepository, demo::IRepository>' requested here
+  661 |         { std::_Construct(__p, std::forward<_Args>(__args)...); }
+      |                ^
+/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/shared_ptr_base.h:604:30: note: in instantiation of function template specialization 'std::allocator_traits<std::allocator<void>>::construct<demo::IRepository, demo::IRepository>' requested here
+  604 |           allocator_traits<_Alloc>::construct(__a, _M_ptr(),
+      |                                     ^
+/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/shared_ptr_base.h:972:6: note: in instantiation of function template specialization 'std::_Sp_counted_ptr_inplace<demo::IRepository, std::allocator<void>, __gnu_cxx::_S_atomic>::_Sp_counted_ptr_inplace<demo::IRepository>' requested here
+  972 |             _Sp_cp_type(__a._M_a, std::forward<_Args>(__args)...);
+      |             ^
+/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/shared_ptr_base.h:1712:14: note: in instantiation of function template specialization 'std::__shared_count<>::__shared_count<demo::IRepository, std::allocator<void>, demo::IRepository>' requested here
+ 1712 |         : _M_ptr(), _M_refcount(_M_ptr, __tag, std::forward<_Args>(__args)...)
+      |                     ^
+/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/shared_ptr.h:464:4: note: in instantiation of function template specialization 'std::__shared_ptr<demo::IRepository>::__shared_ptr<std::allocator<void>, demo::IRepository>' requested here
+  464 |         : __shared_ptr<_Tp>(__tag, std::forward<_Args>(__args)...)
+      |           ^
+/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/shared_ptr.h:1009:14: note: in instantiation of function template specialization 'std::shared_ptr<demo::IRepository>::shared_ptr<std::allocator<void>, demo::IRepository>' requested here
+ 1009 |       return shared_ptr<_Tp>(_Sp_alloc_shared_tag<_Alloc>{__a},
+      |              ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:752:17: note: in instantiation of function template specialization 'std::make_shared<demo::IRepository, demo::IRepository>' requested here
+  752 |     return std::make_shared<std::remove_cvref_t<decltype(t)>>(std::forward<decltype(t)>(t));
+      |                 ^
+/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_construct.h:94:5: note: candidate template ignored: substitution failure [with _Tp = demo::IRepository, _Args = <demo::IRepository>]: allocating an object of abstract class type 'demo::IRepository'
+   94 |     construct_at(_Tp* __location, _Args&&... __args)
+      |     ^
+   95 |     noexcept(noexcept(::new((void*)0) _Tp(std::declval<_Args>()...)))
+   96 |     -> decltype(::new((void*)0) _Tp(std::declval<_Args>()...))
+      |                                 ~~~
+/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_construct.h:119:25: error: allocating an object of abstract class type 'demo::IRepository'
+  119 |       ::new((void*)__p) _Tp(std::forward<_Args>(__args)...);
+      |                         ^
+3 errors generated.

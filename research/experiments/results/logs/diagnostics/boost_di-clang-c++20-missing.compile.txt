@@ -1,0 +1,37 @@
+/home/user/cpp-di-research/experiments/boost_di/main.cpp:78:20: warning: 'create' is deprecated: creatable constraint not satisfied [-Wdeprecated-declarations]
+   78 |   App a = injector.create<App>();
+      |                    ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/boost_di/include/boost/di.hpp:2778:3: note: 'create' has been explicitly marked deprecated here
+ 2778 |   create
+      |   ^
+/home/user/cpp-di-research/experiments/boost_di/main.cpp:78:20: warning: 'create<demo::App, 0>' is deprecated: creatable constraint not satisfied [-Wdeprecated-declarations]
+   78 |   App a = injector.create<App>();
+      |                    ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/boost_di/include/boost/di.hpp:2775:3: note: 'create<demo::App, 0>' has been explicitly marked deprecated here
+ 2775 |   __BOOST_DI_DEPRECATED("creatable constraint not satisfied")
+      |   ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/boost_di/include/boost/di.hpp:33:38: note: expanded from macro '__BOOST_DI_DEPRECATED'
+   33 | #define __BOOST_DI_DEPRECATED(...) [[deprecated(__VA_ARGS__)]]
+      |                                      ^
+/home/user/cpp-di-research/experiments/boost_di/main.cpp:79:20: warning: 'create' is deprecated: creatable constraint not satisfied [-Wdeprecated-declarations]
+   79 |   App b = injector.create<App>();
+      |                    ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/boost_di/include/boost/di.hpp:2778:3: note: 'create' has been explicitly marked deprecated here
+ 2778 |   create
+      |   ^
+/home/user/cpp-di-research/experiments/boost_di/main.cpp:79:20: warning: 'create<demo::App, 0>' is deprecated: creatable constraint not satisfied [-Wdeprecated-declarations]
+   79 |   App b = injector.create<App>();
+      |                    ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/boost_di/include/boost/di.hpp:2775:3: note: 'create<demo::App, 0>' has been explicitly marked deprecated here
+ 2775 |   __BOOST_DI_DEPRECATED("creatable constraint not satisfied")
+      |   ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/boost_di/include/boost/di.hpp:33:38: note: expanded from macro '__BOOST_DI_DEPRECATED'
+   33 | #define __BOOST_DI_DEPRECATED(...) [[deprecated(__VA_ARGS__)]]
+      |                                      ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/boost_di/include/boost/di.hpp:1169:2: error: inline function 'boost::di::concepts::abstract_type<demo::IRepository>::is_not_bound::error' is not defined [-Werror,-Wundefined-inline]
+ 1169 |  error(_ = "type is not bound, did you forget to add: 'di::bind<interface>.to<implementation>()'?");
+      |  ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/boost_di/include/boost/di.hpp:1165:41: note: used here
+ 1165 |       return constraint_not_satisfied{}.error();
+      |                                         ^
+4 warnings and 1 error generated.

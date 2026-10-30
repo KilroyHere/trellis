@@ -1,0 +1,4 @@
+/home/user/cpp-di-research/experiments/manual/main.cpp:27:50: error: use of undeclared identifier 'repository'
+   27 |     return App(std::make_unique<Service>(logger, repository, std::make_unique<SteadyClock>(),
+      |                                                  ^
+1 error generated.

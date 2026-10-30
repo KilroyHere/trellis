@@ -1,0 +1,1176 @@
+In file included from /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:16:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:705:28: error: ‘concept’ does not name a type; did you mean ‘const’?
+  705 | template<class B, class T> concept copy_or_move = std::is_same_v<B, std::remove_cvref_t<T>>;
+      |                            ^~~~~~~
+      |                            const
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:705:28: note: ‘concept’ only available with ‘-std=c++20’ or ‘-fconcepts’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:707:31: error: expected identifier before ‘not’ token
+  707 |   template<class T> requires (not copy_or_move<B, T>) operator T() noexcept(noexcept(bind<arg<B, N>, T>{}));
+      |                               ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:707:31: error: expected ‘,’ or ‘...’ before ‘not’ token
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:707:55: error: expected constructor, destructor, or type conversion before ‘operator’
+  707 |   template<class T> requires (not copy_or_move<B, T>) operator T() noexcept(noexcept(bind<arg<B, N>, T>{}));
+      |                                                       ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:707:106: error: expected unqualified-id before ‘)’ token
+  707 |   template<class T> requires (not copy_or_move<B, T>) operator T() noexcept(noexcept(bind<arg<B, N>, T>{}));
+      |                                                                                                          ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:708:31: error: expected identifier before ‘not’ token
+  708 |   template<class T> requires (not copy_or_move<B, T>) operator T&() const noexcept(noexcept(bind<arg<B, N>, T&>{}));
+      |                               ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:708:31: error: expected ‘,’ or ‘...’ before ‘not’ token
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:708:55: error: expected constructor, destructor, or type conversion before ‘operator’
+  708 |   template<class T> requires (not copy_or_move<B, T>) operator T&() const noexcept(noexcept(bind<arg<B, N>, T&>{}));
+      |                                                       ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:708:114: error: expected unqualified-id before ‘)’ token
+  708 |   template<class T> requires (not copy_or_move<B, T>) operator T&() const noexcept(noexcept(bind<arg<B, N>, T&>{}));
+      |                                                                                                                  ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:709:31: error: expected identifier before ‘not’ token
+  709 |   template<class T> requires (not copy_or_move<B, T>) operator const T&() const noexcept(noexcept(bind<arg<B, N>, const T&>{}));
+      |                               ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:709:31: error: expected ‘,’ or ‘...’ before ‘not’ token
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:709:55: error: expected constructor, destructor, or type conversion before ‘operator’
+  709 |   template<class T> requires (not copy_or_move<B, T>) operator const T&() const noexcept(noexcept(bind<arg<B, N>, const T&>{}));
+      |                                                       ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:709:126: error: expected unqualified-id before ‘)’ token
+  709 |   template<class T> requires (not copy_or_move<B, T>) operator const T&() const noexcept(noexcept(bind<arg<B, N>, const T&>{}));
+      |                                                                                                                              ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:710:31: error: expected identifier before ‘not’ token
+  710 |   template<class T> requires (not copy_or_move<B, T>) operator T&&() const noexcept(noexcept(bind<arg<B, N>, T&&>{}));
+      |                               ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:710:31: error: expected ‘,’ or ‘...’ before ‘not’ token
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:710:55: error: expected constructor, destructor, or type conversion before ‘operator’
+  710 |   template<class T> requires (not copy_or_move<B, T>) operator T&&() const noexcept(noexcept(bind<arg<B, N>, T&&>{}));
+      |                                                       ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:710:116: error: expected unqualified-id before ‘)’ token
+  710 |   template<class T> requires (not copy_or_move<B, T>) operator T&&() const noexcept(noexcept(bind<arg<B, N>, T&&>{}));
+      |                                                                                                                    ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:720:43: error: expected constructor, destructor, or type conversion before ‘(’ token
+  720 | template<class T, std::size_t N> requires (not std::is_class_v<T> and requires(T t) { T{t}; })
+      |                                           ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:720:94: error: expected unqualified-id before ‘)’ token
+  720 | template<class T, std::size_t N> requires (not std::is_class_v<T> and requires(T t) { T{t}; })
+      |                                                                                              ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:729:34: error: ‘requires’ does not name a type
+  729 | template<class T, std::size_t N> requires std::is_class_v<T>
+      |                                  ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:729:34: note: ‘requires’ only available with ‘-std=c++20’ or ‘-fconcepts’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:751:5: error: ‘requires’ only available with ‘-std=c++20’ or ‘-fconcepts’
+  751 |     requires requires { std::make_shared<std::remove_cvref_t<decltype(t)>>(std::forward<decltype(t)>(t)); } {
+      |     ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:751:14: error: ‘requires’ was not declared in this scope
+  751 |     requires requires { std::make_shared<std::remove_cvref_t<decltype(t)>>(std::forward<decltype(t)>(t)); } {
+      |              ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:751:109: error: expected unqualified-id before ‘{’ token
+  751 |     requires requires { std::make_shared<std::remove_cvref_t<decltype(t)>>(std::forward<decltype(t)>(t)); } {
+      |                                                                                                             ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In member function ‘constexpr std::shared_ptr<_Tp> di::v1_0_6::ctor_traits<std::shared_ptr<_Tp>, N>::operator()(auto:1&&) const’:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:751:47: error: ‘remove_cvref_t’ is not a member of ‘std’
+  751 |     requires requires { std::make_shared<std::remove_cvref_t<decltype(t)>>(std::forward<decltype(t)>(t)); } {
+      |                                               ^~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:751:47: note: ‘std::remove_cvref_t’ is only available from C++20 onwards
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:751:30: error: parse error in template argument list
+  751 |     requires requires { std::make_shared<std::remove_cvref_t<decltype(t)>>(std::forward<decltype(t)>(t)); } {
+      |                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: At global scope:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:760:5: error: ‘requires’ only available with ‘-std=c++20’ or ‘-fconcepts’
+  760 |     requires requires { std::make_unique<std::remove_cvref_t<decltype(t)>>(std::forward<decltype(t)>(t)); } {
+      |     ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:760:14: error: ‘requires’ was not declared in this scope
+  760 |     requires requires { std::make_unique<std::remove_cvref_t<decltype(t)>>(std::forward<decltype(t)>(t)); } {
+      |              ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:760:109: error: expected unqualified-id before ‘{’ token
+  760 |     requires requires { std::make_unique<std::remove_cvref_t<decltype(t)>>(std::forward<decltype(t)>(t)); } {
+      |                                                                                                             ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In member function ‘constexpr std::shared_ptr<_Tp> di::v1_0_6::ctor_traits<std::unique_ptr<_Tp>, N>::operator()(auto:2&&) const’:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:760:47: error: ‘remove_cvref_t’ is not a member of ‘std’
+  760 |     requires requires { std::make_unique<std::remove_cvref_t<decltype(t)>>(std::forward<decltype(t)>(t)); } {
+      |                                               ^~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:760:47: note: ‘std::remove_cvref_t’ is only available from C++20 onwards
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:760:30: error: parse error in template argument list
+  760 |     requires requires { std::make_unique<std::remove_cvref_t<decltype(t)>>(std::forward<decltype(t)>(t)); } {
+      |                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: At global scope:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:769:28: error: ‘requires’ does not name a type
+  769 | template<class T, class R> requires requires(T t) { typename T::value_type; typename T::parent_type; t.index(); t.size(); }
+      |                            ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:769:28: note: ‘requires’ only available with ‘-std=c++20’ or ‘-fconcepts’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:770:19: error: ‘T’ was not declared in this scope
+  770 | struct value_type<T, R> { using type = typename T::value_type; };
+      |                   ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:770:22: error: ‘R’ was not declared in this scope
+  770 | struct value_type<T, R> { using type = typename T::value_type; };
+      |                      ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:770:23: error: template argument 1 is invalid
+  770 | struct value_type<T, R> { using type = typename T::value_type; };
+      |                       ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:770:23: error: template argument 2 is invalid
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:770:1: error: an explicit specialization must be preceded by ‘template <>’
+  770 | struct value_type<T, R> { using type = typename T::value_type; };
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+      | template <> 
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:772:47: error: ‘remove_cvref_t’ is not a member of ‘std’
+  772 | using value_type_t = typename value_type<std::remove_cvref_t<std::remove_pointer_t<T>>, T>::type;
+      |                                               ^~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:772:47: note: ‘std::remove_cvref_t’ is only available from C++20 onwards
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:772:85: error: wrong number of template arguments (1, should be 2)
+  772 | using value_type_t = typename value_type<std::remove_cvref_t<std::remove_pointer_t<T>>, T>::type;
+      |                                                                                     ^~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:768:33: note: provided for ‘template<class, class T> struct di::v1_0_6::detail::value_type’
+  768 | template<class, class T> struct value_type { using type = T; };
+      |                                 ^~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:772:31: error: expected nested-name-specifier
+  772 | using value_type_t = typename value_type<std::remove_cvref_t<std::remove_pointer_t<T>>, T>::type;
+      |                               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:774:19: error: ‘concept’ does not name a type; did you mean ‘const’?
+  774 | template<class T> concept invocable =
+      |                   ^~~~~~~
+      |                   const
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:774:19: note: ‘concept’ only available with ‘-std=c++20’ or ‘-fconcepts’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:777:34: error: ‘concept’ does not name a type; did you mean ‘const’?
+  777 | template<class TLhs, class TRhs> concept is = std::is_same_v<detail::value_type_t<TLhs>, TRhs>;
+      |                                  ^~~~~~~
+      |                                  const
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:777:34: note: ‘concept’ only available with ‘-std=c++20’ or ‘-fconcepts’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:779:1: error: ‘concept’ does not name a type; did you mean ‘const’?
+  779 | concept is_a = std::is_same_v<R<typename detail::value_type_t<T>::element_type>, detail::value_type_t<T>>;
+      | ^~~~~~~
+      | const
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:779:1: note: ‘concept’ only available with ‘-std=c++20’ or ‘-fconcepts’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:780:19: error: ‘concept’ does not name a type; did you mean ‘const’?
+  780 | template<class T> concept is_smart_ptr =
+      |                   ^~~~~~~
+      |                   const
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:780:19: note: ‘concept’ only available with ‘-std=c++20’ or ‘-fconcepts’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:783:1: error: ‘concept’ does not name a type; did you mean ‘const’?
+  783 | concept trait = Trait<detail::value_type_t<T>>::value;
+      | ^~~~~~~
+      | const
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:783:1: note: ‘concept’ only available with ‘-std=c++20’ or ‘-fconcepts’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In static member function ‘static constexpr std::size_t di::v1_0_6::provider<T, Index, TParent>::size()’:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:799:19: error: ‘requires’ was not declared in this scope
+  799 |     if constexpr (requires { parent_type::size(); }) {
+      |                   ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:799:28: error: expected ‘)’ before ‘{’ token
+  799 |     if constexpr (requires { parent_type::size(); }) {
+      |                            ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:799:18: note: to match this ‘(’
+  799 |     if constexpr (requires { parent_type::size(); }) {
+      |                  ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: At global scope:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:816:3: error: ‘requires’ only available with ‘-std=c++20’ or ‘-fconcepts’
+  816 |   requires requires { R{std::forward<Ts>(ts)...}; } {
+      |   ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:816:12: error: ‘requires’ was not declared in this scope
+  816 |   requires requires { R{std::forward<Ts>(ts)...}; } {
+      |            ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:816:53: error: expected unqualified-id before ‘{’ token
+  816 |   requires requires { R{std::forward<Ts>(ts)...}; } {
+      |                                                     ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:821:3: error: ‘requires’ only available with ‘-std=c++20’ or ‘-fconcepts’
+  821 |   requires (invocable<T> and not requires { R{std::forward<T>(t_)}; }) {
+      |   ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:821:13: error: ‘invocable’ was not declared in this scope
+  821 |   requires (invocable<T> and not requires { R{std::forward<T>(t_)}; }) {
+      |             ^~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:821:24: error: expected primary-expression before ‘>’ token
+  821 |   requires (invocable<T> and not requires { R{std::forward<T>(t_)}; }) {
+      |                        ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:821:30: error: expected identifier before ‘not’ token
+  821 |   requires (invocable<T> and not requires { R{std::forward<T>(t_)}; }) {
+      |                              ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:821:29: error: expected ‘)’ before ‘not’ token
+  821 |   requires (invocable<T> and not requires { R{std::forward<T>(t_)}; }) {
+      |            ~                ^~~~
+      |                             )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:821:70: error: expected initializer before ‘)’ token
+  821 |   requires (invocable<T> and not requires { R{std::forward<T>(t_)}; }) {
+      |                                                                      ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:851:38: error: ‘remove_cvref_t’ in namespace ‘std’ does not name a template type
+  851 |   -> decltype(di::make<typename std::remove_cvref_t<decltype(t)>::value_type>(t)) {
+      |                                      ^~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:851:38: note: ‘std::remove_cvref_t’ is only available from C++20 onwards
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:851:52: error: expected template-argument before ‘<’ token
+  851 |   -> decltype(di::make<typename std::remove_cvref_t<decltype(t)>::value_type>(t)) {
+      |                                                    ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:851:52: error: expected ‘>’ before ‘<’ token
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In function ‘constexpr decltype (make<<expression error> >(t)) di::v1_0_6::make(auto:4&&)’:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:852:33: error: ‘remove_cvref_t’ in namespace ‘std’ does not name a template type
+  852 |   return di::make<typename std::remove_cvref_t<decltype(t)>::value_type>(t);
+      |                                 ^~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:852:33: note: ‘std::remove_cvref_t’ is only available from C++20 onwards
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:852:47: error: expected template-argument before ‘<’ token
+  852 |   return di::make<typename std::remove_cvref_t<decltype(t)>::value_type>(t);
+      |                                               ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:852:47: error: expected ‘>’ before ‘<’ token
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In lambda function:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:863:24: error: static assertion failed
+  863 |     static_assert(std::is_same_v<type_list<int>, di::ctor_traits<int>::type>);
+      |                   ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:872:24: error: static assertion failed
+  872 |     static_assert(std::is_same_v<type_list<int>, di::ctor_traits<a1>::type>);
+      |                   ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:875:24: error: static assertion failed
+  875 |     static_assert(std::is_same_v<type_list<const int*, float>, di::ctor_traits<a2>::type>);
+      |                   ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:878:24: error: static assertion failed
+  878 |     static_assert(std::is_same_v<type_list<empty>, di::ctor_traits<c0>::type>);
+      |                   ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:881:24: error: static assertion failed
+  881 |     static_assert(std::is_same_v<type_list<int>, di::ctor_traits<c1>::type>);
+      |                   ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:884:24: error: static assertion failed
+  884 |     static_assert(std::is_same_v<type_list<const int&>, di::ctor_traits<c2>::type>);
+      |                   ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:887:24: error: static assertion failed
+  887 |     static_assert(std::is_same_v<type_list<const int&, empty*>, di::ctor_traits<c3>::type>);
+      |                   ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:890:24: error: static assertion failed
+  890 |     static_assert(std::is_same_v<type_list<const int&, const empty*, float>, di::ctor_traits<c4>::type>);
+      |                   ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:893:24: error: static assertion failed
+  893 |     static_assert(std::is_same_v<type_list<int, int, int, int>, di::ctor_traits<c5>::type>);
+      |                   ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:898:24: error: static assertion failed
+  898 |     static_assert(std::is_same_v<
+      |                   ~~~~~^~~~~~~~~~
+  899 |       type_list<int, int, int, int, int,
+      |       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  900 |                 int, int, int, int, int,
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~
+  901 |                 int, int, int, int, int>, di::ctor_traits<c6>::type>);
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:906:23: error: ‘invocable’ is not a member of ‘di’
+  906 |     static_assert(di::invocable<decltype([]{})>);
+      |                       ^~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:906:42: error: lambda-expression in unevaluated context only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  906 |     static_assert(di::invocable<decltype([]{})>);
+      |                                          ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:906:33: error: expected primary-expression before ‘decltype’
+  906 |     static_assert(di::invocable<decltype([]{})>);
+      |                                 ^~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:906:33: error: expected ‘,’ before ‘decltype’
+  906 |     static_assert(di::invocable<decltype([]{})>);
+      |                                 ^~~~~~~~~~~~~~
+      |                                 ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:906:33: error: expected string-literal before ‘decltype’
+  906 |     static_assert(di::invocable<decltype([]{})>);
+      |                                 ^~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:906:33: error: expected ‘)’ before ‘decltype’
+  906 |     static_assert(di::invocable<decltype([]{})>);
+      |                  ~              ^~~~~~~~~~~~~~
+      |                                 )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:907:23: error: ‘invocable’ is not a member of ‘di’
+  907 |     static_assert(di::invocable<decltype([](int){})>);
+      |                       ^~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:907:42: error: lambda-expression in unevaluated context only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  907 |     static_assert(di::invocable<decltype([](int){})>);
+      |                                          ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:907:33: error: expected primary-expression before ‘decltype’
+  907 |     static_assert(di::invocable<decltype([](int){})>);
+      |                                 ^~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:907:33: error: expected ‘,’ before ‘decltype’
+  907 |     static_assert(di::invocable<decltype([](int){})>);
+      |                                 ^~~~~~~~~~~~~~~~~~~
+      |                                 ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:907:33: error: expected string-literal before ‘decltype’
+  907 |     static_assert(di::invocable<decltype([](int){})>);
+      |                                 ^~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:907:33: error: expected ‘)’ before ‘decltype’
+  907 |     static_assert(di::invocable<decltype([](int){})>);
+      |                  ~              ^~~~~~~~~~~~~~~~~~~
+      |                                 )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:908:23: error: ‘invocable’ is not a member of ‘di’
+  908 |     static_assert(di::invocable<decltype([](const int&){})>);
+      |                       ^~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:908:42: error: lambda-expression in unevaluated context only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  908 |     static_assert(di::invocable<decltype([](const int&){})>);
+      |                                          ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:908:33: error: expected primary-expression before ‘decltype’
+  908 |     static_assert(di::invocable<decltype([](const int&){})>);
+      |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:908:33: error: expected ‘,’ before ‘decltype’
+  908 |     static_assert(di::invocable<decltype([](const int&){})>);
+      |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                 ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:908:33: error: expected string-literal before ‘decltype’
+  908 |     static_assert(di::invocable<decltype([](const int&){})>);
+      |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:908:33: error: expected ‘)’ before ‘decltype’
+  908 |     static_assert(di::invocable<decltype([](const int&){})>);
+      |                  ~              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                 )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:909:23: error: ‘invocable’ is not a member of ‘di’
+  909 |     static_assert(di::invocable<decltype([]<class... Ts>(Ts...){})>);
+      |                       ^~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:909:42: error: lambda-expression in unevaluated context only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  909 |     static_assert(di::invocable<decltype([]<class... Ts>(Ts...){})>);
+      |                                          ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:909:33: error: expected primary-expression before ‘decltype’
+  909 |     static_assert(di::invocable<decltype([]<class... Ts>(Ts...){})>);
+      |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:909:33: error: expected ‘,’ before ‘decltype’
+  909 |     static_assert(di::invocable<decltype([]<class... Ts>(Ts...){})>);
+      |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                 ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:909:33: error: expected string-literal before ‘decltype’
+  909 |     static_assert(di::invocable<decltype([]<class... Ts>(Ts...){})>);
+      |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:909:33: error: expected ‘)’ before ‘decltype’
+  909 |     static_assert(di::invocable<decltype([]<class... Ts>(Ts...){})>);
+      |                  ~              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                 )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:910:23: error: ‘invocable’ is not a member of ‘di’
+  910 |     static_assert(di::invocable<decltype([]<auto... >(){})>);
+      |                       ^~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:910:42: error: lambda-expression in unevaluated context only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  910 |     static_assert(di::invocable<decltype([]<auto... >(){})>);
+      |                                          ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:910:33: error: expected primary-expression before ‘decltype’
+  910 |     static_assert(di::invocable<decltype([]<auto... >(){})>);
+      |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:910:33: error: expected ‘,’ before ‘decltype’
+  910 |     static_assert(di::invocable<decltype([]<auto... >(){})>);
+      |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                 ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:910:33: error: expected string-literal before ‘decltype’
+  910 |     static_assert(di::invocable<decltype([]<auto... >(){})>);
+      |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:910:33: error: expected ‘)’ before ‘decltype’
+  910 |     static_assert(di::invocable<decltype([]<auto... >(){})>);
+      |                  ~              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                 )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:911:23: error: ‘invocable’ is not a member of ‘di’
+  911 |     static_assert(di::invocable<decltype([](auto...){})>);
+      |                       ^~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:911:42: error: lambda-expression in unevaluated context only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  911 |     static_assert(di::invocable<decltype([](auto...){})>);
+      |                                          ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:911:33: error: expected primary-expression before ‘decltype’
+  911 |     static_assert(di::invocable<decltype([](auto...){})>);
+      |                                 ^~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:911:33: error: expected ‘,’ before ‘decltype’
+  911 |     static_assert(di::invocable<decltype([](auto...){})>);
+      |                                 ^~~~~~~~~~~~~~~~~~~~~~~
+      |                                 ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:911:33: error: expected string-literal before ‘decltype’
+  911 |     static_assert(di::invocable<decltype([](auto...){})>);
+      |                                 ^~~~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:911:33: error: expected ‘)’ before ‘decltype’
+  911 |     static_assert(di::invocable<decltype([](auto...){})>);
+      |                  ~              ^~~~~~~~~~~~~~~~~~~~~~~
+      |                                 )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:912:23: error: ‘invocable’ is not a member of ‘di’
+  912 |     static_assert(di::invocable<decltype([](...){})>);
+      |                       ^~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:912:42: error: lambda-expression in unevaluated context only available with ‘-std=c++20’ or ‘-std=gnu++20’
+  912 |     static_assert(di::invocable<decltype([](...){})>);
+      |                                          ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:912:33: error: expected primary-expression before ‘decltype’
+  912 |     static_assert(di::invocable<decltype([](...){})>);
+      |                                 ^~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:912:33: error: expected ‘,’ before ‘decltype’
+  912 |     static_assert(di::invocable<decltype([](...){})>);
+      |                                 ^~~~~~~~~~~~~~~~~~~
+      |                                 ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:912:33: error: expected string-literal before ‘decltype’
+  912 |     static_assert(di::invocable<decltype([](...){})>);
+      |                                 ^~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:912:33: error: expected ‘)’ before ‘decltype’
+  912 |     static_assert(di::invocable<decltype([](...){})>);
+      |                  ~              ^~~~~~~~~~~~~~~~~~~
+      |                                 )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:917:27: error: ‘is’ is not a member of ‘di’
+  917 |     static_assert(not di::is<int, const int>);
+      |                           ^~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:917:30: error: expected primary-expression before ‘int’
+  917 |     static_assert(not di::is<int, const int>);
+      |                              ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:917:30: error: expected ‘,’ before ‘int’
+  917 |     static_assert(not di::is<int, const int>);
+      |                              ^~~
+      |                              ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:917:30: error: expected string-literal before ‘int’
+  917 |     static_assert(not di::is<int, const int>);
+      |                              ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:917:30: error: expected ‘)’ before ‘int’
+  917 |     static_assert(not di::is<int, const int>);
+      |                  ~           ^~~
+      |                              )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:918:27: error: ‘is’ is not a member of ‘di’
+  918 |     static_assert(not di::is<int, const int*>);
+      |                           ^~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:918:30: error: expected primary-expression before ‘int’
+  918 |     static_assert(not di::is<int, const int*>);
+      |                              ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:918:30: error: expected ‘,’ before ‘int’
+  918 |     static_assert(not di::is<int, const int*>);
+      |                              ^~~
+      |                              ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:918:30: error: expected string-literal before ‘int’
+  918 |     static_assert(not di::is<int, const int*>);
+      |                              ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:918:30: error: expected ‘)’ before ‘int’
+  918 |     static_assert(not di::is<int, const int*>);
+      |                  ~           ^~~
+      |                              )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:919:27: error: ‘is’ is not a member of ‘di’
+  919 |     static_assert(not di::is<int, const int*>);
+      |                           ^~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:919:30: error: expected primary-expression before ‘int’
+  919 |     static_assert(not di::is<int, const int*>);
+      |                              ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:919:30: error: expected ‘,’ before ‘int’
+  919 |     static_assert(not di::is<int, const int*>);
+      |                              ^~~
+      |                              ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:919:30: error: expected string-literal before ‘int’
+  919 |     static_assert(not di::is<int, const int*>);
+      |                              ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:919:30: error: expected ‘)’ before ‘int’
+  919 |     static_assert(not di::is<int, const int*>);
+      |                  ~           ^~~
+      |                              )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:920:23: error: ‘is’ is not a member of ‘di’
+  920 |     static_assert(di::is<void, void>);
+      |                       ^~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:920:26: error: expected primary-expression before ‘void’
+  920 |     static_assert(di::is<void, void>);
+      |                          ^~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:920:26: error: expected ‘,’ before ‘void’
+  920 |     static_assert(di::is<void, void>);
+      |                          ^~~~
+      |                          ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:920:26: error: expected string-literal before ‘void’
+  920 |     static_assert(di::is<void, void>);
+      |                          ^~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:920:26: error: expected ‘)’ before ‘void’
+  920 |     static_assert(di::is<void, void>);
+      |                  ~       ^~~~
+      |                          )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:921:23: error: ‘is’ is not a member of ‘di’
+  921 |     static_assert(di::is<int, int>);
+      |                       ^~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:921:26: error: expected primary-expression before ‘int’
+  921 |     static_assert(di::is<int, int>);
+      |                          ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:921:26: error: expected ‘,’ before ‘int’
+  921 |     static_assert(di::is<int, int>);
+      |                          ^~~
+      |                          ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:921:26: error: expected string-literal before ‘int’
+  921 |     static_assert(di::is<int, int>);
+      |                          ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:921:26: error: expected ‘)’ before ‘int’
+  921 |     static_assert(di::is<int, int>);
+      |                  ~       ^~~
+      |                          )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:922:23: error: ‘is’ is not a member of ‘di’
+  922 |     static_assert(di::is<const void*, const void*>);
+      |                       ^~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:922:26: error: expected primary-expression before ‘const’
+  922 |     static_assert(di::is<const void*, const void*>);
+      |                          ^~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:922:26: error: expected ‘,’ before ‘const’
+  922 |     static_assert(di::is<const void*, const void*>);
+      |                          ^~~~~
+      |                          ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:922:26: error: expected string-literal before ‘const’
+  922 |     static_assert(di::is<const void*, const void*>);
+      |                          ^~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:922:26: error: expected ‘)’ before ‘const’
+  922 |     static_assert(di::is<const void*, const void*>);
+      |                  ~       ^~~~~
+      |                          )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:923:23: error: ‘is’ is not a member of ‘di’
+  923 |     static_assert(di::is<int&&, int&&>);
+      |                       ^~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:923:26: error: expected primary-expression before ‘int’
+  923 |     static_assert(di::is<int&&, int&&>);
+      |                          ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:923:26: error: expected ‘,’ before ‘int’
+  923 |     static_assert(di::is<int&&, int&&>);
+      |                          ^~~
+      |                          ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:923:26: error: expected string-literal before ‘int’
+  923 |     static_assert(di::is<int&&, int&&>);
+      |                          ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:923:26: error: expected ‘)’ before ‘int’
+  923 |     static_assert(di::is<int&&, int&&>);
+      |                  ~       ^~~
+      |                          )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:928:27: error: ‘is_a’ is not a member of ‘di’
+  928 |     static_assert(not di::is_a<int, std::shared_ptr>);
+      |                           ^~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:928:32: error: expected primary-expression before ‘int’
+  928 |     static_assert(not di::is_a<int, std::shared_ptr>);
+      |                                ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:928:32: error: expected ‘,’ before ‘int’
+  928 |     static_assert(not di::is_a<int, std::shared_ptr>);
+      |                                ^~~
+      |                                ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:928:32: error: expected string-literal before ‘int’
+  928 |     static_assert(not di::is_a<int, std::shared_ptr>);
+      |                                ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:928:32: error: expected ‘)’ before ‘int’
+  928 |     static_assert(not di::is_a<int, std::shared_ptr>);
+      |                  ~             ^~~
+      |                                )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:929:27: error: ‘is_a’ is not a member of ‘di’
+  929 |     static_assert(not di::is_a<std::shared_ptr<void>&, std::unique_ptr>);
+      |                           ^~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:929:53: error: expected primary-expression before ‘&’ token
+  929 |     static_assert(not di::is_a<std::shared_ptr<void>&, std::unique_ptr>);
+      |                                                     ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:929:54: error: expected primary-expression before ‘,’ token
+  929 |     static_assert(not di::is_a<std::shared_ptr<void>&, std::unique_ptr>);
+      |                                                      ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:929:56: error: expected string-literal before ‘std’
+  929 |     static_assert(not di::is_a<std::shared_ptr<void>&, std::unique_ptr>);
+      |                                                        ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:929:55: error: expected ‘)’ before ‘std’
+  929 |     static_assert(not di::is_a<std::shared_ptr<void>&, std::unique_ptr>);
+      |                  ~                                    ^~~~
+      |                                                       )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:930:27: error: ‘is_a’ is not a member of ‘di’
+  930 |     static_assert(not di::is_a<const std::shared_ptr<int>&, std::unique_ptr>);
+      |                           ^~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:930:32: error: expected primary-expression before ‘const’
+  930 |     static_assert(not di::is_a<const std::shared_ptr<int>&, std::unique_ptr>);
+      |                                ^~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:930:32: error: expected ‘,’ before ‘const’
+  930 |     static_assert(not di::is_a<const std::shared_ptr<int>&, std::unique_ptr>);
+      |                                ^~~~~
+      |                                ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:930:32: error: expected string-literal before ‘const’
+  930 |     static_assert(not di::is_a<const std::shared_ptr<int>&, std::unique_ptr>);
+      |                                ^~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:930:32: error: expected ‘)’ before ‘const’
+  930 |     static_assert(not di::is_a<const std::shared_ptr<int>&, std::unique_ptr>);
+      |                  ~             ^~~~~
+      |                                )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:931:27: error: ‘is_a’ is not a member of ‘di’
+  931 |     static_assert(not di::is_a<std::shared_ptr<void>, std::unique_ptr>);
+      |                           ^~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:931:53: error: expected primary-expression before ‘,’ token
+  931 |     static_assert(not di::is_a<std::shared_ptr<void>, std::unique_ptr>);
+      |                                                     ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:931:55: error: expected string-literal before ‘std’
+  931 |     static_assert(not di::is_a<std::shared_ptr<void>, std::unique_ptr>);
+      |                                                       ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:931:54: error: expected ‘)’ before ‘std’
+  931 |     static_assert(not di::is_a<std::shared_ptr<void>, std::unique_ptr>);
+      |                  ~                                   ^~~~
+      |                                                      )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:932:23: error: ‘is_a’ is not a member of ‘di’
+  932 |     static_assert(di::is_a<std::shared_ptr<void>, std::shared_ptr>);
+      |                       ^~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:932:49: error: expected primary-expression before ‘,’ token
+  932 |     static_assert(di::is_a<std::shared_ptr<void>, std::shared_ptr>);
+      |                                                 ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:932:51: error: expected string-literal before ‘std’
+  932 |     static_assert(di::is_a<std::shared_ptr<void>, std::shared_ptr>);
+      |                                                   ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:932:50: error: expected ‘)’ before ‘std’
+  932 |     static_assert(di::is_a<std::shared_ptr<void>, std::shared_ptr>);
+      |                  ~                               ^~~~
+      |                                                  )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:933:23: error: ‘is_a’ is not a member of ‘di’
+  933 |     static_assert(di::is_a<std::shared_ptr<int>, std::shared_ptr>);
+      |                       ^~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:933:48: error: expected primary-expression before ‘,’ token
+  933 |     static_assert(di::is_a<std::shared_ptr<int>, std::shared_ptr>);
+      |                                                ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:933:50: error: expected string-literal before ‘std’
+  933 |     static_assert(di::is_a<std::shared_ptr<int>, std::shared_ptr>);
+      |                                                  ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:933:49: error: expected ‘)’ before ‘std’
+  933 |     static_assert(di::is_a<std::shared_ptr<int>, std::shared_ptr>);
+      |                  ~                              ^~~~
+      |                                                 )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:934:23: error: ‘is_a’ is not a member of ‘di’
+  934 |     static_assert(di::is_a<std::unique_ptr<int>, std::unique_ptr>);
+      |                       ^~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:934:48: error: expected primary-expression before ‘,’ token
+  934 |     static_assert(di::is_a<std::unique_ptr<int>, std::unique_ptr>);
+      |                                                ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:934:50: error: expected string-literal before ‘std’
+  934 |     static_assert(di::is_a<std::unique_ptr<int>, std::unique_ptr>);
+      |                                                  ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:934:49: error: expected ‘)’ before ‘std’
+  934 |     static_assert(di::is_a<std::unique_ptr<int>, std::unique_ptr>);
+      |                  ~                              ^~~~
+      |                                                 )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:939:27: error: ‘is_smart_ptr’ is not a member of ‘di’
+  939 |     static_assert(not di::is_smart_ptr<void>);
+      |                           ^~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:939:40: error: expected primary-expression before ‘void’
+  939 |     static_assert(not di::is_smart_ptr<void>);
+      |                                        ^~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:939:40: error: expected ‘,’ before ‘void’
+  939 |     static_assert(not di::is_smart_ptr<void>);
+      |                                        ^~~~
+      |                                        ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:939:40: error: expected string-literal before ‘void’
+  939 |     static_assert(not di::is_smart_ptr<void>);
+      |                                        ^~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:939:40: error: expected ‘)’ before ‘void’
+  939 |     static_assert(not di::is_smart_ptr<void>);
+      |                  ~                     ^~~~
+      |                                        )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:940:27: error: ‘is_smart_ptr’ is not a member of ‘di’
+  940 |     static_assert(not di::is_smart_ptr<void*>);
+      |                           ^~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:940:40: error: expected primary-expression before ‘void’
+  940 |     static_assert(not di::is_smart_ptr<void*>);
+      |                                        ^~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:940:40: error: expected ‘,’ before ‘void’
+  940 |     static_assert(not di::is_smart_ptr<void*>);
+      |                                        ^~~~
+      |                                        ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:940:40: error: expected string-literal before ‘void’
+  940 |     static_assert(not di::is_smart_ptr<void*>);
+      |                                        ^~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:940:40: error: expected ‘)’ before ‘void’
+  940 |     static_assert(not di::is_smart_ptr<void*>);
+      |                  ~                     ^~~~
+      |                                        )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:941:27: error: ‘is_smart_ptr’ is not a member of ‘di’
+  941 |     static_assert(not di::is_smart_ptr<int>);
+      |                           ^~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:941:40: error: expected primary-expression before ‘int’
+  941 |     static_assert(not di::is_smart_ptr<int>);
+      |                                        ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:941:40: error: expected ‘,’ before ‘int’
+  941 |     static_assert(not di::is_smart_ptr<int>);
+      |                                        ^~~
+      |                                        ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:941:40: error: expected string-literal before ‘int’
+  941 |     static_assert(not di::is_smart_ptr<int>);
+      |                                        ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:941:40: error: expected ‘)’ before ‘int’
+  941 |     static_assert(not di::is_smart_ptr<int>);
+      |                  ~                     ^~~
+      |                                        )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:942:27: error: ‘is_smart_ptr’ is not a member of ‘di’
+  942 |     static_assert(not di::is_smart_ptr<const int&>);
+      |                           ^~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:942:40: error: expected primary-expression before ‘const’
+  942 |     static_assert(not di::is_smart_ptr<const int&>);
+      |                                        ^~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:942:40: error: expected ‘,’ before ‘const’
+  942 |     static_assert(not di::is_smart_ptr<const int&>);
+      |                                        ^~~~~
+      |                                        ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:942:40: error: expected string-literal before ‘const’
+  942 |     static_assert(not di::is_smart_ptr<const int&>);
+      |                                        ^~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:942:40: error: expected ‘)’ before ‘const’
+  942 |     static_assert(not di::is_smart_ptr<const int&>);
+      |                  ~                     ^~~~~
+      |                                        )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:943:27: error: ‘is_smart_ptr’ is not a member of ‘di’
+  943 |     static_assert(not di::is_smart_ptr<const std::shared_ptr<int>&>);
+      |                           ^~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:943:40: error: expected primary-expression before ‘const’
+  943 |     static_assert(not di::is_smart_ptr<const std::shared_ptr<int>&>);
+      |                                        ^~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:943:40: error: expected ‘,’ before ‘const’
+  943 |     static_assert(not di::is_smart_ptr<const std::shared_ptr<int>&>);
+      |                                        ^~~~~
+      |                                        ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:943:40: error: expected string-literal before ‘const’
+  943 |     static_assert(not di::is_smart_ptr<const std::shared_ptr<int>&>);
+      |                                        ^~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:943:40: error: expected ‘)’ before ‘const’
+  943 |     static_assert(not di::is_smart_ptr<const std::shared_ptr<int>&>);
+      |                  ~                     ^~~~~
+      |                                        )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:944:23: error: ‘is_smart_ptr’ is not a member of ‘di’
+  944 |     static_assert(di::is_smart_ptr<std::shared_ptr<void>>);
+      |                       ^~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:944:56: error: expected primary-expression before ‘>’ token
+  944 |     static_assert(di::is_smart_ptr<std::shared_ptr<void>>);
+      |                                                        ^~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:944:58: error: expected primary-expression before ‘)’ token
+  944 |     static_assert(di::is_smart_ptr<std::shared_ptr<void>>);
+      |                                                          ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:945:23: error: ‘is_smart_ptr’ is not a member of ‘di’
+  945 |     static_assert(di::is_smart_ptr<std::shared_ptr<int>>);
+      |                       ^~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:945:55: error: expected primary-expression before ‘>’ token
+  945 |     static_assert(di::is_smart_ptr<std::shared_ptr<int>>);
+      |                                                       ^~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:945:57: error: expected primary-expression before ‘)’ token
+  945 |     static_assert(di::is_smart_ptr<std::shared_ptr<int>>);
+      |                                                         ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:946:23: error: ‘is_smart_ptr’ is not a member of ‘di’
+  946 |     static_assert(di::is_smart_ptr<std::unique_ptr<int>>);
+      |                       ^~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:946:55: error: expected primary-expression before ‘>’ token
+  946 |     static_assert(di::is_smart_ptr<std::unique_ptr<int>>);
+      |                                                       ^~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:946:57: error: expected primary-expression before ‘)’ token
+  946 |     static_assert(di::is_smart_ptr<std::unique_ptr<int>>);
+      |                                                         ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:951:27: error: ‘trait’ is not a member of ‘di’
+  951 |     static_assert(not di::trait<int, std::is_const>);
+      |                           ^~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:951:33: error: expected primary-expression before ‘int’
+  951 |     static_assert(not di::trait<int, std::is_const>);
+      |                                 ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:951:33: error: expected ‘,’ before ‘int’
+  951 |     static_assert(not di::trait<int, std::is_const>);
+      |                                 ^~~
+      |                                 ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:951:33: error: expected string-literal before ‘int’
+  951 |     static_assert(not di::trait<int, std::is_const>);
+      |                                 ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:951:33: error: expected ‘)’ before ‘int’
+  951 |     static_assert(not di::trait<int, std::is_const>);
+      |                  ~              ^~~
+      |                                 )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:952:23: error: ‘trait’ is not a member of ‘di’
+  952 |     static_assert(di::trait<const int, std::is_const>);
+      |                       ^~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:952:29: error: expected primary-expression before ‘const’
+  952 |     static_assert(di::trait<const int, std::is_const>);
+      |                             ^~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:952:29: error: expected ‘,’ before ‘const’
+  952 |     static_assert(di::trait<const int, std::is_const>);
+      |                             ^~~~~
+      |                             ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:952:29: error: expected string-literal before ‘const’
+  952 |     static_assert(di::trait<const int, std::is_const>);
+      |                             ^~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:952:29: error: expected ‘)’ before ‘const’
+  952 |     static_assert(di::trait<const int, std::is_const>);
+      |                  ~          ^~~~~
+      |                             )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:953:27: error: ‘trait’ is not a member of ‘di’
+  953 |     static_assert(not di::trait<const int&, std::is_pointer>);
+      |                           ^~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:953:33: error: expected primary-expression before ‘const’
+  953 |     static_assert(not di::trait<const int&, std::is_pointer>);
+      |                                 ^~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:953:33: error: expected ‘,’ before ‘const’
+  953 |     static_assert(not di::trait<const int&, std::is_pointer>);
+      |                                 ^~~~~
+      |                                 ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:953:33: error: expected string-literal before ‘const’
+  953 |     static_assert(not di::trait<const int&, std::is_pointer>);
+      |                                 ^~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:953:33: error: expected ‘)’ before ‘const’
+  953 |     static_assert(not di::trait<const int&, std::is_pointer>);
+      |                  ~              ^~~~~
+      |                                 )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:954:23: error: ‘trait’ is not a member of ‘di’
+  954 |     static_assert(di::trait<int*, std::is_pointer>);
+      |                       ^~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:954:29: error: expected primary-expression before ‘int’
+  954 |     static_assert(di::trait<int*, std::is_pointer>);
+      |                             ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:954:29: error: expected ‘,’ before ‘int’
+  954 |     static_assert(di::trait<int*, std::is_pointer>);
+      |                             ^~~
+      |                             ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:954:29: error: expected string-literal before ‘int’
+  954 |     static_assert(di::trait<int*, std::is_pointer>);
+      |                             ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:954:29: error: expected ‘)’ before ‘int’
+  954 |     static_assert(di::trait<int*, std::is_pointer>);
+      |                  ~          ^~~
+      |                             )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:955:27: error: ‘trait’ is not a member of ‘di’
+  955 |     static_assert(not di::trait<int, std::is_class>);
+      |                           ^~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:955:33: error: expected primary-expression before ‘int’
+  955 |     static_assert(not di::trait<int, std::is_class>);
+      |                                 ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:955:33: error: expected ‘,’ before ‘int’
+  955 |     static_assert(not di::trait<int, std::is_class>);
+      |                                 ^~~
+      |                                 ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:955:33: error: expected string-literal before ‘int’
+  955 |     static_assert(not di::trait<int, std::is_class>);
+      |                                 ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:955:33: error: expected ‘)’ before ‘int’
+  955 |     static_assert(not di::trait<int, std::is_class>);
+      |                  ~              ^~~
+      |                                 )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:956:23: error: ‘trait’ is not a member of ‘di’
+  956 |     static_assert(di::trait<std::shared_ptr<void>, std::is_class>);
+      |                       ^~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:956:50: error: expected primary-expression before ‘,’ token
+  956 |     static_assert(di::trait<std::shared_ptr<void>, std::is_class>);
+      |                                                  ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:956:52: error: expected string-literal before ‘std’
+  956 |     static_assert(di::trait<std::shared_ptr<void>, std::is_class>);
+      |                                                    ^~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:956:51: error: expected ‘)’ before ‘std’
+  956 |     static_assert(di::trait<std::shared_ptr<void>, std::is_class>);
+      |                  ~                                ^~~~
+      |                                                   )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:971:27: error: invalid operands of types ‘int’ and ‘void’ to binary ‘operator==’
+  971 |     static_assert(int(42) == di::make<int>(42));
+      |                   ~~~~~~~ ^~ ~~~~~~~~~~~~~~~~~
+      |                   |                       |
+      |                   int                     void
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:972:29: error: invalid operands of types ‘char’ and ‘void’ to binary ‘operator==’
+  972 |     static_assert(char('x') == di::make<char>('x'));
+      |                   ~~~~~~~~~ ^~ ~~~~~~~~~~~~~~~~~~~
+      |                   |                          |
+      |                   char                       void
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:978:37: error: invalid use of ‘void’
+  978 |     static_assert(42 == di::make<c1>(42).i);
+      |                         ~~~~~~~~~~~~^~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:978:42: error: expected ‘,’ before ‘i’
+  978 |     static_assert(42 == di::make<c1>(42).i);
+      |                                          ^
+      |                                          ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:978:42: error: expected string-literal before ‘i’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:978:42: error: expected ‘)’ before ‘i’
+  978 |     static_assert(42 == di::make<c1>(42).i);
+      |                  ~                       ^
+      |                                          )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In instantiation of ‘constexpr auto di::v1_0_6::make(Ts&& ...) [with R = <lambda()>::c1; Ts = {overload<<lambda()>::<lambda(...)> >}]’:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:979:37:   required from here
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:816:23: error: invalid user-defined conversion from ‘di::v1_0_6::overload<<lambda()>::<lambda(...)> >’ to ‘int’ [-fpermissive]
+  816 |   requires requires { R{std::forward<Ts>(ts)...}; } {
+      |                       ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:980:7: note: candidate is: ‘constexpr<lambda()>::<lambda(...)>::operator int (*)(...)() const’ (near match)
+  980 |       [](...) { return 42; }
+      |       ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:980:7: note:   no known conversion from ‘int (*)(...)’ to ‘int’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:816:23: sorry, unimplemented: converting lambda that uses ‘...’ to function pointer
+  816 |   requires requires { R{std::forward<Ts>(ts)...}; } {
+      |                       ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:977:34: note:   initializing argument 1 of ‘constexpr<lambda()>::c1::c1(int)’
+  977 |     struct c1 { constexpr c1(int i) : i{i} { } int i{}; };
+      |                              ~~~~^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:979:37: error: invalid use of ‘void’
+  979 |     static_assert(42 == di::make<c1>(di::overload{
+      |                         ~~~~~~~~~~~~^~~~~~~~~~~~~~
+  980 |       [](...) { return 42; }
+      |       ~~~~~~~~~~~~~~~~~~~~~~         
+  981 |     }).i);
+      |     ~~                               
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:981:8: error: expected ‘,’ before ‘i’
+  981 |     }).i);
+      |        ^
+      |        ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:981:8: error: expected string-literal before ‘i’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:981:8: error: expected ‘)’ before ‘i’
+  981 |     }).i);
+      |        ^
+      |        )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:979:18: note: to match this ‘(’
+  979 |     static_assert(42 == di::make<c1>(di::overload{
+      |                  ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In lambda function:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:982:43: error: ‘requires’ was not declared in this scope
+  982 |     static_assert([](auto... ts) { return requires { di::make<c1>(ts...); }; }(int{}));
+      |                                           ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:982:51: error: expected ‘;’ before ‘{’ token
+  982 |     static_assert([](auto... ts) { return requires { di::make<c1>(ts...); }; }(int{}));
+      |                                                   ^~
+      |                                                   ;
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In lambda function:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:982:79: error: could not convert ‘<lambda closure object><lambda()>::<lambda(auto:11 ...)>().<lambda()>::<lambda(auto:11 ...)>(0)’ from ‘void’ to ‘bool’
+  982 |     static_assert([](auto... ts) { return requires { di::make<c1>(ts...); }; }(int{}));
+      |                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+      |                                                                               |
+      |                                                                               void
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In lambda function:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:983:47: error: ‘requires’ was not declared in this scope
+  983 |     static_assert(not [](auto... ts) { return requires { di::make<c1>(ts...); }; }());
+      |                                               ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:983:55: error: expected ‘;’ before ‘{’ token
+  983 |     static_assert(not [](auto... ts) { return requires { di::make<c1>(ts...); }; }());
+      |                                                       ^~
+      |                                                       ;
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In instantiation of ‘constexpr auto di::v1_0_6::make(Ts&& ...) [with R = <lambda()>::c1; Ts = {}]’:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:983:70:   required from ‘<lambda()>::<lambda(auto:12 ...)> [with auto:12 = {}]’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:983:83:   required from here
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:816:23: error: no matching function for call to ‘<lambda()>::c1::c1(<brace-enclosed initializer list>)’
+  816 |   requires requires { R{std::forward<Ts>(ts)...}; } {
+      |                       ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:977:27: note: candidate: ‘constexpr<lambda()>::c1::c1(int)’
+  977 |     struct c1 { constexpr c1(int i) : i{i} { } int i{}; };
+      |                           ^~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:977:27: note:   candidate expects 1 argument, 0 provided
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:977:12: note: candidate: ‘constexpr<lambda()>::c1::c1(const<lambda()>::c1&)’
+  977 |     struct c1 { constexpr c1(int i) : i{i} { } int i{}; };
+      |            ^~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:977:12: note:   candidate expects 1 argument, 0 provided
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:977:12: note: candidate: ‘constexpr<lambda()>::c1::c1(<lambda()>::c1&&)’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:977:12: note:   candidate expects 1 argument, 0 provided
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In lambda function:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:983:83: error: could not convert ‘<lambda closure object><lambda()>::<lambda(auto:12 ...)>().<lambda()>::<lambda(auto:12 ...)>()’ from ‘void’ to ‘bool’
+  983 |     static_assert(not [](auto... ts) { return requires { di::make<c1>(ts...); }; }());
+      |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+      |                                                                                   |
+      |                                                                                   void
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:983:83: error: in argument to unary !
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In lambda function:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:984:47: error: ‘requires’ was not declared in this scope
+  984 |     static_assert(not [](auto... ts) { return requires { di::make<c1>(ts...); }; }(float{}));
+      |                                               ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:984:55: error: expected ‘;’ before ‘{’ token
+  984 |     static_assert(not [](auto... ts) { return requires { di::make<c1>(ts...); }; }(float{}));
+      |                                                       ^~
+      |                                                       ;
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In lambda function:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:984:83: error: could not convert ‘<lambda closure object><lambda()>::<lambda(auto:13 ...)>().<lambda()>::<lambda(auto:13 ...)>(0.0f)’ from ‘void’ to ‘bool’
+  984 |     static_assert(not [](auto... ts) { return requires { di::make<c1>(ts...); }; }(float{}));
+      |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~
+      |                                                                                   |
+      |                                                                                   void
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:984:83: error: in argument to unary !
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In lambda function:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:985:47: error: ‘requires’ was not declared in this scope
+  985 |     static_assert(not [](auto... ts) { return requires { di::make<c1>(ts...); }; }(int{}, int{}));
+      |                                               ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:985:55: error: expected ‘;’ before ‘{’ token
+  985 |     static_assert(not [](auto... ts) { return requires { di::make<c1>(ts...); }; }(int{}, int{}));
+      |                                                       ^~
+      |                                                       ;
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In instantiation of ‘constexpr auto di::v1_0_6::make(Ts&& ...) [with R = <lambda()>::c1; Ts = {int&, int&}]’:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:985:70:   required from ‘<lambda()>::<lambda(auto:14 ...)> [with auto:14 = {int, int}]’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:985:83:   required from here
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:816:23: error: no matching function for call to ‘<lambda()>::c1::c1(<brace-enclosed initializer list>)’
+  816 |   requires requires { R{std::forward<Ts>(ts)...}; } {
+      |                       ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:977:27: note: candidate: ‘constexpr<lambda()>::c1::c1(int)’
+  977 |     struct c1 { constexpr c1(int i) : i{i} { } int i{}; };
+      |                           ^~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:977:27: note:   candidate expects 1 argument, 2 provided
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:977:12: note: candidate: ‘constexpr<lambda()>::c1::c1(const<lambda()>::c1&)’
+  977 |     struct c1 { constexpr c1(int i) : i{i} { } int i{}; };
+      |            ^~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:977:12: note:   candidate expects 1 argument, 2 provided
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:977:12: note: candidate: ‘constexpr<lambda()>::c1::c1(<lambda()>::c1&&)’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:977:12: note:   candidate expects 1 argument, 2 provided
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In lambda function:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:985:83: error: could not convert ‘<lambda closure object><lambda()>::<lambda(auto:14 ...)>().<lambda()>::<lambda(auto:14 ...)>(0, 0)’ from ‘void’ to ‘bool’
+  985 |     static_assert(not [](auto... ts) { return requires { di::make<c1>(ts...); }; }(int{}, int{}));
+      |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~
+      |                                                                                   |
+      |                                                                                   void
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:985:83: error: in argument to unary !
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:988:36: error: invalid use of ‘void’
+  988 |     static_assert(1 == di::make<c2>(1, true).i);
+      |                        ~~~~~~~~~~~~^~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:988:46: error: expected ‘,’ before ‘i’
+  988 |     static_assert(1 == di::make<c2>(1, true).i);
+      |                                              ^
+      |                                              ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:988:46: error: expected string-literal before ‘i’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:988:46: error: expected ‘)’ before ‘i’
+  988 |     static_assert(1 == di::make<c2>(1, true).i);
+      |                  ~                           ^
+      |                                              )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:989:39: error: invalid use of ‘void’
+  989 |     static_assert(true == di::make<c2>(1, true).b);
+      |                           ~~~~~~~~~~~~^~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:989:49: error: expected ‘,’ before ‘b’
+  989 |     static_assert(true == di::make<c2>(1, true).b);
+      |                                                 ^
+      |                                                 ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:989:49: error: expected string-literal before ‘b’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:989:49: error: expected ‘)’ before ‘b’
+  989 |     static_assert(true == di::make<c2>(1, true).b);
+      |                  ~                              ^
+      |                                                 )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:991:20: error: ‘requires’ only available with ‘-std=c++20’ or ‘-fconcepts’
+  991 |       [](auto&& t) requires std::is_same_v<typename std::remove_cvref_t<decltype(t)>::value_type, int> { return 42; },
+      |                    ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:991:58: error: ‘remove_cvref_t’ in namespace ‘std’ does not name a template type
+  991 |       [](auto&& t) requires std::is_same_v<typename std::remove_cvref_t<decltype(t)>::value_type, int> { return 42; },
+      |                                                          ^~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:991:58: note: ‘std::remove_cvref_t’ is only available from C++20 onwards
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:991:72: error: expected template-argument before ‘<’ token
+  991 |       [](auto&& t) requires std::is_same_v<typename std::remove_cvref_t<decltype(t)>::value_type, int> { return 42; },
+      |                                                                        ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:991:72: error: expected ‘>’ before ‘<’ token
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:992:20: error: ‘requires’ only available with ‘-std=c++20’ or ‘-fconcepts’
+  992 |       [](auto&& t) requires std::is_same_v<typename std::remove_cvref_t<decltype(t)>::value_type, bool> { return true; },
+      |                    ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:992:58: error: ‘remove_cvref_t’ in namespace ‘std’ does not name a template type
+  992 |       [](auto&& t) requires std::is_same_v<typename std::remove_cvref_t<decltype(t)>::value_type, bool> { return true; },
+      |                                                          ^~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:992:58: note: ‘std::remove_cvref_t’ is only available from C++20 onwards
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:992:72: error: expected template-argument before ‘<’ token
+  992 |       [](auto&& t) requires std::is_same_v<typename std::remove_cvref_t<decltype(t)>::value_type, bool> { return true; },
+      |                                                                        ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:992:72: error: expected ‘>’ before ‘<’ token
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In instantiation of ‘constexpr auto di::v1_0_6::make(Ts&& ...) [with R = <lambda()>::c2; Ts = {const overload<<lambda()>::<lambda(auto:15&&)>, <lambda()>::<lambda(auto:16&&)> >&}]’:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:994:37:   required from here
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:816:23: error: no matching function for call to ‘<lambda()>::c2::c2(<brace-enclosed initializer list>)’
+  816 |   requires requires { R{std::forward<Ts>(ts)...}; } {
+      |                       ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:987:27: note: candidate: ‘constexpr<lambda()>::c2::c2(int, bool)’
+  987 |     struct c2 { constexpr c2(int i, bool b) : i{i}, b{b} { } int i; bool b; };
+      |                           ^~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:987:27: note:   candidate expects 2 arguments, 1 provided
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:987:12: note: candidate: ‘constexpr<lambda()>::c2::c2(const<lambda()>::c2&)’
+  987 |     struct c2 { constexpr c2(int i, bool b) : i{i}, b{b} { } int i; bool b; };
+      |            ^~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:987:12: note:   no known conversion for argument 1 from ‘const di::v1_0_6::overload<<lambda()>::<lambda(auto:15&&)>, <lambda()>::<lambda(auto:16&&)> >’ to ‘const<lambda()>::c2&’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:987:12: note: candidate: ‘constexpr<lambda()>::c2::c2(<lambda()>::c2&&)’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:987:12: note:   no known conversion for argument 1 from ‘const di::v1_0_6::overload<<lambda()>::<lambda(auto:15&&)>, <lambda()>::<lambda(auto:16&&)> >’ to ‘<lambda()>::c2&&’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:994:37: error: invalid use of ‘void’
+  994 |     static_assert(42 == di::make<c2>(cfg1).i);
+      |                         ~~~~~~~~~~~~^~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:994:44: error: expected ‘,’ before ‘i’
+  994 |     static_assert(42 == di::make<c2>(cfg1).i);
+      |                                            ^
+      |                                            ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:994:44: error: expected string-literal before ‘i’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:994:44: error: expected ‘)’ before ‘i’
+  994 |     static_assert(42 == di::make<c2>(cfg1).i);
+      |                  ~                         ^
+      |                                            )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:995:39: error: invalid use of ‘void’
+  995 |     static_assert(true == di::make<c2>(cfg1).b);
+      |                           ~~~~~~~~~~~~^~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:995:46: error: expected ‘,’ before ‘b’
+  995 |     static_assert(true == di::make<c2>(cfg1).b);
+      |                                              ^
+      |                                              ,
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:995:46: error: expected string-literal before ‘b’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:995:46: error: expected ‘)’ before ‘b’
+  995 |     static_assert(true == di::make<c2>(cfg1).b);
+      |                  ~                           ^
+      |                                              )
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In lambda function:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:997:43: error: ‘requires’ was not declared in this scope
+  997 |     static_assert([](auto... ts) { return requires { di::make<c2>(ts...); }; }(int{}, bool{}));
+      |                                           ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:997:51: error: expected ‘;’ before ‘{’ token
+  997 |     static_assert([](auto... ts) { return requires { di::make<c2>(ts...); }; }(int{}, bool{}));
+      |                                                   ^~
+      |                                                   ;
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In lambda function:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:997:79: error: could not convert ‘<lambda closure object><lambda()>::<lambda(auto:17 ...)>().<lambda()>::<lambda(auto:17 ...)>(0, 0)’ from ‘void’ to ‘bool’
+  997 |     static_assert([](auto... ts) { return requires { di::make<c2>(ts...); }; }(int{}, bool{}));
+      |                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~
+      |                                                                               |
+      |                                                                               void
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In lambda function:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:998:47: error: ‘requires’ was not declared in this scope
+  998 |     static_assert(not [](auto... ts) { return requires { di::make<c2>(ts...); }; }(bool{}, int{}));
+      |                                               ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:998:55: error: expected ‘;’ before ‘{’ token
+  998 |     static_assert(not [](auto... ts) { return requires { di::make<c2>(ts...); }; }(bool{}, int{}));
+      |                                                       ^~
+      |                                                       ;
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In lambda function:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:998:83: error: could not convert ‘<lambda closure object><lambda()>::<lambda(auto:18 ...)>().<lambda()>::<lambda(auto:18 ...)>(0, 0)’ from ‘void’ to ‘bool’
+  998 |     static_assert(not [](auto... ts) { return requires { di::make<c2>(ts...); }; }(bool{}, int{}));
+      |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~
+      |                                                                                   |
+      |                                                                                   void
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:998:83: error: in argument to unary !
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In lambda function:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:999:47: error: ‘requires’ was not declared in this scope
+  999 |     static_assert(not [](auto... ts) { return requires { di::make<c2>(ts...); }; }(bool{}, char{}));
+      |                                               ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:999:55: error: expected ‘;’ before ‘{’ token
+  999 |     static_assert(not [](auto... ts) { return requires { di::make<c2>(ts...); }; }(bool{}, char{}));
+      |                                                       ^~
+      |                                                       ;
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In lambda function:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:999:83: error: could not convert ‘<lambda closure object><lambda()>::<lambda(auto:19 ...)>().<lambda()>::<lambda(auto:19 ...)>(0, 0)’ from ‘void’ to ‘bool’
+  999 |     static_assert(not [](auto... ts) { return requires { di::make<c2>(ts...); }; }(bool{}, char{}));
+      |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
+      |                                                                                   |
+      |                                                                                   void
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:999:83: error: in argument to unary !
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In lambda function:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:1000:47: error: ‘requires’ was not declared in this scope
+ 1000 |     static_assert(not [](auto... ts) { return requires { di::make<c2>(ts...); }; }(bool{}, bool{}, bool{}));
+      |                                               ^~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:1000:55: error: expected ‘;’ before ‘{’ token
+ 1000 |     static_assert(not [](auto... ts) { return requires { di::make<c2>(ts...); }; }(bool{}, bool{}, bool{}));
+      |                                                       ^~
+      |                                                       ;
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In instantiation of ‘constexpr auto di::v1_0_6::make(Ts&& ...) [with R = <lambda()>::c2; Ts = {bool&, bool&, bool&}]’:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:1000:70:   required from ‘<lambda()>::<lambda(auto:20 ...)> [with auto:20 = {bool, bool, bool}]’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:1000:83:   required from here
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:816:23: error: no matching function for call to ‘<lambda()>::c2::c2(<brace-enclosed initializer list>)’
+  816 |   requires requires { R{std::forward<Ts>(ts)...}; } {
+      |                       ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:987:27: note: candidate: ‘constexpr<lambda()>::c2::c2(int, bool)’
+  987 |     struct c2 { constexpr c2(int i, bool b) : i{i}, b{b} { } int i; bool b; };
+      |                           ^~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:987:27: note:   candidate expects 2 arguments, 3 provided
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:987:12: note: candidate: ‘constexpr<lambda()>::c2::c2(const<lambda()>::c2&)’
+  987 |     struct c2 { constexpr c2(int i, bool b) : i{i}, b{b} { } int i; bool b; };
+      |            ^~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:987:12: note:   candidate expects 1 argument, 3 provided
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:987:12: note: candidate: ‘constexpr<lambda()>::c2::c2(<lambda()>::c2&&)’
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:987:12: note:   candidate expects 1 argument, 3 provided
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In lambda function:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:1000:83: error: could not convert ‘<lambda closure object><lambda()>::<lambda(auto:20 ...)>().<lambda()>::<lambda(auto:20 ...)>(0, 0, 0)’ from ‘void’ to ‘bool’
+ 1000 |     static_assert(not [](auto... ts) { return requires { di::make<c2>(ts...); }; }(bool{}, bool{}, bool{}));
+      |                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~
+      |                                                                                   |
+      |                                                                                   void
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:1000:83: error: in argument to unary !
+/home/user/cpp-di-research/experiments/qlibs_di/main.cpp: In function ‘auto {anonymous}::make_injector(Scope&, const demo::Config&)’:
+/home/user/cpp-di-research/experiments/qlibs_di/main.cpp:31:17: error: ‘di::is’ has not been declared
+   31 |       [&config](di::is<const Config&> auto) -> const Config& { return config; },  // instance
+      |                 ^~
+/home/user/cpp-di-research/experiments/qlibs_di/main.cpp:31:23: error: expected ‘,’ or ‘...’ before ‘<’ token
+   31 |       [&config](di::is<const Config&> auto) -> const Config& { return config; },  // instance
+      |                       ^
+/home/user/cpp-di-research/experiments/qlibs_di/main.cpp:32:16: error: ‘di::is’ has not been declared
+   32 |       [&scope](di::is<std::shared_ptr<ILogger>> auto) {
+      |                ^~
+/home/user/cpp-di-research/experiments/qlibs_di/main.cpp:32:22: error: expected ‘,’ or ‘...’ before ‘<’ token
+   32 |       [&scope](di::is<std::shared_ptr<ILogger>> auto) {
+      |                      ^
+/home/user/cpp-di-research/experiments/qlibs_di/main.cpp:37:16: error: ‘di::is’ has not been declared
+   37 |       [&scope](di::is<std::shared_ptr<IRepository>> auto) {
+      |                ^~
+/home/user/cpp-di-research/experiments/qlibs_di/main.cpp:37:22: error: expected ‘,’ or ‘...’ before ‘<’ token
+   37 |       [&scope](di::is<std::shared_ptr<IRepository>> auto) {
+      |                      ^
+/home/user/cpp-di-research/experiments/qlibs_di/main.cpp:42:10: error: ‘di::is’ has not been declared
+   42 |       [](di::is<std::unique_ptr<IClock>> auto) -> std::unique_ptr<IClock> {
+      |          ^~
+/home/user/cpp-di-research/experiments/qlibs_di/main.cpp:42:16: error: expected ‘,’ or ‘...’ before ‘<’ token
+   42 |       [](di::is<std::unique_ptr<IClock>> auto) -> std::unique_ptr<IClock> {
+      |                ^
+/home/user/cpp-di-research/experiments/qlibs_di/main.cpp:45:10: error: ‘di::is’ has not been declared
+   45 |       [](di::is<std::unique_ptr<Service>> auto t) {
+      |          ^~
+/home/user/cpp-di-research/experiments/qlibs_di/main.cpp:45:16: error: expected ‘,’ or ‘...’ before ‘<’ token
+   45 |       [](di::is<std::unique_ptr<Service>> auto t) {
+      |                ^
+/home/user/cpp-di-research/experiments/qlibs_di/main.cpp: In lambda function:
+/home/user/cpp-di-research/experiments/qlibs_di/main.cpp:46:60: error: ‘t’ was not declared in this scope; did you mean ‘tm’?
+   46 |         return std::make_unique<Service>(di::make<Service>(t));
+      |                                                            ^
+      |                                                            tm
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In instantiation of ‘constexpr auto di::v1_0_6::make(Ts&& ...) [with R = demo::App; Ts = {overload<{anonymous}::make_injector(Scope&, const demo::Config&)::<lambda(int)>, {anonymous}::make_injector(Scope&, const demo::Config&)::<lambda(int)>, {anonymous}::make_injector(Scope&, const demo::Config&)::<lambda(int)>, {anonymous}::make_injector(Scope&, const demo::Config&)::<lambda(int)>, {anonymous}::make_injector(Scope&, const demo::Config&)::<lambda(int)>, {anonymous}::make_injector(Scope&, const demo::Config&)::<lambda(auto:21)> >&}]’:
+/home/user/cpp-di-research/experiments/qlibs_di/main.cpp:86:24:   required from here
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:816:23: error: no matching function for call to ‘demo::App::App(<brace-enclosed initializer list>)’
+  816 |   requires requires { R{std::forward<Ts>(ts)...}; } {
+      |                       ^
+In file included from /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:18:
+/home/user/cpp-di-research/experiments/common/domain.hpp:113:3: note: candidate: ‘demo::App::App(std::unique_ptr<demo::Service>, std::shared_ptr<demo::ILogger>)’
+  113 |   App(std::unique_ptr<Service> service, std::shared_ptr<ILogger> logger)
+      |   ^~~
+/home/user/cpp-di-research/experiments/common/domain.hpp:113:3: note:   candidate expects 2 arguments, 1 provided
+/home/user/cpp-di-research/experiments/common/domain.hpp:111:7: note: candidate: ‘demo::App::App(demo::App&&)’
+  111 | class App {
+      |       ^~~
+/home/user/cpp-di-research/experiments/common/domain.hpp:111:7: note:   no known conversion for argument 1 from ‘di::v1_0_6::overload<{anonymous}::make_injector(Scope&, const demo::Config&)::<lambda(int)>, {anonymous}::make_injector(Scope&, const demo::Config&)::<lambda(int)>, {anonymous}::make_injector(Scope&, const demo::Config&)::<lambda(int)>, {anonymous}::make_injector(Scope&, const demo::Config&)::<lambda(int)>, {anonymous}::make_injector(Scope&, const demo::Config&)::<lambda(int)>, {anonymous}::make_injector(Scope&, const demo::Config&)::<lambda(auto:21)> >’ to ‘demo::App&&’
+/home/user/cpp-di-research/experiments/qlibs_di/main.cpp: In function ‘int main()’:
+/home/user/cpp-di-research/experiments/qlibs_di/main.cpp:86:24: error: conversion from ‘void’ to non-scalar type ‘demo::App’ requested
+   86 |   App a = di::make<App>(injector);
+      |           ~~~~~~~~~~~~~^~~~~~~~~~
+/home/user/cpp-di-research/experiments/qlibs_di/main.cpp:87:24: error: conversion from ‘void’ to non-scalar type ‘demo::App’ requested
+   87 |   App b = di::make<App>(injector);
+      |           ~~~~~~~~~~~~~^~~~~~~~~~

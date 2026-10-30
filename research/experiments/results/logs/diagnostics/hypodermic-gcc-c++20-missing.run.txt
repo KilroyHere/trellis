@@ -1,0 +1,5 @@
+exit code: -6
+--- stdout ---
+--- stderr ---
+terminate called after throwing an instance of 'Hypodermic::ActivationException'
+  what():  Unable to activate instance of type demo.App: Unable to resolve demo.IRepository - Throw location: resolveIfTypeCanBeRegistered in /tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/hypodermic/Hypodermic/ComponentContext.h(151) - Throw location: getOrCreateComponent in /tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/hypodermic/Hypodermic/ResolutionContainer.h(75)

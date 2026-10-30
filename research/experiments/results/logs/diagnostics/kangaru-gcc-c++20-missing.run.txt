@@ -1,0 +1,5 @@
+exit code: -6
+--- stdout ---
+--- stderr ---
+terminate called after throwing an instance of 'kgr::abstract_not_found'
+  what():  No instance found for the requested abstract service

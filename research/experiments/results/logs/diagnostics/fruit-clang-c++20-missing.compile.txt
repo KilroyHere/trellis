@@ -1,0 +1,30 @@
+In file included from /home/user/cpp-di-research/experiments/fruit/main.cpp:19:
+In file included from /tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/fruit.h:25:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/impl/injection_errors.h:38:17: error: static assertion failed due to requirement 'AlwaysFalse<demo::IRepository>::value': No explicit binding was found for T, and note that C is an abstract class (so Fruit can't auto-inject this type, even if it has an Inject typedef or an INJECT annotation that will be ignored).
+   38 |   static_assert(AlwaysFalse<T>::value,
+      |                 ^~~~~~~~~~~~~~~~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/impl/component.defn.h:56:9: note: in instantiation of template class 'fruit::impl::NoBindingFoundForAbstractClassError<demo::IRepository, demo::IRepository>' requested here
+   56 |   (void)typename fruit::impl::meta::CheckIfError<Op>::type();
+      |         ^
+/home/user/cpp-di-research/experiments/fruit/main.cpp:34:10: note: in instantiation of function template specialization 'fruit::Component<std::function<std::unique_ptr<demo::App> ()>>::Component<fruit::impl::RegisterFactory<std::unique_ptr<demo::App> (std::function<std::unique_ptr<demo::Service> ()>, std::shared_ptr<demo::ILogger>), (lambda at /home/user/cpp-di-research/experiments/fruit/main.cpp:54:11)>, fruit::impl::RegisterFactory<std::unique_ptr<demo::Service> (std::shared_ptr<demo::ILogger>, std::shared_ptr<demo::IRepository>, std::function<std::unique_ptr<demo::IClock> ()>, const demo::Config &), (lambda at /home/user/cpp-di-research/experiments/fruit/main.cpp:48:11)>, fruit::impl::Bind<demo::IClock, demo::SteadyClock>, fruit::impl::RegisterFactory<std::unique_ptr<demo::SteadyClock> (), (lambda at /home/user/cpp-di-research/experiments/fruit/main.cpp:43:11)>, fruit::impl::Bind<demo::ILogger, demo::CountingLogger>, fruit::impl::RegisterConstructor<demo::CountingLogger ()>, fruit::impl::BindConstInstance<demo::Config, demo::Config>>' requested here
+   34 |   return fruit::createComponent()
+      |          ^
+In file included from /home/user/cpp-di-research/experiments/fruit/main.cpp:19:
+In file included from /tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/fruit.h:27:
+In file included from /tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/component.h:1080:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/impl/component.defn.h:60:81: error: no type named 'Result' in 'fruit::impl::meta::Error<fruit::impl::NoBindingFoundForAbstractClassErrorTag, demo::IRepository, demo::IRepository>'
+   60 |       fruit::impl::meta::Eval<fruit::impl::meta::CheckNoLoopInDeps(typename Op::Result)>>::type();
+      |                                                                    ~~~~~~~~~~~~~^~~~~~
+/home/user/cpp-di-research/experiments/fruit/main.cpp:34:10: note: in instantiation of function template specialization 'fruit::Component<std::function<std::unique_ptr<demo::App> ()>>::Component<fruit::impl::RegisterFactory<std::unique_ptr<demo::App> (std::function<std::unique_ptr<demo::Service> ()>, std::shared_ptr<demo::ILogger>), (lambda at /home/user/cpp-di-research/experiments/fruit/main.cpp:54:11)>, fruit::impl::RegisterFactory<std::unique_ptr<demo::Service> (std::shared_ptr<demo::ILogger>, std::shared_ptr<demo::IRepository>, std::function<std::unique_ptr<demo::IClock> ()>, const demo::Config &), (lambda at /home/user/cpp-di-research/experiments/fruit/main.cpp:48:11)>, fruit::impl::Bind<demo::IClock, demo::SteadyClock>, fruit::impl::RegisterFactory<std::unique_ptr<demo::SteadyClock> (), (lambda at /home/user/cpp-di-research/experiments/fruit/main.cpp:43:11)>, fruit::impl::Bind<demo::ILogger, demo::CountingLogger>, fruit::impl::RegisterConstructor<demo::CountingLogger ()>, fruit::impl::BindConstInstance<demo::Config, demo::Config>>' requested here
+   34 |   return fruit::createComponent()
+      |          ^
+In file included from /home/user/cpp-di-research/experiments/fruit/main.cpp:19:
+In file included from /tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/fruit.h:27:
+In file included from /tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/component.h:1080:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/impl/component.defn.h:63:76: error: no member named 'numEntries' in 'fruit::impl::meta::Error<fruit::impl::NoBindingFoundForAbstractClassErrorTag, demo::IRepository, demo::IRepository>'
+   63 |   std::size_t num_entries = partial_component.storage.numBindings() + Op().numEntries();
+      |                                                                       ~~~~ ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/impl/component.defn.h:66:3: error: type 'Op' (aka 'Error<fruit::impl::NoBindingFoundForAbstractClassErrorTag, demo::IRepository, demo::IRepository>') does not provide a call operator
+   66 |   Op()(entries);
+      |   ^~~~
+4 errors generated.

@@ -1,0 +1,187 @@
+== matrix ==
+[matrix] manual-gcc-c++17: compiles=True t=0.49s warn=0 size=22832
+[matrix] manual-gcc-c++20: compiles=True t=1.20s warn=0 size=18736
+[matrix] manual-clang-c++17: compiles=True t=0.49s warn=0 size=14744
+[matrix] manual-clang-c++20: compiles=True t=1.41s warn=0 size=14744
+[matrix] boost_di-gcc-c++17: compiles=True t=0.74s warn=0 size=22832
+[matrix] boost_di-gcc-c++20: compiles=True t=1.47s warn=0 size=22832
+[matrix] boost_di-clang-c++17: compiles=True t=0.86s warn=0 size=22992
+[matrix] boost_di-clang-c++20: compiles=True t=1.64s warn=0 size=22992
+[matrix] fruit-gcc-c++17: compiles=True t=1.44s warn=0 size=145712
+[matrix] fruit-gcc-c++20: compiles=True t=2.20s warn=0 size=145712
+[matrix] fruit-clang-c++17: compiles=True t=1.57s warn=0 size=133800
+[matrix] fruit-clang-c++20: compiles=True t=2.43s warn=0 size=133800
+[matrix] kangaru-gcc-c++17: compiles=True t=1.39s warn=3 size=35120
+[matrix] kangaru-gcc-c++20: compiles=True t=2.06s warn=3 size=35120
+[matrix] kangaru-clang-c++17: compiles=True t=1.91s warn=3 size=35304
+[matrix] kangaru-clang-c++20: compiles=True t=2.71s warn=3 size=35304
+[matrix] dingo-gcc-c++17: compiles=True t=2.97s warn=0 size=117112
+[matrix] dingo-gcc-c++20: compiles=True t=3.54s warn=0 size=117112
+[matrix] dingo-clang-c++17: compiles=True t=2.87s warn=0 size=113224
+[matrix] dingo-clang-c++20: compiles=True t=3.80s warn=0 size=121416
+[matrix] hypodermic-gcc-c++17: compiles=True t=8.25s warn=0 size=317792
+[matrix] hypodermic-gcc-c++20: compiles=True t=9.23s warn=0 size=317792
+[matrix] hypodermic-clang-c++17: compiles=True t=7.66s warn=0 size=326536
+[matrix] hypodermic-clang-c++20: compiles=True t=8.13s warn=0 size=326520
+[matrix] qlibs_di-gcc-c++17: compiles=False t=nans warn=0 size=None
+[matrix] qlibs_di-gcc-c++20: compiles=True t=1.21s warn=0 size=18736
+[matrix] qlibs_di-clang-c++17: compiles=False t=nans warn=0 size=None
+[matrix] qlibs_di-clang-c++20: compiles=True t=1.50s warn=0 size=18840
+== diagnostics ==
+[diag] manual-gcc-c++20-missing: compile time rc=1 lines=4 bytes=417
+[diag] manual-clang-c++20-missing: compile time rc=1 lines=4 bytes=291
+[diag] boost_di-gcc-c++20-missing: link time (compile only warned) rc=0 lines=18 bytes=3553
+[diag] boost_di-clang-c++20-missing: compile time rc=1 lines=37 bytes=3118
+[diag] fruit-gcc-c++20-missing: compile time rc=1 lines=22 bytes=9595
+[diag] fruit-clang-c++20-missing: compile time rc=1 lines=30 bytes=5324
+[diag] kangaru-gcc-c++20-missing: runtime (compiles, with warnings) rc=0 lines=24 bytes=10185
+[diag] kangaru-clang-c++20-missing: runtime (compiles, with warnings) rc=0 lines=58 bytes=7717
+[diag] dingo-gcc-c++20-missing: runtime (compiles) rc=0 lines=0 bytes=0
+[diag] dingo-clang-c++20-missing: runtime (compiles) rc=0 lines=0 bytes=0
+[diag] hypodermic-gcc-c++20-missing: runtime (compiles) rc=0 lines=0 bytes=0
+[diag] hypodermic-clang-c++20-missing: runtime (compiles) rc=0 lines=0 bytes=0
+[diag] qlibs_di-gcc-c++20-missing: compile time rc=1 lines=64 bytes=30388
+[diag] qlibs_di-clang-c++20-missing: compile time rc=1 lines=81 bytes=13722
+== bench ==
+[bench] manual gcc graph: 58.2 ns/op (min 56.8, max 58.5)
+[bench] manual gcc resolve: 26.6 ns/op (min 26.2, max 31.6)
+[bench] manual clang graph: 52.6 ns/op (min 52.1, max 53.0)
+[bench] manual clang resolve: 26.5 ns/op (min 26.1, max 26.7)
+[bench] boost_di gcc graph: 27.4 ns/op (min 26.9, max 29.6)
+[bench] boost_di gcc resolve: 29.0 ns/op (min 28.6, max 29.8)
+[bench] boost_di clang graph: 35.9 ns/op (min 35.7, max 36.2)
+[bench] boost_di clang resolve: 35.7 ns/op (min 35.6, max 35.9)
+[bench] fruit gcc graph: 1529.2 ns/op (min 1467.1, max 1585.9)
+[bench] fruit gcc graph_normalized: 663.5 ns/op (min 662.4, max 755.6)
+[bench] fruit gcc resolve: 101.9 ns/op (min 101.4, max 105.5)
+[bench] fruit clang graph: 1516.6 ns/op (min 1456.3, max 1588.5)
+[bench] fruit clang graph_normalized: 736.0 ns/op (min 648.0, max 917.6)
+[bench] fruit clang resolve: 104.0 ns/op (min 103.4, max 107.5)
+[bench] kangaru gcc graph: 579.0 ns/op (min 568.7, max 588.5)
+[bench] kangaru gcc resolve: 39.8 ns/op (min 39.5, max 41.0)
+[bench] kangaru clang graph: 551.2 ns/op (min 540.0, max 570.8)
+[bench] kangaru clang resolve: 40.8 ns/op (min 40.1, max 41.9)
+[bench] dingo gcc graph: 1064.0 ns/op (min 1025.7, max 1214.1)
+[bench] dingo gcc resolve: 273.4 ns/op (min 268.8, max 298.6)
+[bench] dingo clang graph: 1199.6 ns/op (min 1156.2, max 1397.1)
+[bench] dingo clang resolve: 326.2 ns/op (min 321.7, max 567.5)
+[bench] hypodermic gcc graph: 7845.0 ns/op (min 7005.5, max 8074.8)
+[bench] hypodermic gcc resolve: 656.5 ns/op (min 649.2, max 674.5)
+[bench] hypodermic clang graph: 7619.2 ns/op (min 7196.0, max 8106.2)
+[bench] hypodermic clang resolve: 598.4 ns/op (min 585.4, max 638.4)
+[bench] qlibs_di gcc graph: 55.6 ns/op (min 52.6, max 60.8)
+[bench] qlibs_di gcc resolve: 27.3 ns/op (min 25.6, max 30.6)
+[bench] qlibs_di clang graph: 58.9 ns/op (min 55.2, max 62.3)
+[bench] qlibs_di clang resolve: 27.6 ns/op (min 27.2, max 32.9)
+[bench] boost_di_shared_ext gcc graph: 163.8 ns/op (min 152.0, max 176.0)
+[bench] boost_di_shared_ext gcc resolve: 32.6 ns/op (min 31.7, max 37.3)
+[bench] boost_di_shared_ext clang graph: 179.3 ns/op (min 175.5, max 197.3)
+[bench] boost_di_shared_ext clang resolve: 41.0 ns/op (min 39.5, max 51.1)
+== scaling ==
+[scaling] manual-10-gcc: 1.06s rss=121.8MB ok=True 
+[scaling] manual-10-clang: 0.90s rss=133.4MB ok=True 
+[scaling] boost_di-10-gcc: 1.40s rss=169.6MB ok=True 
+[scaling] boost_di-10-clang: 1.33s rss=150.8MB ok=True 
+[scaling] fruit-10-gcc: 2.46s rss=279.7MB ok=True 
+[scaling] fruit-10-clang: 2.59s rss=231.2MB ok=True 
+[scaling] fruit_flat-10-gcc: 4.02s rss=486.2MB ok=True 
+[scaling] fruit_flat-10-clang: 5.55s rss=470.5MB ok=True 
+[scaling] kangaru-10-gcc: 3.27s rss=273.6MB ok=True 
+[scaling] kangaru-10-clang: 3.58s rss=195.8MB ok=True 
+[scaling] dingo-10-gcc: 4.62s rss=312.4MB ok=True 
+[scaling] dingo-10-clang: 4.92s rss=221.8MB ok=True 
+[scaling] hypodermic-10-gcc: 13.46s rss=664.6MB ok=True 
+[scaling] hypodermic-10-clang: 12.29s rss=394.4MB ok=True 
+[scaling] qlibs_di-10-gcc: 2.75s rss=229.7MB ok=True 
+[scaling] qlibs_di-10-clang: 6.58s rss=177.6MB ok=True 
+[scaling] manual-25-gcc: 2.13s rss=173.4MB ok=True 
+[scaling] manual-25-clang: 1.64s rss=143.8MB ok=True 
+[scaling] boost_di-25-gcc: 2.66s rss=235.7MB ok=True 
+[scaling] boost_di-25-clang: 2.38s rss=180.6MB ok=True 
+[scaling] fruit-25-gcc: 4.85s rss=400.2MB ok=True 
+[scaling] fruit-25-clang: 5.85s rss=364.5MB ok=True 
+[scaling] fruit_flat-25-gcc: nans rss=NoneMB ok=None rc=1
+[scaling] fruit_flat-25-clang: nans rss=NoneMB ok=None rc=-9
+[scaling] kangaru-25-gcc: 7.39s rss=414.8MB ok=True 
+[scaling] kangaru-25-clang: 7.69s rss=280.1MB ok=True 
+[scaling] dingo-25-gcc: 9.71s rss=439.9MB ok=True 
+[scaling] dingo-25-clang: 9.64s rss=324.0MB ok=True 
+[scaling] hypodermic-25-gcc: 23.99s rss=899.7MB ok=True 
+[scaling] hypodermic-25-clang: 21.03s rss=527.9MB ok=True 
+[scaling] qlibs_di-25-gcc: 518.08s rss=10807.2MB ok=True 
+== scaling ==
+[scaling] manual-50-gcc: 2.51s rss=244.4MB ok=True 
+[scaling] manual-50-clang: 2.18s rss=171.6MB ok=True 
+results: /home/user/cpp-di-research/experiments/results/results.json and /home/user/cpp-di-research/experiments/results/summary.md
+== scaling ==
+[scaling] boost_di-50-gcc: 3.72s rss=316.1MB ok=True 
+[scaling] boost_di-50-clang: 3.29s rss=231.3MB ok=True 
+results: /home/user/cpp-di-research/experiments/results/results.json and /home/user/cpp-di-research/experiments/results/summary.md
+== scaling ==
+[scaling] fruit-50-gcc: 9.47s rss=625.5MB ok=True 
+[scaling] fruit-50-clang: 8.09s rss=589.2MB ok=True 
+results: /home/user/cpp-di-research/experiments/results/results.json and /home/user/cpp-di-research/experiments/results/summary.md
+== scaling ==
+[scaling] kangaru-50-gcc: 11.02s rss=668.3MB ok=True 
+[scaling] kangaru-50-clang: 10.48s rss=422.7MB ok=True 
+results: /home/user/cpp-di-research/experiments/results/results.json and /home/user/cpp-di-research/experiments/results/summary.md
+== scaling ==
+[scaling] dingo-50-gcc: 14.13s rss=624.5MB ok=True 
+[scaling] dingo-50-clang: 14.08s rss=495.6MB ok=True 
+results: /home/user/cpp-di-research/experiments/results/results.json and /home/user/cpp-di-research/experiments/results/summary.md
+== scaling ==
+[scaling] manual-100-gcc: 5.51s rss=362.9MB ok=True 
+[scaling] manual-100-clang: 4.23s rss=231.8MB ok=True 
+[scaling] boost_di-100-gcc: 6.84s rss=487.4MB ok=True 
+[scaling] boost_di-100-clang: 6.30s rss=341.1MB ok=True 
+results: /home/user/cpp-di-research/experiments/results/results.json and /home/user/cpp-di-research/experiments/results/summary.md
+== scaling ==
+[scaling] fruit-100-gcc: 18.06s rss=1070.6MB ok=True 
+[scaling] fruit-100-clang: 16.25s rss=1039.3MB ok=True 
+results: /home/user/cpp-di-research/experiments/results/results.json and /home/user/cpp-di-research/experiments/results/summary.md
+== scaling ==
+[scaling] kangaru-100-gcc: 22.50s rss=1145.4MB ok=True 
+[scaling] kangaru-100-clang: 21.64s rss=708.9MB ok=True 
+results: /home/user/cpp-di-research/experiments/results/results.json and /home/user/cpp-di-research/experiments/results/summary.md
+== scaling ==
+[scaling] dingo-100-gcc: 26.85s rss=1200.4MB ok=True 
+[scaling] dingo-100-clang: 27.72s rss=840.3MB ok=True 
+results: /home/user/cpp-di-research/experiments/results/results.json and /home/user/cpp-di-research/experiments/results/summary.md
+== scaling ==
+[scaling] hypodermic-50-gcc: 36.97s rss=1531.1MB ok=True 
+[scaling] hypodermic-50-clang: 29.01s rss=755.1MB ok=True 
+results: /home/user/cpp-di-research/experiments/results/results.json and /home/user/cpp-di-research/experiments/results/summary.md
+== scaling ==
+[scaling] hypodermic-100-gcc: 74.97s rss=2625.6MB ok=True 
+[scaling] hypodermic-100-clang: 54.89s rss=1197.4MB ok=True 
+results: /home/user/cpp-di-research/experiments/results/results.json and /home/user/cpp-di-research/experiments/results/summary.md
+== scaling ==
+results: /home/user/cpp-di-research/experiments/results/results.json and /home/user/cpp-di-research/experiments/results/summary.md
+== sizes ==
+[sizes] manual-gcc-c++17: text=9966 data=1176 bss=8
+[sizes] manual-gcc-c++20: text=10037 data=1160 bss=8
+[sizes] manual-clang-c++17: text=8451 data=1160 bss=8
+[sizes] manual-clang-c++20: text=8451 data=1160 bss=8
+[sizes] boost_di-gcc-c++17: text=11271 data=1232 bss=96
+[sizes] boost_di-gcc-c++20: text=11345 data=1216 bss=96
+[sizes] boost_di-clang-c++17: text=10333 data=1248 bss=112
+[sizes] boost_di-clang-c++20: text=10333 data=1248 bss=112
+[sizes] fruit-gcc-c++17: text=129029 data=2240 bss=488
+[sizes] fruit-gcc-c++20: text=130313 data=2232 bss=488
+[sizes] fruit-clang-c++17: text=123313 data=2200 bss=192
+[sizes] fruit-clang-c++20: text=123313 data=2200 bss=192
+[sizes] kangaru-gcc-c++17: text=22937 data=1384 bss=8
+[sizes] kangaru-gcc-c++20: text=22695 data=1368 bss=8
+[sizes] kangaru-clang-c++17: text=21422 data=1336 bss=8
+[sizes] kangaru-clang-c++20: text=21422 data=1336 bss=8
+[sizes] dingo-gcc-c++17: text=108077 data=3264 bss=18
+[sizes] dingo-gcc-c++20: text=105775 data=3256 bss=18
+[sizes] dingo-clang-c++17: text=101621 data=3264 bss=18
+[sizes] dingo-clang-c++20: text=105730 data=3264 bss=18
+[sizes] hypodermic-gcc-c++17: text=294515 data=13000 bss=512
+[sizes] hypodermic-gcc-c++20: text=294972 data=12976 bss=512
+[sizes] hypodermic-clang-c++17: text=304361 data=12928 bss=392
+[sizes] hypodermic-clang-c++20: text=303414 data=12912 bss=392
+[sizes] qlibs_di-gcc-c++20: text=10837 data=1160 bss=8
+[sizes] qlibs_di-clang-c++20: text=9687 data=1160 bss=8
+results: /home/user/cpp-di-research/experiments/results/results.json and /home/user/cpp-di-research/experiments/results/summary.md

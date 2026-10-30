@@ -1,0 +1,4 @@
+/home/user/cpp-di-research/experiments/manual/main.cpp: In member function ‘demo::App {anonymous}::Wiring::make_app() const’:
+/home/user/cpp-di-research/experiments/manual/main.cpp:27:50: error: ‘repository’ was not declared in this scope
+   27 |     return App(std::make_unique<Service>(logger, repository, std::make_unique<SteadyClock>(),
+      |                                                  ^~~~~~~~~~

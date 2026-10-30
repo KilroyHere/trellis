@@ -1,0 +1,68 @@
+In file included from /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:16:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:705:28: error: unknown type name 'concept'
+  705 | template<class B, class T> concept copy_or_move = std::is_same_v<B, std::remove_cvref_t<T>>;
+      |                            ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:705:74: error: no template named 'remove_cvref_t' in namespace 'std'; did you mean '__remove_cvref_t'?
+  705 | template<class B, class T> concept copy_or_move = std::is_same_v<B, std::remove_cvref_t<T>>;
+      |                                                                     ~~~~~^
+/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/type_traits:2228:5: note: '__remove_cvref_t' declared here
+ 2228 |     using __remove_cvref_t
+      |     ^
+In file included from /home/user/cpp-di-research/experiments/qlibs_di/main.cpp:16:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:707:31: error: expected parameter declarator
+  707 |   template<class T> requires (not copy_or_move<B, T>) operator T() noexcept(noexcept(bind<arg<B, N>, T>{}));
+      |                               ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:707:31: error: expected ')'
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:707:30: note: to match this '('
+  707 |   template<class T> requires (not copy_or_move<B, T>) operator T() noexcept(noexcept(bind<arg<B, N>, T>{}));
+      |                              ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:707:21: error: a type specifier is required for all declarations
+  707 |   template<class T> requires (not copy_or_move<B, T>) operator T() noexcept(noexcept(bind<arg<B, N>, T>{}));
+      |                     ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:707:54: error: expected ';' at end of declaration list
+  707 |   template<class T> requires (not copy_or_move<B, T>) operator T() noexcept(noexcept(bind<arg<B, N>, T>{}));
+      |                                                      ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:708:31: error: expected parameter declarator
+  708 |   template<class T> requires (not copy_or_move<B, T>) operator T&() const noexcept(noexcept(bind<arg<B, N>, T&>{}));
+      |                               ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:708:31: error: expected ')'
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:708:30: note: to match this '('
+  708 |   template<class T> requires (not copy_or_move<B, T>) operator T&() const noexcept(noexcept(bind<arg<B, N>, T&>{}));
+      |                              ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:708:21: error: a type specifier is required for all declarations
+  708 |   template<class T> requires (not copy_or_move<B, T>) operator T&() const noexcept(noexcept(bind<arg<B, N>, T&>{}));
+      |                     ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:708:54: error: expected ';' at end of declaration list
+  708 |   template<class T> requires (not copy_or_move<B, T>) operator T&() const noexcept(noexcept(bind<arg<B, N>, T&>{}));
+      |                                                      ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:709:31: error: expected parameter declarator
+  709 |   template<class T> requires (not copy_or_move<B, T>) operator const T&() const noexcept(noexcept(bind<arg<B, N>, const T&>{}));
+      |                               ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:709:31: error: expected ')'
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:709:30: note: to match this '('
+  709 |   template<class T> requires (not copy_or_move<B, T>) operator const T&() const noexcept(noexcept(bind<arg<B, N>, const T&>{}));
+      |                              ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:709:21: error: a type specifier is required for all declarations
+  709 |   template<class T> requires (not copy_or_move<B, T>) operator const T&() const noexcept(noexcept(bind<arg<B, N>, const T&>{}));
+      |                     ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:709:54: error: expected ';' at end of declaration list
+  709 |   template<class T> requires (not copy_or_move<B, T>) operator const T&() const noexcept(noexcept(bind<arg<B, N>, const T&>{}));
+      |                                                      ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:710:31: error: expected parameter declarator
+  710 |   template<class T> requires (not copy_or_move<B, T>) operator T&&() const noexcept(noexcept(bind<arg<B, N>, T&&>{}));
+      |                               ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:710:31: error: expected ')'
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:710:30: note: to match this '('
+  710 |   template<class T> requires (not copy_or_move<B, T>) operator T&&() const noexcept(noexcept(bind<arg<B, N>, T&&>{}));
+      |                              ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:710:21: error: a type specifier is required for all declarations
+  710 |   template<class T> requires (not copy_or_move<B, T>) operator T&&() const noexcept(noexcept(bind<arg<B, N>, T&&>{}));
+      |                     ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:710:54: error: expected ';' at end of declaration list
+  710 |   template<class T> requires (not copy_or_move<B, T>) operator T&&() const noexcept(noexcept(bind<arg<B, N>, T&&>{}));
+      |                                                      ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:720:34: error: a type specifier is required for all declarations
+  720 | template<class T, std::size_t N> requires (not std::is_class_v<T> and requires(T t) { T{t}; })
+      |                                  ^
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+20 errors generated.

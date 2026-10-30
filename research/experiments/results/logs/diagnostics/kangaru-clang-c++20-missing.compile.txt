@@ -1,0 +1,58 @@
+In file included from /home/user/cpp-di-research/experiments/kangaru/main.cpp:16:
+In file included from /tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/kangaru/include/kangaru/kangaru.hpp:4:
+In file included from /tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/kangaru/include/kangaru/autocall.hpp:9:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/kangaru/include/kangaru/container.hpp:443:9: warning: unused variable 'service' [-Wunused-variable]
+  443 |                 auto& service = static_unwrap_single<T>(storage);
+      |                       ^~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/kangaru/include/kangaru/container.hpp:403:10: note: in instantiation of function template specialization 'kgr::container::make_contained_service<(anonymous namespace)::ConfigService, demo::Config &, 0, 0, 0>' requested here
+  403 |                 return make_contained_service<T>(
+      |                        ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/kangaru/include/kangaru/container.hpp:385:10: note: in instantiation of function template specialization 'kgr::container::make_service_instance_helper<(anonymous namespace)::ConfigService, demo::Config &, 0UL>' requested here
+  385 |                 return make_service_instance_helper<T>(
+      |                        ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/kangaru/include/kangaru/container.hpp:78:68: note: in instantiation of function template specialization 'kgr::container::make_service_instance<(anonymous namespace)::ConfigService, demo::Config &>' requested here
+   78 |                 return contains<T>() ? false : (autocall(static_unwrap_single<T>(make_service_instance<T>(std::forward<Args>(args)...))), true);
+      |                                                                                  ^
+/home/user/cpp-di-research/experiments/kangaru/main.cpp:83:13: note: in instantiation of function template specialization 'kgr::container::emplace<(anonymous namespace)::ConfigService, demo::Config &, 0>' requested here
+   83 |   container.emplace<ConfigService>(config);
+      |             ^
+In file included from /home/user/cpp-di-research/experiments/kangaru/main.cpp:16:
+In file included from /tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/kangaru/include/kangaru/kangaru.hpp:4:
+In file included from /tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/kangaru/include/kangaru/autocall.hpp:9:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/kangaru/include/kangaru/container.hpp:443:9: warning: unused variable 'service' [-Wunused-variable]
+  443 |                 auto& service = static_unwrap_single<T>(storage);
+      |                       ^~~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/kangaru/include/kangaru/container.hpp:403:10: note: in instantiation of function template specialization 'kgr::container::make_contained_service<(anonymous namespace)::CountingLoggerService, (anonymous namespace)::ILoggerService, std::shared_ptr<demo::CountingLogger>, 0, 0, 0>' requested here
+  403 |                 return make_contained_service<T>(
+      |                        ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/kangaru/include/kangaru/container.hpp:385:10: note: in instantiation of function template specialization 'kgr::container::make_service_instance_helper<(anonymous namespace)::CountingLoggerService, 0UL>' requested here
+  385 |                 return make_service_instance_helper<T>(
+      |                        ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/kangaru/include/kangaru/container.hpp:360:18: note: in instantiation of function template specialization 'kgr::container::make_service_instance<(anonymous namespace)::CountingLoggerService>' requested here
+  360 |                 auto storage = make_service_instance<detail::default_type<T>>();
+      |                                ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/kangaru/include/kangaru/container.hpp:529:47: note: in instantiation of function template specialization 'kgr::container::configure_new_service<(anonymous namespace)::ILoggerService, 0, 0, 0, 0>' requested here
+  529 |                         [this]{ return detail::injected_wrapper<T>{configure_new_service<T>()}; }
+      |                                                                    ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/kangaru/include/kangaru/container.hpp:569:19: note: in instantiation of function template specialization 'kgr::container::definition<(anonymous namespace)::ILoggerService, 0>' requested here
+  569 |                 return U::value(definition<detail::injected_argument_t<S, F>>()..., std::forward<Args>(args)...);
+      |                                 ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/kangaru/include/kangaru/container.hpp:557:10: note: (skipping 1 context in backtrace; use -ftemplate-backtrace-limit=0 to see all)
+  557 |                 return invoke_definition_helper<U>(
+      |                        ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/kangaru/include/kangaru/container.hpp:398:25: note: in instantiation of function template specialization 'kgr::container::invoke_definition<kgr::detail::get_template_construct_helper<(anonymous namespace)::AppService, kgr::detail::meta_list<>, kgr::detail::meta_list<>>, std::tuple<kgr::detail::forwarded_inject<std::unique_ptr<demo::Service>>, kgr::detail::forwarded_inject<std::shared_ptr<demo::ILogger>>> (*)(kgr::detail::injected<(anonymous namespace)::ServiceService> &&, kgr::detail::virtual_injected<(anonymous namespace)::ILoggerService> &&)>' requested here
+  398 |                 auto construct_args = invoke_definition<detail::construct_function<T, Args...>>(std::forward<Args>(args)...);
+      |                                       ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/kangaru/include/kangaru/container.hpp:385:10: note: in instantiation of function template specialization 'kgr::container::make_service_instance_helper<(anonymous namespace)::AppService, 0UL, 1UL>' requested here
+  385 |                 return make_service_instance_helper<T>(
+      |                        ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/kangaru/include/kangaru/container.hpp:494:18: note: in instantiation of function template specialization 'kgr::container::make_service_instance<(anonymous namespace)::AppService>' requested here
+  494 |                 auto service = make_service_instance<T>(std::forward<Args>(args)...);
+      |                                ^
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/kangaru/include/kangaru/container.hpp:123:10: note: in instantiation of function template specialization 'kgr::container::definition<(anonymous namespace)::AppService, 0, 0, 0>' requested here
+  123 |                 return definition<T>(std::forward<Args>(args)...).forward();
+      |                        ^
+/home/user/cpp-di-research/experiments/kangaru/main.cpp:84:21: note: in instantiation of function template specialization 'kgr::container::service<(anonymous namespace)::AppService, 0>' requested here
+   84 |   App a = container.service<AppService>();
+      |                     ^
+2 warnings generated.

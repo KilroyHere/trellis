@@ -1,0 +1,18 @@
+/home/user/cpp-di-research/experiments/boost_di/main.cpp: In function ‘int main()’:
+/home/user/cpp-di-research/experiments/boost_di/main.cpp:78:31: warning: ‘T boost::ext::di::v1_3_0::core::injector<TConfig, boost::ext::di::v1_3_0::core::pool<boost::ext::di::v1_3_0::aux::type_list<> >, TDeps ...>::create() const [with T = demo::App; typename boost::ext::di::v1_3_0::aux::enable_if<(! is_creatable<T, boost::ext::di::v1_3_0::no_name, boost::ext::di::v1_3_0::aux::integral_constant<bool, true> >::value), int>::type <anonymous> = 0; TConfig = boost::ext::di::v1_3_0::config; TDeps = {boost::ext::di::v1_3_0::core::dependency<boost::ext::di::v1_3_0::scopes::instance, demo::Config, demo::Config&, boost::ext::di::v1_3_0::no_name, void, boost::ext::di::v1_3_0::core::none>, boost::ext::di::v1_3_0::core::dependency<boost::ext::di::v1_3_0::scopes::singleton, demo::ILogger, demo::CountingLogger, boost::ext::di::v1_3_0::no_name, void, boost::ext::di::v1_3_0::core::none>, boost::ext::di::v1_3_0::core::dependency<boost::ext::di::v1_3_0::scopes::unique, demo::IClock, demo::SteadyClock, boost::ext::di::v1_3_0::no_name, void, boost::ext::di::v1_3_0::core::none>}]’ is deprecated: creatable constraint not satisfied [-Wdeprecated-declarations]
+   78 |   App a = injector.create<App>();
+      |           ~~~~~~~~~~~~~~~~~~~~^~
+In file included from /home/user/cpp-di-research/experiments/boost_di/main.cpp:15:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/boost_di/include/boost/di.hpp:2778:3: note: declared here
+ 2778 |   create
+      |   ^~~~~~
+/home/user/cpp-di-research/experiments/boost_di/main.cpp:79:31: warning: ‘T boost::ext::di::v1_3_0::core::injector<TConfig, boost::ext::di::v1_3_0::core::pool<boost::ext::di::v1_3_0::aux::type_list<> >, TDeps ...>::create() const [with T = demo::App; typename boost::ext::di::v1_3_0::aux::enable_if<(! is_creatable<T, boost::ext::di::v1_3_0::no_name, boost::ext::di::v1_3_0::aux::integral_constant<bool, true> >::value), int>::type <anonymous> = 0; TConfig = boost::ext::di::v1_3_0::config; TDeps = {boost::ext::di::v1_3_0::core::dependency<boost::ext::di::v1_3_0::scopes::instance, demo::Config, demo::Config&, boost::ext::di::v1_3_0::no_name, void, boost::ext::di::v1_3_0::core::none>, boost::ext::di::v1_3_0::core::dependency<boost::ext::di::v1_3_0::scopes::singleton, demo::ILogger, demo::CountingLogger, boost::ext::di::v1_3_0::no_name, void, boost::ext::di::v1_3_0::core::none>, boost::ext::di::v1_3_0::core::dependency<boost::ext::di::v1_3_0::scopes::unique, demo::IClock, demo::SteadyClock, boost::ext::di::v1_3_0::no_name, void, boost::ext::di::v1_3_0::core::none>}]’ is deprecated: creatable constraint not satisfied [-Wdeprecated-declarations]
+   79 |   App b = injector.create<App>();
+      |           ~~~~~~~~~~~~~~~~~~~~^~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/boost_di/include/boost/di.hpp:2778:3: note: declared here
+ 2778 |   create
+      |   ^~~~~~
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/boost_di/include/boost/di.hpp: At global scope:
+/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/boost_di/include/boost/di.hpp:1169:2: warning: inline function ‘static T* boost::ext::di::v1_3_0::concepts::abstract_type<T>::is_not_bound::error(boost::ext::di::v1_3_0::_) [with T = demo::IRepository]’ used but never defined
+ 1169 |  error(_ = "type is not bound, did you forget to add: 'di::bind<interface>.to<implementation>()'?");
+      |  ^~~~~

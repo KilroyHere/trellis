@@ -1,0 +1,5 @@
+exit code: -6
+--- stdout ---
+--- stderr ---
+terminate called after throwing an instance of 'dingo::type_not_found_exception'
+  what():  type not found: std::shared_ptr<demo::IRepository> (required by demo::App -> demo::Service)

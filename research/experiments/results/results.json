@@ -1,0 +1,2917 @@
+{
+ "env": {
+  "date_utc": "2026-10-30T04:34:27Z",
+  "uname": "Linux vm 6.18.44-fc-v185 #1 SMP PREEMPT_DYNAMIC @0 x86_64 x86_64",
+  "nproc": 4,
+  "cpu_model": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "gcc": "g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+  "cmake": "cmake version 3.28.3",
+  "python": "3.13.17",
+  "boost_headers": "1_83",
+  "flags": {
+   "opt": [
+    "-O2"
+   ],
+   "warnings": [
+    "-Wall",
+    "-Wextra"
+   ]
+  },
+  "frameworks": "# name tag commit commit-date\nboost_di v1.3.2 20b6454c889f23c1e7c9eb5136cd7e3d6f6d718d 2025-04-02\nfruit v3.7.1 8149131119475ccaae3c1ae386fe9f2c679317f0 2023-01-21\nkangaru v4.3.2 ab498eb9db0de74ffebc46f395b9a31093017412 2024-04-29\ndingo v0.2.0 ccafcb6cbde54fb2819a3da8243106642f3b1711 2026-04-02\nhypodermic v2.5.3 0e0d85d70aa2f2391dfd84f8af4a3863d4fb1611 2021-09-21\nqlibs_di v1.0.6 bdafce9baa19dfc503d6acd5f5abf91f503fa5ef 2025-04-27\n",
+  "loadavg": [
+   0.4169921875,
+   0.6044921875,
+   0.65576171875
+  ]
+ },
+ "headers": {
+  "boost_di": {
+   "files": 41,
+   "lines": 7776
+  },
+  "fruit": {
+   "files": 90,
+   "lines": 15462
+  },
+  "fruit (library sources)": {
+   "files": 10,
+   "lines": 1026
+  },
+  "kangaru": {
+   "files": 46,
+   "lines": 6698
+  },
+  "dingo": {
+   "files": 51,
+   "lines": 8062
+  },
+  "hypodermic": {
+   "files": 95,
+   "lines": 4854
+  },
+  "qlibs_di": {
+   "files": 1,
+   "lines": 1003
+  }
+ },
+ "matrix": [
+  {
+   "framework": "manual",
+   "compiler": "gcc",
+   "std": "17",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "g++ -std=c++17 -O2 -Wall -Wextra -I<experiments>/common -c <experiments>/manual/main.cpp -o <build>/matrix/manual-gcc-c++17.o",
+   "compile_s": {
+    "median": 0.48954550300004485,
+    "min": 0.4777552499999729,
+    "max": 0.5142470990003858,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 86.7,
+   "links": true,
+   "binary_bytes": 30344,
+   "stripped_bytes": 22832,
+   "run_rc": 0,
+   "run_stdout": "manual: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 28924,
+   "text_bytes": 9966,
+   "data_bytes": 1176,
+   "bss_bytes": 8
+  },
+  {
+   "framework": "manual",
+   "compiler": "gcc",
+   "std": "20",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "g++ -std=c++20 -O2 -Wall -Wextra -I<experiments>/common -c <experiments>/manual/main.cpp -o <build>/matrix/manual-gcc-c++20.o",
+   "compile_s": {
+    "median": 1.2003666430000521,
+    "min": 1.1462906319998183,
+    "max": 1.3785465309997562,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 164.5,
+   "links": true,
+   "binary_bytes": 26072,
+   "stripped_bytes": 18736,
+   "run_rc": 0,
+   "run_stdout": "manual: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 64923,
+   "text_bytes": 10037,
+   "data_bytes": 1160,
+   "bss_bytes": 8
+  },
+  {
+   "framework": "manual",
+   "compiler": "clang",
+   "std": "17",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "clang++ -std=c++17 -O2 -Wall -Wextra -I<experiments>/common -c <experiments>/manual/main.cpp -o <build>/matrix/manual-clang-c++17.o",
+   "compile_s": {
+    "median": 0.49410651599964694,
+    "min": 0.4708309210000152,
+    "max": 0.5657240689997707,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 119.2,
+   "links": true,
+   "binary_bytes": 21072,
+   "stripped_bytes": 14744,
+   "run_rc": 0,
+   "run_stdout": "manual: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 27286,
+   "text_bytes": 8451,
+   "data_bytes": 1160,
+   "bss_bytes": 8
+  },
+  {
+   "framework": "manual",
+   "compiler": "clang",
+   "std": "20",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "clang++ -std=c++20 -O2 -Wall -Wextra -I<experiments>/common -c <experiments>/manual/main.cpp -o <build>/matrix/manual-clang-c++20.o",
+   "compile_s": {
+    "median": 1.4116448119998495,
+    "min": 1.3548218380001344,
+    "max": 1.4966817220001758,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 151.9,
+   "links": true,
+   "binary_bytes": 21072,
+   "stripped_bytes": 14744,
+   "run_rc": 0,
+   "run_stdout": "manual: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 63353,
+   "text_bytes": 8451,
+   "data_bytes": 1160,
+   "bss_bytes": 8
+  },
+  {
+   "framework": "boost_di",
+   "compiler": "gcc",
+   "std": "17",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "g++ -std=c++17 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/boost_di/include -c <experiments>/boost_di/main.cpp -o <build>/matrix/boost_di-gcc-c++17.o",
+   "compile_s": {
+    "median": 0.7395741220002492,
+    "min": 0.7165782699998999,
+    "max": 0.8623179269998218,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 128.6,
+   "links": true,
+   "binary_bytes": 33112,
+   "stripped_bytes": 22832,
+   "run_rc": 0,
+   "run_stdout": "boost_di: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 51420,
+   "text_bytes": 11271,
+   "data_bytes": 1232,
+   "bss_bytes": 96
+  },
+  {
+   "framework": "boost_di",
+   "compiler": "gcc",
+   "std": "20",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "g++ -std=c++20 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/boost_di/include -c <experiments>/boost_di/main.cpp -o <build>/matrix/boost_di-gcc-c++20.o",
+   "compile_s": {
+    "median": 1.474609378000423,
+    "min": 1.3690652000000227,
+    "max": 1.5497607140000582,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 206.2,
+   "links": true,
+   "binary_bytes": 32936,
+   "stripped_bytes": 22832,
+   "run_rc": 0,
+   "run_stdout": "boost_di: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 82893,
+   "text_bytes": 11345,
+   "data_bytes": 1216,
+   "bss_bytes": 96
+  },
+  {
+   "framework": "boost_di",
+   "compiler": "clang",
+   "std": "17",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "clang++ -std=c++17 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/boost_di/include -c <experiments>/boost_di/main.cpp -o <build>/matrix/boost_di-clang-c++17.o",
+   "compile_s": {
+    "median": 0.8582729649997418,
+    "min": 0.8254618220003067,
+    "max": 0.9368737710001369,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 140.7,
+   "links": true,
+   "binary_bytes": 35120,
+   "stripped_bytes": 22992,
+   "run_rc": 0,
+   "run_stdout": "boost_di: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 48844,
+   "text_bytes": 10333,
+   "data_bytes": 1248,
+   "bss_bytes": 112
+  },
+  {
+   "framework": "boost_di",
+   "compiler": "clang",
+   "std": "20",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "clang++ -std=c++20 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/boost_di/include -c <experiments>/boost_di/main.cpp -o <build>/matrix/boost_di-clang-c++20.o",
+   "compile_s": {
+    "median": 1.6377709100001994,
+    "min": 1.5976084829999309,
+    "max": 1.7602905310000097,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 171.3,
+   "links": true,
+   "binary_bytes": 35120,
+   "stripped_bytes": 22992,
+   "run_rc": 0,
+   "run_stdout": "boost_di: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 81118,
+   "text_bytes": 10333,
+   "data_bytes": 1248,
+   "bss_bytes": 112
+  },
+  {
+   "framework": "fruit",
+   "compiler": "gcc",
+   "std": "17",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "g++ -std=c++17 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/fruit/include -I<build>/fruit-gcc-17/include -c <experiments>/fruit/main.cpp -o <build>/matrix/fruit-gcc-c++17.o",
+   "compile_s": {
+    "median": 1.4418725109999286,
+    "min": 1.3396676639999896,
+    "max": 1.4674518330002684,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 180.2,
+   "links": true,
+   "binary_bytes": 258736,
+   "stripped_bytes": 145712,
+   "run_rc": 0,
+   "run_stdout": "fruit: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 48033,
+   "text_bytes": 129029,
+   "data_bytes": 2240,
+   "bss_bytes": 488
+  },
+  {
+   "framework": "fruit",
+   "compiler": "gcc",
+   "std": "20",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "g++ -std=c++20 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/fruit/include -I<build>/fruit-gcc-20/include -c <experiments>/fruit/main.cpp -o <build>/matrix/fruit-gcc-c++20.o",
+   "compile_s": {
+    "median": 2.195293015000061,
+    "min": 2.1430057950001355,
+    "max": 2.244133294000221,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 264.8,
+   "links": true,
+   "binary_bytes": 258600,
+   "stripped_bytes": 145712,
+   "run_rc": 0,
+   "run_stdout": "fruit: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 81331,
+   "text_bytes": 130313,
+   "data_bytes": 2232,
+   "bss_bytes": 488
+  },
+  {
+   "framework": "fruit",
+   "compiler": "clang",
+   "std": "17",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "clang++ -std=c++17 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/fruit/include -I<build>/fruit-clang-17/include -c <experiments>/fruit/main.cpp -o <build>/matrix/fruit-clang-c++17.o",
+   "compile_s": {
+    "median": 1.572936658999879,
+    "min": 1.5564663280001696,
+    "max": 1.6255472739999277,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 161.7,
+   "links": true,
+   "binary_bytes": 211928,
+   "stripped_bytes": 133800,
+   "run_rc": 0,
+   "run_stdout": "fruit: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 45685,
+   "text_bytes": 123313,
+   "data_bytes": 2200,
+   "bss_bytes": 192
+  },
+  {
+   "framework": "fruit",
+   "compiler": "clang",
+   "std": "20",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "clang++ -std=c++20 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/fruit/include -I<build>/fruit-clang-20/include -c <experiments>/fruit/main.cpp -o <build>/matrix/fruit-clang-c++20.o",
+   "compile_s": {
+    "median": 2.4309533709997595,
+    "min": 2.2331929500001024,
+    "max": 2.6295380999999907,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 207.4,
+   "links": true,
+   "binary_bytes": 211928,
+   "stripped_bytes": 133800,
+   "run_rc": 0,
+   "run_stdout": "fruit: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 79600,
+   "text_bytes": 123313,
+   "data_bytes": 2200,
+   "bss_bytes": 192
+  },
+  {
+   "framework": "kangaru",
+   "compiler": "gcc",
+   "std": "17",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 17644,
+   "stderr_lines": 38,
+   "warnings": {
+    "count": 3,
+    "unique": [
+     {
+      "file": "<deps>/kangaru/include/kangaru/container.hpp",
+      "flag": "-Wunused-variable",
+      "msg": "unused variable \u2018service\u2019"
+     }
+    ]
+   },
+   "command": "g++ -std=c++17 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/kangaru/include -I<build>/kangaru-config/generated/include -c <experiments>/kangaru/main.cpp -o <build>/matrix/kangaru-gcc-c++17.o",
+   "compile_s": {
+    "median": 1.392660646999957,
+    "min": 1.3492186789999323,
+    "max": 1.527887888999885,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 173.4,
+   "links": true,
+   "binary_bytes": 51072,
+   "stripped_bytes": 35120,
+   "run_rc": 0,
+   "run_stdout": "kangaru: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 48515,
+   "text_bytes": 22937,
+   "data_bytes": 1384,
+   "bss_bytes": 8
+  },
+  {
+   "framework": "kangaru",
+   "compiler": "gcc",
+   "std": "20",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 17644,
+   "stderr_lines": 38,
+   "warnings": {
+    "count": 3,
+    "unique": [
+     {
+      "file": "<deps>/kangaru/include/kangaru/container.hpp",
+      "flag": "-Wunused-variable",
+      "msg": "unused variable \u2018service\u2019"
+     }
+    ]
+   },
+   "command": "g++ -std=c++20 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/kangaru/include -I<build>/kangaru-config/generated/include -c <experiments>/kangaru/main.cpp -o <build>/matrix/kangaru-gcc-c++20.o",
+   "compile_s": {
+    "median": 2.060604931999933,
+    "min": 1.9993748179999784,
+    "max": 2.170215049000035,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 248.9,
+   "links": true,
+   "binary_bytes": 50792,
+   "stripped_bytes": 35120,
+   "run_rc": 0,
+   "run_stdout": "kangaru: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 76699,
+   "text_bytes": 22695,
+   "data_bytes": 1368,
+   "bss_bytes": 8
+  },
+  {
+   "framework": "kangaru",
+   "compiler": "clang",
+   "std": "17",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 13167,
+   "stderr_lines": 97,
+   "warnings": {
+    "count": 3,
+    "unique": [
+     {
+      "file": "<deps>/kangaru/include/kangaru/container.hpp",
+      "flag": "-Wunused-variable",
+      "msg": "unused variable 'service'"
+     }
+    ]
+   },
+   "command": "clang++ -std=c++17 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/kangaru/include -I<build>/kangaru-config/generated/include -c <experiments>/kangaru/main.cpp -o <build>/matrix/kangaru-clang-c++17.o",
+   "compile_s": {
+    "median": 1.9103109520001453,
+    "min": 1.8339363350000895,
+    "max": 2.000340717000199,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 149.3,
+   "links": true,
+   "binary_bytes": 47904,
+   "stripped_bytes": 35304,
+   "run_rc": 0,
+   "run_stdout": "kangaru: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 46277,
+   "text_bytes": 21422,
+   "data_bytes": 1336,
+   "bss_bytes": 8
+  },
+  {
+   "framework": "kangaru",
+   "compiler": "clang",
+   "std": "20",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 13167,
+   "stderr_lines": 97,
+   "warnings": {
+    "count": 3,
+    "unique": [
+     {
+      "file": "<deps>/kangaru/include/kangaru/container.hpp",
+      "flag": "-Wunused-variable",
+      "msg": "unused variable 'service'"
+     }
+    ]
+   },
+   "command": "clang++ -std=c++20 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/kangaru/include -I<build>/kangaru-config/generated/include -c <experiments>/kangaru/main.cpp -o <build>/matrix/kangaru-clang-c++20.o",
+   "compile_s": {
+    "median": 2.712370367999938,
+    "min": 2.6548974079996697,
+    "max": 2.9220039140000154,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 190.3,
+   "links": true,
+   "binary_bytes": 47904,
+   "stripped_bytes": 35304,
+   "run_rc": 0,
+   "run_stdout": "kangaru: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 75118,
+   "text_bytes": 21422,
+   "data_bytes": 1336,
+   "bss_bytes": 8
+  },
+  {
+   "framework": "dingo",
+   "compiler": "gcc",
+   "std": "17",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "g++ -std=c++17 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/dingo/include -c <experiments>/dingo/main.cpp -o <build>/matrix/dingo-gcc-c++17.o",
+   "compile_s": {
+    "median": 2.965968041999986,
+    "min": 2.8317148539999835,
+    "max": 3.0074253699999645,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 227.9,
+   "links": true,
+   "binary_bytes": 189088,
+   "stripped_bytes": 117112,
+   "run_rc": 0,
+   "run_stdout": "dingo: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 53248,
+   "text_bytes": 108077,
+   "data_bytes": 3264,
+   "bss_bytes": 18
+  },
+  {
+   "framework": "dingo",
+   "compiler": "gcc",
+   "std": "20",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "g++ -std=c++20 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/dingo/include -c <experiments>/dingo/main.cpp -o <build>/matrix/dingo-gcc-c++20.o",
+   "compile_s": {
+    "median": 3.5352975360001437,
+    "min": 3.449442953000016,
+    "max": 3.6431710090000706,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 305.3,
+   "links": true,
+   "binary_bytes": 188960,
+   "stripped_bytes": 117112,
+   "run_rc": 0,
+   "run_stdout": "dingo: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 85246,
+   "text_bytes": 105775,
+   "data_bytes": 3256,
+   "bss_bytes": 18
+  },
+  {
+   "framework": "dingo",
+   "compiler": "clang",
+   "std": "17",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "clang++ -std=c++17 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/dingo/include -c <experiments>/dingo/main.cpp -o <build>/matrix/dingo-clang-c++17.o",
+   "compile_s": {
+    "median": 2.8663414659999944,
+    "min": 2.8353259130003607,
+    "max": 3.033156863000386,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 172.8,
+   "links": true,
+   "binary_bytes": 196880,
+   "stripped_bytes": 113224,
+   "run_rc": 0,
+   "run_stdout": "dingo: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 50918,
+   "text_bytes": 101621,
+   "data_bytes": 3264,
+   "bss_bytes": 18
+  },
+  {
+   "framework": "dingo",
+   "compiler": "clang",
+   "std": "20",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "clang++ -std=c++20 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/dingo/include -c <experiments>/dingo/main.cpp -o <build>/matrix/dingo-clang-c++20.o",
+   "compile_s": {
+    "median": 3.804675465999935,
+    "min": 3.7281590950001373,
+    "max": 3.815798882999843,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 215.2,
+   "links": true,
+   "binary_bytes": 205656,
+   "stripped_bytes": 121416,
+   "run_rc": 0,
+   "run_stdout": "dingo: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 83570,
+   "text_bytes": 105730,
+   "data_bytes": 3264,
+   "bss_bytes": 18
+  },
+  {
+   "framework": "hypodermic",
+   "compiler": "gcc",
+   "std": "17",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "g++ -std=c++17 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/hypodermic -c <experiments>/hypodermic/main.cpp -o <build>/matrix/hypodermic-gcc-c++17.o",
+   "compile_s": {
+    "median": 8.253853546999835,
+    "min": 8.162132397999812,
+    "max": 8.470701564000137,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 526.3,
+   "links": true,
+   "binary_bytes": 621400,
+   "stripped_bytes": 317792,
+   "run_rc": 0,
+   "run_stdout": "hypodermic: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 115854,
+   "text_bytes": 294515,
+   "data_bytes": 13000,
+   "bss_bytes": 512
+  },
+  {
+   "framework": "hypodermic",
+   "compiler": "gcc",
+   "std": "20",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "g++ -std=c++20 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/hypodermic -c <experiments>/hypodermic/main.cpp -o <build>/matrix/hypodermic-gcc-c++20.o",
+   "compile_s": {
+    "median": 9.234454628000094,
+    "min": 8.631749774999662,
+    "max": 9.440382876000058,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 522.0,
+   "links": true,
+   "binary_bytes": 621128,
+   "stripped_bytes": 317792,
+   "run_rc": 0,
+   "run_stdout": "hypodermic: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 139137,
+   "text_bytes": 294972,
+   "data_bytes": 12976,
+   "bss_bytes": 512
+  },
+  {
+   "framework": "hypodermic",
+   "compiler": "clang",
+   "std": "17",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "clang++ -std=c++17 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/hypodermic -c <experiments>/hypodermic/main.cpp -o <build>/matrix/hypodermic-clang-c++17.o",
+   "compile_s": {
+    "median": 7.657832257999871,
+    "min": 7.553040393000174,
+    "max": 7.8721604419997675,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 322.0,
+   "links": true,
+   "binary_bytes": 663536,
+   "stripped_bytes": 326536,
+   "run_rc": 0,
+   "run_stdout": "hypodermic: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 121912,
+   "text_bytes": 304361,
+   "data_bytes": 12928,
+   "bss_bytes": 392
+  },
+  {
+   "framework": "hypodermic",
+   "compiler": "clang",
+   "std": "20",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "clang++ -std=c++20 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/hypodermic -c <experiments>/hypodermic/main.cpp -o <build>/matrix/hypodermic-clang-c++20.o",
+   "compile_s": {
+    "median": 8.129026840000279,
+    "min": 8.055842601999757,
+    "max": 8.61835565399997,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 354.1,
+   "links": true,
+   "binary_bytes": 660152,
+   "stripped_bytes": 326520,
+   "run_rc": 0,
+   "run_stdout": "hypodermic: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 143728,
+   "text_bytes": 303414,
+   "data_bytes": 12912,
+   "bss_bytes": 392
+  },
+  {
+   "framework": "qlibs_di",
+   "compiler": "gcc",
+   "std": "17",
+   "compiles": false,
+   "rc": 1,
+   "stderr_bytes": 111230,
+   "stderr_lines": 1176,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "g++ -std=c++17 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/qlibs_di -c <experiments>/qlibs_di/main.cpp -o <build>/matrix/qlibs_di-gcc-c++17.o",
+   "first_errors": [
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:705:28: error: \u2018concept\u2019 does not name a type; did you mean \u2018const\u2019?",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:707:31: error: expected identifier before \u2018not\u2019 token",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:707:31: error: expected \u2018,\u2019 or \u2018...\u2019 before \u2018not\u2019 token",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:707:55: error: expected constructor, destructor, or type conversion before \u2018operator\u2019",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:707:106: error: expected unqualified-id before \u2018)\u2019 token"
+   ]
+  },
+  {
+   "framework": "qlibs_di",
+   "compiler": "gcc",
+   "std": "20",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "g++ -std=c++20 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/qlibs_di -c <experiments>/qlibs_di/main.cpp -o <build>/matrix/qlibs_di-gcc-c++20.o",
+   "compile_s": {
+    "median": 1.207828509999672,
+    "min": 1.1405585990000873,
+    "max": 1.2946470560000307,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 179.6,
+   "links": true,
+   "binary_bytes": 27008,
+   "stripped_bytes": 18736,
+   "run_rc": 0,
+   "run_stdout": "qlibs_di: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 65194,
+   "text_bytes": 10837,
+   "data_bytes": 1160,
+   "bss_bytes": 8
+  },
+  {
+   "framework": "qlibs_di",
+   "compiler": "clang",
+   "std": "17",
+   "compiles": false,
+   "rc": 1,
+   "stderr_bytes": 6791,
+   "stderr_lines": 68,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "clang++ -std=c++17 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/qlibs_di -c <experiments>/qlibs_di/main.cpp -o <build>/matrix/qlibs_di-clang-c++17.o",
+   "first_errors": [
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:705:28: error: unknown type name 'concept'",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:705:74: error: no template named 'remove_cvref_t' in namespace 'std'; did you mean '__remove_cvref_t'?",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:707:31: error: expected parameter declarator",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:707:31: error: expected ')'",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:707:21: error: a type specifier is required for all declarations"
+   ]
+  },
+  {
+   "framework": "qlibs_di",
+   "compiler": "clang",
+   "std": "20",
+   "compiles": true,
+   "rc": 0,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "warnings": {
+    "count": 0,
+    "unique": []
+   },
+   "command": "clang++ -std=c++20 -O2 -Wall -Wextra -I<experiments>/common -I<deps>/qlibs_di -c <experiments>/qlibs_di/main.cpp -o <build>/matrix/qlibs_di-clang-c++20.o",
+   "compile_s": {
+    "median": 1.502397738000127,
+    "min": 1.3851032070001565,
+    "max": 1.5299454259998129,
+    "runs": 5
+   },
+   "compile_maxrss_mb": 163.8,
+   "links": true,
+   "binary_bytes": 25608,
+   "stripped_bytes": 18840,
+   "run_rc": 0,
+   "run_stdout": "qlibs_di: wiring_errors=0 handled=6 log_lines=8 repo_size=6",
+   "preprocessed_lines": 63623,
+   "text_bytes": 9687,
+   "data_bytes": 1160,
+   "bss_bytes": 8
+  }
+ ],
+ "diagnostics": [
+  {
+   "framework": "manual",
+   "compiler": "gcc",
+   "std": "20",
+   "compile_rc": 1,
+   "compile_s": 0.9900571379998837,
+   "stderr_bytes": 417,
+   "stderr_lines": 4,
+   "error_lines": 1,
+   "first_error": "/home/user/cpp-di-research/experiments/manual/main.cpp:27:50: error: \u2018repository\u2019 was not declared in this scope",
+   "key_lines": [
+    "/home/user/cpp-di-research/experiments/manual/main.cpp:27:50: error: \u2018repository\u2019 was not declared in this scope"
+   ],
+   "detected_at": "compile time"
+  },
+  {
+   "framework": "manual",
+   "compiler": "clang",
+   "std": "20",
+   "compile_rc": 1,
+   "compile_s": 1.196199469000021,
+   "stderr_bytes": 291,
+   "stderr_lines": 4,
+   "error_lines": 2,
+   "first_error": "/home/user/cpp-di-research/experiments/manual/main.cpp:27:50: error: use of undeclared identifier 'repository'",
+   "key_lines": [
+    "/home/user/cpp-di-research/experiments/manual/main.cpp:27:50: error: use of undeclared identifier 'repository'"
+   ],
+   "detected_at": "compile time"
+  },
+  {
+   "framework": "boost_di",
+   "compiler": "gcc",
+   "std": "20",
+   "compile_rc": 0,
+   "compile_s": 1.5398536469997453,
+   "stderr_bytes": 3553,
+   "stderr_lines": 18,
+   "error_lines": 2,
+   "first_error": "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/boost_di/include/boost/di.hpp:1169:2: warning: inline function \u2018static T* boost::ext::di::v1_3_0::concepts::abstract_type<T>::is_not_bound::error(boost::ext::di::v1_3_0::_) [with T = demo::IRepository]\u2019 used but never defined",
+   "key_lines": [
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/boost_di/include/boost/di.hpp:1169:2: warning: inline function \u2018static T* boost::ext::di::v1_3_0::concepts::abstract_type<T>::is_not_bound::error(boost::ext::di::v1_3_0::_) [with T = demo::IRepository]\u2019 used but never defined",
+    " 1169 |  error(_ = \"type is not bound, did you forget to add: 'di::bind<interface>.to<implementation>()'?\");"
+   ],
+   "detected_at": "link time (compile only warned)",
+   "werror_rc": 1,
+   "werror_stderr_bytes": 3615,
+   "werror_stderr_lines": 19,
+   "link_rc": 1,
+   "link_stderr_bytes": 1757,
+   "link_stderr_lines": 3,
+   "link_first_error": "main.cpp:(.text._ZNK5boost3ext2di6v1_3_04core8injectorINS2_6configENS3_4poolINS2_3aux9type_listIJEEEEEJNS3_10dependencyINS2_6scopes8instanceEN4demo6ConfigERSF_NS2_7no_nameEvNS3_4noneEEENSB_INSC_9singletonENSE_7ILoggerENSE_14CountingLoggerESH_vSI_EENSB_INSC_6uniqueENSE_6IClockENSE_11SteadyClockESH_vSI_EEEE6createINSE_3AppELi0EEET_v[_ZNK5boost3ext2di6v1_3_04core8injectorINS2_6configENS3_4poolINS2_3aux9type_listIJEEEEEJNS3_10dependencyINS2_6scopes8instanceEN4demo6ConfigERSF_NS2_7no_nameEvNS3_4noneEEENSB_INSC_9singletonENSE_7ILoggerENSE_14CountingLoggerESH_vSI_EENSB_INSC_6uniqueENSE_6IClockENSE_11SteadyClockESH_vSI_EEEE6createINSE_3AppELi0EEET_v]+0x1f8): undefined reference to `boost::ext::di::v1_3_0::concepts::abstract_type<demo::IRepository>::is_not_bound::error(boost::ext::di::v1_3_0::_)'"
+  },
+  {
+   "framework": "boost_di",
+   "compiler": "clang",
+   "std": "20",
+   "compile_rc": 1,
+   "compile_s": 1.2449783929996556,
+   "stderr_bytes": 3118,
+   "stderr_lines": 37,
+   "error_lines": 4,
+   "first_error": "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/boost_di/include/boost/di.hpp:1169:2: error: inline function 'boost::di::concepts::abstract_type<demo::IRepository>::is_not_bound::error' is not defined [-Werror,-Wundefined-inline]",
+   "key_lines": [
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/boost_di/include/boost/di.hpp:1169:2: error: inline function 'boost::di::concepts::abstract_type<demo::IRepository>::is_not_bound::error' is not defined [-Werror,-Wundefined-inline]",
+    " 1169 |  error(_ = \"type is not bound, did you forget to add: 'di::bind<interface>.to<implementation>()'?\");"
+   ],
+   "detected_at": "compile time"
+  },
+  {
+   "framework": "fruit",
+   "compiler": "gcc",
+   "std": "20",
+   "compile_rc": 1,
+   "compile_s": 1.3879745740000544,
+   "stderr_bytes": 9595,
+   "stderr_lines": 22,
+   "error_lines": 4,
+   "first_error": "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/impl/injection_errors.h: In instantiation of \u2018struct fruit::impl::NoBindingFoundForAbstractClassError<demo::IRepository, demo::IRepository>\u2019:",
+   "key_lines": [
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/impl/injection_errors.h: In instantiation of \u2018struct fruit::impl::NoBindingFoundForAbstractClassError<demo::IRepository, demo::IRepository>\u2019:",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/impl/component.defn.h:56:55:   required from \u2018fruit::Component<Types>::Component(fruit::PartialComponent<Bindings ...>&&) [with Bindings = {fruit::impl::RegisterFactory<std::unique_ptr<demo::App, std::default_delete<demo::App> >(std::function<std::unique_ptr<demo::Service, std::default_delete<demo::Se",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/impl/injection_errors.h:38:33: error: static assertion failed: No explicit binding was found for T, and note that C is an abstract class (so Fruit can't auto-inject this type, even if it has an Inject typedef or an INJECT annotation that will be ignored).",
+    "   38 |   static_assert(AlwaysFalse<T>::value,",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/impl/injection_errors.h:38:33: note: \u2018fruit::impl::AlwaysFalse<demo::IRepository>::value\u2019 evaluates to false",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/impl/component.defn.h: In instantiation of \u2018fruit::Component<Types>::Component(fruit::PartialComponent<Bindings ...>&&) [with Bindings = {fruit::impl::RegisterFactory<std::unique_ptr<demo::App, std::default_delete<demo::App> >(std::function<std::unique_ptr<demo::Service, std::default_delete<demo::Serv",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/impl/component.defn.h:60:92: error: no type named \u2018Result\u2019 in \u2018fruit::impl::meta::OpForComponent<fruit::impl::RegisterFactory<std::unique_ptr<demo::App, std::default_delete<demo::App> >(std::function<std::unique_ptr<demo::Service, std::default_delete<demo::Service> >()>, std::shared_ptr<demo::ILogger>",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/impl/component.defn.h:63:76: error: \u2018using Op = fruit::impl::meta::OpForComponent<fruit::impl::RegisterFactory<std::unique_ptr<demo::App, std::default_delete<demo::App> >(std::function<std::unique_ptr<demo::Service, std::default_delete<demo::Service> >()>, std::shared_ptr<demo::ILogger>), {anonymous}:",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/impl/component.defn.h:66:7: error: no match for call to \u2018(Op {aka fruit::impl::meta::Error<fruit::impl::NoBindingFoundForAbstractClassErrorTag, demo::IRepository, demo::IRepository>}) (fruit::impl::FixedSizeVector<fruit::impl::ComponentStorageEntry>&)\u2019"
+   ],
+   "detected_at": "compile time"
+  },
+  {
+   "framework": "fruit",
+   "compiler": "clang",
+   "std": "20",
+   "compile_rc": 1,
+   "compile_s": 1.5530720380002094,
+   "stderr_bytes": 5324,
+   "stderr_lines": 30,
+   "error_lines": 4,
+   "first_error": "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/impl/injection_errors.h:38:17: error: static assertion failed due to requirement 'AlwaysFalse<demo::IRepository>::value': No explicit binding was found for T, and note that C is an abstract class (so Fruit can't auto-inject this type, even if it has an Inject typedef or an INJECT annotation that will be ignored).",
+   "key_lines": [
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/impl/injection_errors.h:38:17: error: static assertion failed due to requirement 'AlwaysFalse<demo::IRepository>::value': No explicit binding was found for T, and note that C is an abstract class (so Fruit can't auto-inject this type, even if it has an Inject typedef or an INJECT annotation that will ",
+    "   38 |   static_assert(AlwaysFalse<T>::value,",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/impl/component.defn.h:56:9: note: in instantiation of template class 'fruit::impl::NoBindingFoundForAbstractClassError<demo::IRepository, demo::IRepository>' requested here",
+    "/home/user/cpp-di-research/experiments/fruit/main.cpp:34:10: note: in instantiation of function template specialization 'fruit::Component<std::function<std::unique_ptr<demo::App> ()>>::Component<fruit::impl::RegisterFactory<std::unique_ptr<demo::App> (std::function<std::unique_ptr<demo::Service> ()>, std::shared_ptr<demo::ILogger>), (lambda at /home/user/cpp-di-research/experiments/fruit/main.cpp:",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/impl/component.defn.h:60:81: error: no type named 'Result' in 'fruit::impl::meta::Error<fruit::impl::NoBindingFoundForAbstractClassErrorTag, demo::IRepository, demo::IRepository>'",
+    "/home/user/cpp-di-research/experiments/fruit/main.cpp:34:10: note: in instantiation of function template specialization 'fruit::Component<std::function<std::unique_ptr<demo::App> ()>>::Component<fruit::impl::RegisterFactory<std::unique_ptr<demo::App> (std::function<std::unique_ptr<demo::Service> ()>, std::shared_ptr<demo::ILogger>), (lambda at /home/user/cpp-di-research/experiments/fruit/main.cpp:",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/impl/component.defn.h:63:76: error: no member named 'numEntries' in 'fruit::impl::meta::Error<fruit::impl::NoBindingFoundForAbstractClassErrorTag, demo::IRepository, demo::IRepository>'",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/fruit/include/fruit/impl/component.defn.h:66:3: error: type 'Op' (aka 'Error<fruit::impl::NoBindingFoundForAbstractClassErrorTag, demo::IRepository, demo::IRepository>') does not provide a call operator"
+   ],
+   "detected_at": "compile time"
+  },
+  {
+   "framework": "kangaru",
+   "compiler": "gcc",
+   "std": "20",
+   "compile_rc": 0,
+   "compile_s": 1.8325169679997089,
+   "stderr_bytes": 10185,
+   "stderr_lines": 24,
+   "error_lines": 0,
+   "first_error": "",
+   "key_lines": [
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/kangaru/include/kangaru/container.hpp:360:64:   required from \u2018kgr::detail::typed_service_storage<T> kgr::container::configure_new_service(Args&& ...) [with T = {anonymous}::ILoggerService; Args = {}; typename std::enable_if<std::is_base_of<kgr::single, T>::value, int>::type <anonymous> = 0; typename std::enable_if<(! st"
+   ],
+   "detected_at": "runtime (compiles, with warnings)",
+   "werror_rc": 1,
+   "werror_stderr_bytes": 10239,
+   "werror_stderr_lines": 25,
+   "link_rc": 0,
+   "run_rc": -6,
+   "run_stdout": "",
+   "run_stderr": "terminate called after throwing an instance of 'kgr::abstract_not_found'\n  what():  No instance found for the requested abstract service\n",
+   "run_stderr_bytes": 137
+  },
+  {
+   "framework": "kangaru",
+   "compiler": "clang",
+   "std": "20",
+   "compile_rc": 0,
+   "compile_s": 2.282484742000179,
+   "stderr_bytes": 7717,
+   "stderr_lines": 58,
+   "error_lines": 0,
+   "first_error": "",
+   "key_lines": [],
+   "detected_at": "runtime (compiles, with warnings)",
+   "werror_rc": 1,
+   "werror_stderr_bytes": 7727,
+   "werror_stderr_lines": 58,
+   "link_rc": 0,
+   "run_rc": -6,
+   "run_stdout": "",
+   "run_stderr": "terminate called after throwing an instance of 'kgr::abstract_not_found'\n  what():  No instance found for the requested abstract service\n",
+   "run_stderr_bytes": 137
+  },
+  {
+   "framework": "dingo",
+   "compiler": "gcc",
+   "std": "20",
+   "compile_rc": 0,
+   "compile_s": 3.5655018789998394,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "error_lines": 0,
+   "first_error": "",
+   "key_lines": [],
+   "detected_at": "runtime (compiles)",
+   "link_rc": 0,
+   "run_rc": -6,
+   "run_stdout": "",
+   "run_stderr": "terminate called after throwing an instance of 'dingo::type_not_found_exception'\n  what():  type not found: std::shared_ptr<demo::IRepository> (required by demo::App -> demo::Service)\n",
+   "run_stderr_bytes": 184
+  },
+  {
+   "framework": "dingo",
+   "compiler": "clang",
+   "std": "20",
+   "compile_rc": 0,
+   "compile_s": 3.5036367059997247,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "error_lines": 0,
+   "first_error": "",
+   "key_lines": [],
+   "detected_at": "runtime (compiles)",
+   "link_rc": 0,
+   "run_rc": -6,
+   "run_stdout": "",
+   "run_stderr": "terminate called after throwing an instance of 'dingo::type_not_found_exception'\n  what():  type not found: std::shared_ptr<demo::IRepository> (required by demo::App -> demo::Service)\n",
+   "run_stderr_bytes": 184
+  },
+  {
+   "framework": "hypodermic",
+   "compiler": "gcc",
+   "std": "20",
+   "compile_rc": 0,
+   "compile_s": 8.414562114000091,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "error_lines": 0,
+   "first_error": "",
+   "key_lines": [],
+   "detected_at": "runtime (compiles)",
+   "link_rc": 0,
+   "run_rc": -6,
+   "run_stdout": "",
+   "run_stderr": "terminate called after throwing an instance of 'Hypodermic::ActivationException'\n  what():  Unable to activate instance of type demo.App: Unable to resolve demo.IRepository - Throw location: resolveIfTypeCanBeRegistered in /tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/hypodermic/Hypodermic/ComponentContext.h(151) - Throw location: getOrCreateComponent in /tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/hypodermic/Hypodermic/ResolutionContainer.h(75)\n",
+   "run_stderr_bytes": 515
+  },
+  {
+   "framework": "hypodermic",
+   "compiler": "clang",
+   "std": "20",
+   "compile_rc": 0,
+   "compile_s": 7.6898919639997985,
+   "stderr_bytes": 0,
+   "stderr_lines": 0,
+   "error_lines": 0,
+   "first_error": "",
+   "key_lines": [],
+   "detected_at": "runtime (compiles)",
+   "link_rc": 0,
+   "run_rc": -6,
+   "run_stdout": "",
+   "run_stderr": "terminate called after throwing an instance of 'Hypodermic::ActivationException'\n  what():  Unable to activate instance of type demo.App: Unable to resolve demo.IRepository - Throw location: resolveIfTypeCanBeRegistered in /tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/hypodermic/Hypodermic/ComponentContext.h(151) - Throw location: getOrCreateComponent in /tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/hypodermic/Hypodermic/ResolutionContainer.h(75)\n",
+   "run_stderr_bytes": 515
+  },
+  {
+   "framework": "qlibs_di",
+   "compiler": "gcc",
+   "std": "20",
+   "compile_rc": 1,
+   "compile_s": 0.9828273969997099,
+   "stderr_bytes": 30388,
+   "stderr_lines": 64,
+   "error_lines": 5,
+   "first_error": "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:836:24: error: cannot allocate an object of abstract type \u2018demo::IRepository\u2019",
+   "key_lines": [
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di: In instantiation of \u2018di::v1_0_6::make<demo::IRepository, provider<demo::IRepository, std::integral_constant<long unsigned int, 0>, provider<std::shared_ptr<demo::IRepository>, std::integral_constant<long unsigned int, 1>, provider<std::unique_ptr<demo::Service>, std::integral_constant<long unsigned int, 0>, ",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:830:12:   required from \u2018di::v1_0_6::make<demo::IRepository, provider<demo::IRepository, std::integral_constant<long unsigned int, 0>, provider<std::shared_ptr<demo::IRepository>, std::integral_constant<long unsigned int, 1>, provider<std::unique_ptr<demo::Service>, std::integral_constant<long unsigned int, 0",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:844:18:   required from \u2018constexpr decltype(auto) di::v1_0_6::make(T&&) requires (invocable<T>) && !requires{{(forward<T>)(di::v1_0_6::make::t_)};} [with R = demo::IRepository; T = provider<demo::IRepository, std::integral_constant<long unsigned int, 0>, provider<std::shared_ptr<demo::IRepository>, std::integ",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:851:78:   required by substitution of \u2018template<class auto:19> constexpr decltype (make<typename std::remove_cvref<decltype (t)>::type::value_type>(t)) di::v1_0_6::make(auto:19&&) [with auto:19 = di::v1_0_6::provider<demo::IRepository, std::integral_constant<long unsigned int, 0>, di::v1_0_6::provider<std::sh",
+    "/home/user/cpp-di-research/experiments/qlibs_di/main.cpp:48:53:   required from \u2018{anonymous}::make_injector(Scope&, const demo::Config&)::<lambda(auto:69)> [with auto:69 = di::v1_0_6::provider<demo::IRepository, std::integral_constant<long unsigned int, 0>, di::v1_0_6::provider<std::shared_ptr<demo::IRepository>, std::integral_constant<long unsigned int, 1>, di::v1_0_6::provider<std::unique_ptr<de",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:831:50:   required from \u2018di::v1_0_6::make<std::shared_ptr<demo::IRepository>, provider<std::shared_ptr<demo::IRepository>, std::integral_constant<long unsigned int, 1>, provider<std::unique_ptr<demo::Service>, std::integral_constant<long unsigned int, 0>, provider<demo::App, std::integral_constant<long unsign",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:836:24: error: cannot allocate an object of abstract type \u2018demo::IRepository\u2019",
+    "/home/user/cpp-di-research/experiments/common/domain.hpp:38:7: note:   because the following virtual functions are pure within \u2018demo::IRepository\u2019:",
+    "   38 | class IRepository {",
+    "/home/user/cpp-di-research/experiments/common/domain.hpp:41:16: note:     \u2018virtual void demo::IRepository::add(int)\u2019",
+    "/home/user/cpp-di-research/experiments/common/domain.hpp:42:23: note:     \u2018virtual std::size_t demo::IRepository::size() const\u2019",
+    "/home/user/cpp-di-research/experiments/qlibs_di/main.cpp: In instantiation of \u2018{anonymous}::make_injector(Scope&, const demo::Config&)::<lambda(auto:69)> [with auto:69 = di::v1_0_6::provider<demo::IRepository, std::integral_constant<long unsigned int, 0>, di::v1_0_6::provider<std::shared_ptr<demo::IRepository>, std::integral_constant<long unsigned int, 1>, di::v1_0_6::provider<std::unique_ptr<demo"
+   ],
+   "detected_at": "compile time"
+  },
+  {
+   "framework": "qlibs_di",
+   "compiler": "clang",
+   "std": "20",
+   "compile_rc": 1,
+   "compile_s": 1.2376927479999722,
+   "stderr_bytes": 13722,
+   "stderr_lines": 81,
+   "error_lines": 3,
+   "first_error": "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:850:30: error: return type 'decltype(di::make<typename std::remove_cvref_t<decltype(t)>::value_type>(t))' (aka 'demo::IRepository') is an abstract class",
+   "key_lines": [
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:850:30: error: return type 'decltype(di::make<typename std::remove_cvref_t<decltype(t)>::value_type>(t))' (aka 'demo::IRepository') is an abstract class",
+    "/home/user/cpp-di-research/experiments/qlibs_di/main.cpp:48:49: note: in instantiation of function template specialization 'di::make<di::provider<demo::IRepository, std::integral_constant<unsigned long, 0>, di::provider<std::shared_ptr<demo::IRepository>, std::integral_constant<unsigned long, 1>, di::provider<std::unique_ptr<demo::Service>, std::integral_constant<unsigned long, 0>, di::provider<de",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:831:49: note: in instantiation of function template specialization '(anonymous namespace)::make_injector(Scope &, const Config &)::(anonymous class)::operator()<di::provider<demo::IRepository, std::integral_constant<unsigned long, 0>, di::provider<std::shared_ptr<demo::IRepository>, std::integral_constant<uns",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:830:12: note: in instantiation of function template specialization 'di::make(di::provider<std::shared_ptr<demo::IRepository>, std::integral_constant<unsigned long, 1>, di::provider<std::unique_ptr<demo::Service>, std::integral_constant<unsigned long, 0>, di::provider<demo::App, std::integral_constant<unsigned",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps/qlibs_di/di:844:14: note: in instantiation of function template specialization 'di::make(di::provider<std::shared_ptr<demo::IRepository>, std::integral_constant<unsigned long, 1>, di::provider<std::unique_ptr<demo::Service>, std::integral_constant<unsigned long, 0>, di::provider<demo::App, std::integral_constant<unsigned",
+    "/home/user/cpp-di-research/experiments/common/domain.hpp:41:16: note: unimplemented pure virtual method 'add' in 'IRepository'",
+    "/home/user/cpp-di-research/experiments/common/domain.hpp:42:23: note: unimplemented pure virtual method 'size' in 'IRepository'",
+    "/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_construct.h:115:4: error: no matching function for call to 'construct_at'",
+    "/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/alloc_traits.h:661:9: note: in instantiation of function template specialization 'std::_Construct<demo::IRepository, demo::IRepository>' requested here",
+    "/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/shared_ptr_base.h:604:30: note: in instantiation of function template specialization 'std::allocator_traits<std::allocator<void>>::construct<demo::IRepository, demo::IRepository>' requested here",
+    "/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/shared_ptr_base.h:972:6: note: in instantiation of function template specialization 'std::_Sp_counted_ptr_inplace<demo::IRepository, std::allocator<void>, __gnu_cxx::_S_atomic>::_Sp_counted_ptr_inplace<demo::IRepository>' requested here",
+    "/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/shared_ptr_base.h:1712:14: note: in instantiation of function template specialization 'std::__shared_count<>::__shared_count<demo::IRepository, std::allocator<void>, demo::IRepository>' requested here"
+   ],
+   "detected_at": "compile time"
+  }
+ ],
+ "bench": [
+  {
+   "framework": "manual",
+   "case": "graph",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 58.19,
+   "min_ns": 56.79,
+   "max_ns": 58.54,
+   "compiler": "gcc",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.013671875,
+   "loadavg_after": 1.013671875
+  },
+  {
+   "framework": "manual",
+   "case": "resolve",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 26.56,
+   "min_ns": 26.19,
+   "max_ns": 31.55,
+   "compiler": "gcc",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.013671875,
+   "loadavg_after": 1.013671875
+  },
+  {
+   "framework": "manual",
+   "case": "graph",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 52.62,
+   "min_ns": 52.15,
+   "max_ns": 53.05,
+   "compiler": "clang",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.01220703125,
+   "loadavg_after": 1.01220703125
+  },
+  {
+   "framework": "manual",
+   "case": "resolve",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 26.48,
+   "min_ns": 26.13,
+   "max_ns": 26.68,
+   "compiler": "clang",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.01220703125,
+   "loadavg_after": 1.01220703125
+  },
+  {
+   "framework": "boost_di",
+   "case": "graph",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 27.37,
+   "min_ns": 26.91,
+   "max_ns": 29.6,
+   "compiler": "gcc",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.01220703125,
+   "loadavg_after": 1.01220703125
+  },
+  {
+   "framework": "boost_di",
+   "case": "resolve",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 28.98,
+   "min_ns": 28.62,
+   "max_ns": 29.79,
+   "compiler": "gcc",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.01220703125,
+   "loadavg_after": 1.01220703125
+  },
+  {
+   "framework": "boost_di",
+   "case": "graph",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 35.89,
+   "min_ns": 35.68,
+   "max_ns": 36.17,
+   "compiler": "clang",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.01220703125,
+   "loadavg_after": 1.01220703125
+  },
+  {
+   "framework": "boost_di",
+   "case": "resolve",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 35.73,
+   "min_ns": 35.58,
+   "max_ns": 35.88,
+   "compiler": "clang",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.01220703125,
+   "loadavg_after": 1.01220703125
+  },
+  {
+   "framework": "fruit",
+   "case": "graph",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 1529.21,
+   "min_ns": 1467.07,
+   "max_ns": 1585.91,
+   "compiler": "gcc",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.0107421875,
+   "loadavg_after": 1.009765625
+  },
+  {
+   "framework": "fruit",
+   "case": "graph_normalized",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 663.47,
+   "min_ns": 662.43,
+   "max_ns": 755.6,
+   "compiler": "gcc",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.0107421875,
+   "loadavg_after": 1.009765625
+  },
+  {
+   "framework": "fruit",
+   "case": "resolve",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 101.91,
+   "min_ns": 101.44,
+   "max_ns": 105.45,
+   "compiler": "gcc",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.0107421875,
+   "loadavg_after": 1.009765625
+  },
+  {
+   "framework": "fruit",
+   "case": "graph",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 1516.62,
+   "min_ns": 1456.35,
+   "max_ns": 1588.51,
+   "compiler": "clang",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.009765625,
+   "loadavg_after": 1.0087890625
+  },
+  {
+   "framework": "fruit",
+   "case": "graph_normalized",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 735.97,
+   "min_ns": 648.05,
+   "max_ns": 917.59,
+   "compiler": "clang",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.009765625,
+   "loadavg_after": 1.0087890625
+  },
+  {
+   "framework": "fruit",
+   "case": "resolve",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 103.95,
+   "min_ns": 103.37,
+   "max_ns": 107.53,
+   "compiler": "clang",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.009765625,
+   "loadavg_after": 1.0087890625
+  },
+  {
+   "framework": "kangaru",
+   "case": "graph",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 578.97,
+   "min_ns": 568.67,
+   "max_ns": 588.48,
+   "compiler": "gcc",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.0087890625,
+   "loadavg_after": 1.0087890625
+  },
+  {
+   "framework": "kangaru",
+   "case": "resolve",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 39.81,
+   "min_ns": 39.51,
+   "max_ns": 41.02,
+   "compiler": "gcc",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.0087890625,
+   "loadavg_after": 1.0087890625
+  },
+  {
+   "framework": "kangaru",
+   "case": "graph",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 551.19,
+   "min_ns": 540.04,
+   "max_ns": 570.81,
+   "compiler": "clang",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.0078125,
+   "loadavg_after": 1.0078125
+  },
+  {
+   "framework": "kangaru",
+   "case": "resolve",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 40.78,
+   "min_ns": 40.15,
+   "max_ns": 41.86,
+   "compiler": "clang",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.0078125,
+   "loadavg_after": 1.0078125
+  },
+  {
+   "framework": "dingo",
+   "case": "graph",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 1064.02,
+   "min_ns": 1025.66,
+   "max_ns": 1214.13,
+   "compiler": "gcc",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.0068359375,
+   "loadavg_after": 1.0068359375
+  },
+  {
+   "framework": "dingo",
+   "case": "resolve",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 273.41,
+   "min_ns": 268.75,
+   "max_ns": 298.61,
+   "compiler": "gcc",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.0068359375,
+   "loadavg_after": 1.0068359375
+  },
+  {
+   "framework": "dingo",
+   "case": "graph",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 1199.59,
+   "min_ns": 1156.22,
+   "max_ns": 1397.13,
+   "compiler": "clang",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.005859375,
+   "loadavg_after": 1.00537109375
+  },
+  {
+   "framework": "dingo",
+   "case": "resolve",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 326.18,
+   "min_ns": 321.68,
+   "max_ns": 567.45,
+   "compiler": "clang",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.005859375,
+   "loadavg_after": 1.00537109375
+  },
+  {
+   "framework": "hypodermic",
+   "case": "graph",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 7844.96,
+   "min_ns": 7005.52,
+   "max_ns": 8074.83,
+   "compiler": "gcc",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.0048828125,
+   "loadavg_after": 1.00341796875
+  },
+  {
+   "framework": "hypodermic",
+   "case": "resolve",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 656.47,
+   "min_ns": 649.21,
+   "max_ns": 674.47,
+   "compiler": "gcc",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.0048828125,
+   "loadavg_after": 1.00341796875
+  },
+  {
+   "framework": "hypodermic",
+   "case": "graph",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 7619.21,
+   "min_ns": 7196.01,
+   "max_ns": 8106.16,
+   "compiler": "clang",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.0029296875,
+   "loadavg_after": 1.00146484375
+  },
+  {
+   "framework": "hypodermic",
+   "case": "resolve",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 598.42,
+   "min_ns": 585.36,
+   "max_ns": 638.43,
+   "compiler": "clang",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.0029296875,
+   "loadavg_after": 1.00146484375
+  },
+  {
+   "framework": "qlibs_di",
+   "case": "graph",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 55.59,
+   "min_ns": 52.59,
+   "max_ns": 60.77,
+   "compiler": "gcc",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.00146484375,
+   "loadavg_after": 1.00146484375
+  },
+  {
+   "framework": "qlibs_di",
+   "case": "resolve",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 27.34,
+   "min_ns": 25.65,
+   "max_ns": 30.55,
+   "compiler": "gcc",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.00146484375,
+   "loadavg_after": 1.00146484375
+  },
+  {
+   "framework": "qlibs_di",
+   "case": "graph",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 58.85,
+   "min_ns": 55.25,
+   "max_ns": 62.32,
+   "compiler": "clang",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.0009765625,
+   "loadavg_after": 1.0009765625
+  },
+  {
+   "framework": "qlibs_di",
+   "case": "resolve",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 27.57,
+   "min_ns": 27.2,
+   "max_ns": 32.89,
+   "compiler": "clang",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.0009765625,
+   "loadavg_after": 1.0009765625
+  },
+  {
+   "framework": "boost_di_shared_ext",
+   "case": "graph",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 163.75,
+   "min_ns": 152.02,
+   "max_ns": 176.02,
+   "compiler": "gcc",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.0009765625,
+   "loadavg_after": 1.0009765625
+  },
+  {
+   "framework": "boost_di_shared_ext",
+   "case": "resolve",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 32.58,
+   "min_ns": 31.69,
+   "max_ns": 37.28,
+   "compiler": "gcc",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.0009765625,
+   "loadavg_after": 1.0009765625
+  },
+  {
+   "framework": "boost_di_shared_ext",
+   "case": "graph",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 179.29,
+   "min_ns": 175.47,
+   "max_ns": 197.28,
+   "compiler": "clang",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.0009765625,
+   "loadavg_after": 1.0009765625
+  },
+  {
+   "framework": "boost_di_shared_ext",
+   "case": "resolve",
+   "iters": 200000,
+   "repeats": 7,
+   "median_ns": 40.95,
+   "min_ns": 39.5,
+   "max_ns": 51.09,
+   "compiler": "clang",
+   "pinned_cpu": "3",
+   "loadavg_before": 1.0009765625,
+   "loadavg_after": 1.0009765625
+  }
+ ],
+ "scaling": [
+  {
+   "framework": "manual",
+   "n": 10,
+   "compiler": "gcc",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 1.06,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 121.8,
+   "checksum_ok": true
+  },
+  {
+   "framework": "manual",
+   "n": 10,
+   "compiler": "clang",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 0.9,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 133.4,
+   "checksum_ok": true
+  },
+  {
+   "framework": "boost_di",
+   "n": 10,
+   "compiler": "gcc",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 1.4,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 169.6,
+   "checksum_ok": true
+  },
+  {
+   "framework": "boost_di",
+   "n": 10,
+   "compiler": "clang",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 1.33,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 150.8,
+   "checksum_ok": true
+  },
+  {
+   "framework": "fruit",
+   "n": 10,
+   "compiler": "gcc",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 2.46,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 279.7,
+   "checksum_ok": true
+  },
+  {
+   "framework": "fruit",
+   "n": 10,
+   "compiler": "clang",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 2.59,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 231.2,
+   "checksum_ok": true
+  },
+  {
+   "framework": "fruit_flat",
+   "n": 10,
+   "compiler": "gcc",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 4.02,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 486.2,
+   "checksum_ok": true
+  },
+  {
+   "framework": "fruit_flat",
+   "n": 10,
+   "compiler": "clang",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 5.55,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 470.5,
+   "checksum_ok": true
+  },
+  {
+   "framework": "kangaru",
+   "n": 10,
+   "compiler": "gcc",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 3.27,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 273.6,
+   "checksum_ok": true
+  },
+  {
+   "framework": "kangaru",
+   "n": 10,
+   "compiler": "clang",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 3.58,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 195.8,
+   "checksum_ok": true
+  },
+  {
+   "framework": "dingo",
+   "n": 10,
+   "compiler": "gcc",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 4.62,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 312.4,
+   "checksum_ok": true
+  },
+  {
+   "framework": "dingo",
+   "n": 10,
+   "compiler": "clang",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 4.92,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 221.8,
+   "checksum_ok": true
+  },
+  {
+   "framework": "hypodermic",
+   "n": 10,
+   "compiler": "gcc",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 13.46,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 664.6,
+   "checksum_ok": true
+  },
+  {
+   "framework": "hypodermic",
+   "n": 10,
+   "compiler": "clang",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 12.29,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 394.4,
+   "checksum_ok": true
+  },
+  {
+   "framework": "qlibs_di",
+   "n": 10,
+   "compiler": "gcc",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 2.75,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 229.7,
+   "checksum_ok": true
+  },
+  {
+   "framework": "qlibs_di",
+   "n": 10,
+   "compiler": "clang",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 6.58,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 177.6,
+   "checksum_ok": true
+  },
+  {
+   "framework": "manual",
+   "n": 25,
+   "compiler": "gcc",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 2.13,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 173.4,
+   "checksum_ok": true
+  },
+  {
+   "framework": "manual",
+   "n": 25,
+   "compiler": "clang",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 1.64,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 143.8,
+   "checksum_ok": true
+  },
+  {
+   "framework": "boost_di",
+   "n": 25,
+   "compiler": "gcc",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 2.66,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 235.7,
+   "checksum_ok": true
+  },
+  {
+   "framework": "boost_di",
+   "n": 25,
+   "compiler": "clang",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 2.38,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 180.6,
+   "checksum_ok": true
+  },
+  {
+   "framework": "fruit",
+   "n": 25,
+   "compiler": "gcc",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 4.85,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 400.2,
+   "checksum_ok": true
+  },
+  {
+   "framework": "fruit",
+   "n": 25,
+   "compiler": "clang",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 5.85,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 364.5,
+   "checksum_ok": true
+  },
+  {
+   "framework": "fruit_flat",
+   "n": 25,
+   "compiler": "gcc",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "error": "rc=1 - OOM-killed by the container's memory cgroup at ~13.9 GB RSS (logs/scaling/oom_kills_dmesg.txt)"
+  },
+  {
+   "framework": "fruit_flat",
+   "n": 25,
+   "compiler": "clang",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "error": "rc=-9 - OOM-killed by the container's memory cgroup at ~13.9 GB RSS (logs/scaling/oom_kills_dmesg.txt)"
+  },
+  {
+   "framework": "kangaru",
+   "n": 25,
+   "compiler": "gcc",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 7.39,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 414.8,
+   "checksum_ok": true
+  },
+  {
+   "framework": "kangaru",
+   "n": 25,
+   "compiler": "clang",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 7.69,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 280.1,
+   "checksum_ok": true
+  },
+  {
+   "framework": "dingo",
+   "n": 25,
+   "compiler": "gcc",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 9.71,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 439.9,
+   "checksum_ok": true
+  },
+  {
+   "framework": "dingo",
+   "n": 25,
+   "compiler": "clang",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 9.64,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 324.0,
+   "checksum_ok": true
+  },
+  {
+   "framework": "hypodermic",
+   "n": 25,
+   "compiler": "gcc",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 23.99,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 899.7,
+   "checksum_ok": true
+  },
+  {
+   "framework": "hypodermic",
+   "n": 25,
+   "compiler": "clang",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 21.03,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 527.9,
+   "checksum_ok": true
+  },
+  {
+   "framework": "qlibs_di",
+   "n": 25,
+   "compiler": "gcc",
+   "source": "recovered from measure.log after the container restart; main run, median of up to 3 runs, no binary size",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   },
+   "compile_s": {
+    "median": 518.08,
+    "runs": 1
+   },
+   "compile_maxrss_mb": 10807.2,
+   "checksum_ok": true
+  },
+  {
+   "framework": "qlibs_di",
+   "n": 25,
+   "compiler": "clang",
+   "error": "did not finish: the container restarted while this compile was running (ps showed ~5.1 GB RSS after 102 s)",
+   "source": "main run, interrupted",
+   "caps": {
+    "timeout_s": 600,
+    "mem_limit_gib": null
+   }
+  },
+  {
+   "framework": "manual",
+   "n": 50,
+   "compiler": "gcc",
+   "compile_s": {
+    "median": 2.5096186860000103,
+    "min": 2.3344257439999865,
+    "max": 5.286794267999994,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 244.4,
+   "checksum_ok": true,
+   "stripped_bytes": 133424,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "manual",
+   "n": 50,
+   "compiler": "clang",
+   "compile_s": {
+    "median": 2.1750618660000214,
+    "min": 2.154518941000049,
+    "max": 2.8343149790000552,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 171.6,
+   "checksum_ok": true,
+   "stripped_bytes": 145792,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "boost_di",
+   "n": 50,
+   "compiler": "gcc",
+   "compile_s": {
+    "median": 3.724510083000041,
+    "min": 3.417475245999981,
+    "max": 4.93238987999996,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 316.1,
+   "checksum_ok": true,
+   "stripped_bytes": 162096,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "boost_di",
+   "n": 50,
+   "compiler": "clang",
+   "compile_s": {
+    "median": 3.2929868890000193,
+    "min": 3.0588665839999862,
+    "max": 3.4947426669999686,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 231.3,
+   "checksum_ok": true,
+   "stripped_bytes": 178616,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "fruit",
+   "n": 50,
+   "compiler": "gcc",
+   "compile_s": {
+    "median": 9.471673262000024,
+    "min": 9.24516772200002,
+    "max": 9.56823723399998,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 625.5,
+   "checksum_ok": true,
+   "stripped_bytes": 334128,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "fruit",
+   "n": 50,
+   "compiler": "clang",
+   "compile_s": {
+    "median": 8.090073789999963,
+    "min": 7.628126495000004,
+    "max": 9.228201353000031,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 589.2,
+   "checksum_ok": true,
+   "stripped_bytes": 330392,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "fruit_flat",
+   "n": 50,
+   "skipped": "above --scaling-cap: N=25 was OOM-killed at ~13.9 GB RSS with GCC and Clang (2026-10-30)"
+  },
+  {
+   "framework": "kangaru",
+   "n": 50,
+   "compiler": "gcc",
+   "compile_s": {
+    "median": 11.018759611999997,
+    "min": 10.868993595000006,
+    "max": 12.91916256899998,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 668.3,
+   "checksum_ok": true,
+   "stripped_bytes": 342320,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "kangaru",
+   "n": 50,
+   "compiler": "clang",
+   "compile_s": {
+    "median": 10.475264677999974,
+    "min": 10.255142401,
+    "max": 11.523973892000015,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 422.7,
+   "checksum_ok": true,
+   "stripped_bytes": 465352,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "dingo",
+   "n": 50,
+   "compiler": "gcc",
+   "compile_s": {
+    "median": 14.134926244000042,
+    "min": 13.775463032000005,
+    "max": 14.149177550000047,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 624.5,
+   "checksum_ok": true,
+   "stripped_bytes": 727416,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "dingo",
+   "n": 50,
+   "compiler": "clang",
+   "compile_s": {
+    "median": 14.082925971999998,
+    "min": 13.893769709000026,
+    "max": 14.54521965799995,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 495.6,
+   "checksum_ok": true,
+   "stripped_bytes": 883256,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "manual",
+   "n": 100,
+   "compiler": "gcc",
+   "compile_s": {
+    "median": 5.505853473999991,
+    "min": 5.365547969999966,
+    "max": 5.562267642999927,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 362.9,
+   "checksum_ok": true,
+   "stripped_bytes": 264496,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "manual",
+   "n": 100,
+   "compiler": "clang",
+   "compile_s": {
+    "median": 4.227815926999938,
+    "min": 4.178470966999953,
+    "max": 4.2324902959999235,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 231.8,
+   "checksum_ok": true,
+   "stripped_bytes": 289152,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "boost_di",
+   "n": 100,
+   "compiler": "gcc",
+   "compile_s": {
+    "median": 6.843039558999976,
+    "min": 6.756237730000066,
+    "max": 6.882796725000048,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 487.4,
+   "checksum_ok": true,
+   "stripped_bytes": 313648,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "boost_di",
+   "n": 100,
+   "compiler": "clang",
+   "compile_s": {
+    "median": 6.303908604999947,
+    "min": 6.2741315539999505,
+    "max": 6.649621175999982,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 341.1,
+   "checksum_ok": true,
+   "stripped_bytes": 346552,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "fruit",
+   "n": 100,
+   "compiler": "gcc",
+   "compile_s": {
+    "median": 18.063104264000003,
+    "min": 17.48450140800003,
+    "max": 18.384384386999955,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 1070.6,
+   "checksum_ok": true,
+   "stripped_bytes": 551216,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "fruit",
+   "n": 100,
+   "compiler": "clang",
+   "compile_s": {
+    "median": 16.24705984100001,
+    "min": 15.88729651899996,
+    "max": 16.528725231999942,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 1039.3,
+   "checksum_ok": true,
+   "stripped_bytes": 551576,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "fruit_flat",
+   "n": 100,
+   "skipped": "above --scaling-cap: N=25 was OOM-killed at ~13.9 GB RSS with GCC and Clang (2026-10-30)"
+  },
+  {
+   "framework": "kangaru",
+   "n": 100,
+   "compiler": "gcc",
+   "compile_s": {
+    "median": 22.499484094999957,
+    "min": 21.874174563999986,
+    "max": 23.479261211999983,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 1145.4,
+   "checksum_ok": true,
+   "stripped_bytes": 657712,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "kangaru",
+   "n": 100,
+   "compiler": "clang",
+   "compile_s": {
+    "median": 21.64481849499998,
+    "min": 21.50254229799998,
+    "max": 21.87575744200001,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 708.9,
+   "checksum_ok": true,
+   "stripped_bytes": 911816,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "dingo",
+   "n": 100,
+   "compiler": "gcc",
+   "compile_s": {
+    "median": 26.84942644900002,
+    "min": 25.90740258599999,
+    "max": 28.519964695,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 1200.4,
+   "checksum_ok": true,
+   "stripped_bytes": 1411448,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "dingo",
+   "n": 100,
+   "compiler": "clang",
+   "compile_s": {
+    "median": 27.71609040499993,
+    "min": 27.699116339000057,
+    "max": 27.843467756999985,
+    "runs": 3
+   },
+   "compile_maxrss_mb": 840.3,
+   "checksum_ok": true,
+   "stripped_bytes": 1722936,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "hypodermic",
+   "n": 50,
+   "compiler": "gcc",
+   "compile_s": {
+    "median": 36.972878620000074,
+    "min": 36.972878620000074,
+    "max": 36.972878620000074,
+    "runs": 1
+   },
+   "compile_maxrss_mb": 1531.1,
+   "checksum_ok": true,
+   "stripped_bytes": 2455904,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "hypodermic",
+   "n": 50,
+   "compiler": "clang",
+   "compile_s": {
+    "median": 29.006593586999998,
+    "min": 29.006593586999998,
+    "max": 29.006593586999998,
+    "runs": 1
+   },
+   "compile_maxrss_mb": 755.1,
+   "checksum_ok": true,
+   "stripped_bytes": 2493296,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "hypodermic",
+   "n": 100,
+   "compiler": "gcc",
+   "compile_s": {
+    "median": 74.97421509499986,
+    "min": 74.97421509499986,
+    "max": 74.97421509499986,
+    "runs": 1
+   },
+   "compile_maxrss_mb": 2625.6,
+   "checksum_ok": true,
+   "stripped_bytes": 4733280,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "hypodermic",
+   "n": 100,
+   "compiler": "clang",
+   "compile_s": {
+    "median": 54.889088937999986,
+    "min": 54.889088937999986,
+    "max": 54.889088937999986,
+    "runs": 1
+   },
+   "compile_maxrss_mb": 1197.4,
+   "checksum_ok": true,
+   "stripped_bytes": 4766576,
+   "caps": {
+    "timeout_s": 300,
+    "mem_limit_gib": 5.6
+   }
+  },
+  {
+   "framework": "qlibs_di",
+   "n": 100,
+   "skipped": "above --scaling-cap: N=25 took 518 s and 10.8 GB RSS with GCC (2026-10-30)"
+  },
+  {
+   "framework": "qlibs_di",
+   "n": 50,
+   "skipped": "above --scaling-cap: N=25 took 518 s and 10.8 GB RSS with GCC (2026-10-30)"
+  }
+ ],
+ "runs": [
+  {
+   "argv": [
+    "--deps",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps",
+    "--build",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/build",
+    "--results",
+    "/home/user/cpp-di-research/experiments/results",
+    "--only",
+    "scaling",
+    "--scaling-n",
+    "50",
+    "--frameworks",
+    "manual",
+    "--scaling-timeout",
+    "300",
+    "--mem-limit-gb",
+    "5.6"
+   ],
+   "date_utc": "2026-10-30T05:20:49Z",
+   "loadavg": [
+    0.0029296875,
+    0.01171875,
+    0.0
+   ]
+  },
+  {
+   "argv": [
+    "--deps",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps",
+    "--build",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/build",
+    "--results",
+    "/home/user/cpp-di-research/experiments/results",
+    "--only",
+    "scaling",
+    "--scaling-n",
+    "50",
+    "--frameworks",
+    "boost_di",
+    "--scaling-timeout",
+    "300",
+    "--mem-limit-gb",
+    "5.6"
+   ],
+   "date_utc": "2026-10-30T05:21:18Z",
+   "loadavg": [
+    0.2421875,
+    0.07373046875,
+    0.0205078125
+   ]
+  },
+  {
+   "argv": [
+    "--deps",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps",
+    "--build",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/build",
+    "--results",
+    "/home/user/cpp-di-research/experiments/results",
+    "--only",
+    "scaling",
+    "--scaling-n",
+    "50",
+    "--frameworks",
+    "fruit",
+    "--scaling-timeout",
+    "300",
+    "--mem-limit-gb",
+    "5.6"
+   ],
+   "date_utc": "2026-10-30T05:21:47Z",
+   "loadavg": [
+    0.42138671875,
+    0.1318359375,
+    0.04150390625
+   ]
+  },
+  {
+   "argv": [
+    "--deps",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps",
+    "--build",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/build",
+    "--results",
+    "/home/user/cpp-di-research/experiments/results",
+    "--only",
+    "scaling",
+    "--scaling-n",
+    "50",
+    "--frameworks",
+    "kangaru",
+    "--scaling-timeout",
+    "300",
+    "--mem-limit-gb",
+    "5.6"
+   ],
+   "date_utc": "2026-10-30T05:22:49Z",
+   "loadavg": [
+    0.7255859375,
+    0.2880859375,
+    0.10400390625
+   ]
+  },
+  {
+   "argv": [
+    "--deps",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps",
+    "--build",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/build",
+    "--results",
+    "/home/user/cpp-di-research/experiments/results",
+    "--only",
+    "scaling",
+    "--scaling-n",
+    "50",
+    "--frameworks",
+    "dingo",
+    "--scaling-timeout",
+    "300",
+    "--mem-limit-gb",
+    "5.6"
+   ],
+   "date_utc": "2026-10-30T05:24:03Z",
+   "loadavg": [
+    0.7685546875,
+    0.41552734375,
+    0.16552734375
+   ]
+  },
+  {
+   "argv": [
+    "--deps",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps",
+    "--build",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/build",
+    "--results",
+    "/home/user/cpp-di-research/experiments/results",
+    "--only",
+    "scaling",
+    "--scaling-n",
+    "100",
+    "--frameworks",
+    "manual,boost_di",
+    "--scaling-timeout",
+    "300",
+    "--mem-limit-gb",
+    "5.6"
+   ],
+   "date_utc": "2026-10-30T05:25:40Z",
+   "loadavg": [
+    0.7998046875,
+    0.544921875,
+    0.2392578125
+   ]
+  },
+  {
+   "argv": [
+    "--deps",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps",
+    "--build",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/build",
+    "--results",
+    "/home/user/cpp-di-research/experiments/results",
+    "--only",
+    "scaling",
+    "--scaling-n",
+    "100",
+    "--frameworks",
+    "fruit",
+    "--scaling-timeout",
+    "300",
+    "--mem-limit-gb",
+    "5.6"
+   ],
+   "date_utc": "2026-10-30T05:27:00Z",
+   "loadavg": [
+    0.79443359375,
+    0.62158203125,
+    0.2939453125
+   ]
+  },
+  {
+   "argv": [
+    "--deps",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps",
+    "--build",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/build",
+    "--results",
+    "/home/user/cpp-di-research/experiments/results",
+    "--only",
+    "scaling",
+    "--scaling-n",
+    "100",
+    "--frameworks",
+    "kangaru",
+    "--scaling-timeout",
+    "300",
+    "--mem-limit-gb",
+    "5.6"
+   ],
+   "date_utc": "2026-10-30T05:28:49Z",
+   "loadavg": [
+    0.8896484375,
+    0.7255859375,
+    0.3720703125
+   ]
+  },
+  {
+   "argv": [
+    "--deps",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps",
+    "--build",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/build",
+    "--results",
+    "/home/user/cpp-di-research/experiments/results",
+    "--only",
+    "scaling",
+    "--scaling-n",
+    "100",
+    "--frameworks",
+    "dingo",
+    "--scaling-timeout",
+    "300",
+    "--mem-limit-gb",
+    "5.6"
+   ],
+   "date_utc": "2026-10-30T05:31:09Z",
+   "loadavg": [
+    0.83740234375,
+    0.7998046875,
+    0.45458984375
+   ]
+  },
+  {
+   "argv": [
+    "--deps",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps",
+    "--build",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/build",
+    "--results",
+    "/home/user/cpp-di-research/experiments/results",
+    "--only",
+    "scaling",
+    "--scaling-n",
+    "50",
+    "--frameworks",
+    "hypodermic",
+    "--scaling-runs",
+    "1",
+    "--scaling-timeout",
+    "300",
+    "--mem-limit-gb",
+    "5.6"
+   ],
+   "date_utc": "2026-10-30T05:34:13Z",
+   "loadavg": [
+    0.71484375,
+    0.8408203125,
+    0.5419921875
+   ]
+  },
+  {
+   "argv": [
+    "--deps",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps",
+    "--build",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/build",
+    "--results",
+    "/home/user/cpp-di-research/experiments/results",
+    "--only",
+    "scaling",
+    "--scaling-n",
+    "100",
+    "--frameworks",
+    "hypodermic,qlibs_di",
+    "--scaling-runs",
+    "1",
+    "--scaling-timeout",
+    "300",
+    "--mem-limit-gb",
+    "5.6"
+   ],
+   "date_utc": "2026-10-30T05:35:31Z",
+   "loadavg": [
+    0.76611328125,
+    0.845703125,
+    0.56787109375
+   ]
+  },
+  {
+   "argv": [
+    "--deps",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps",
+    "--build",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/build",
+    "--results",
+    "/home/user/cpp-di-research/experiments/results",
+    "--only",
+    "scaling",
+    "--scaling-n",
+    "50",
+    "--frameworks",
+    "qlibs_di"
+   ],
+   "date_utc": "2026-10-30T05:37:54Z",
+   "loadavg": [
+    0.7587890625,
+    0.8603515625,
+    0.62109375
+   ]
+  },
+  {
+   "argv": [
+    "--deps",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/deps",
+    "--build",
+    "/tmp/claude-0/-home-user/2d27a639-9f98-5872-8a89-4b383c577f29/scratchpad/build",
+    "--results",
+    "/home/user/cpp-di-research/experiments/results",
+    "--only",
+    "sizes"
+   ],
+   "date_utc": "2026-10-30T05:37:54Z",
+   "loadavg": [
+    0.7587890625,
+    0.8603515625,
+    0.62109375
+   ]
+  }
+ ]
+}
