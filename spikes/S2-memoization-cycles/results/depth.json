@@ -1,0 +1,592 @@
+[
+ {
+  "compiler": "gcc-13",
+  "config": "s1-stub value",
+  "min_template_depth": {
+   "50": 312,
+   "100": 612,
+   "250": 1512,
+   "500": 3012
+  },
+  "fit": {
+   "levels_per_hop": 6.0,
+   "intercept": 12.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 148,
+  "beyond_default": "template depth",
+  "beyond_default_error": "spikes/S1-deduced-discovery/deduce.hpp:230:45: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)",
+  "default_template_depth": 900,
+  "compiles": 27
+ },
+ {
+  "compiler": "gcc-13",
+  "config": "memo value",
+  "min_template_depth": {
+   "50": 154,
+   "100": 304,
+   "250": 754,
+   "500": 1504
+  },
+  "fit": {
+   "levels_per_hop": 3.0,
+   "intercept": 4.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 298,
+  "beyond_default": "template depth",
+  "beyond_default_error": "spikes/S2-memoization-cycles/stub.hpp:407:8: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)",
+  "default_template_depth": 900,
+  "compiles": 27
+ },
+ {
+  "compiler": "gcc-13",
+  "config": "memo shared_ptr",
+  "min_template_depth": {
+   "50": 215,
+   "100": 415,
+   "250": 1015,
+   "500": 2015
+  },
+  "fit": {
+   "levels_per_hop": 4.0,
+   "intercept": 15.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 221,
+  "beyond_default": "template depth",
+  "beyond_default_error": "/usr/include/c++/13/type_traits:172:41: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)",
+  "default_template_depth": 900,
+  "compiles": 27
+ },
+ {
+  "compiler": "gcc-13",
+  "config": "depth value",
+  "min_template_depth": {
+   "50": 154,
+   "100": 304,
+   "250": 754,
+   "500": 1504
+  },
+  "fit": {
+   "levels_per_hop": 3.0,
+   "intercept": 4.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 298,
+  "beyond_default": "template depth",
+  "beyond_default_error": "spikes/S2-memoization-cycles/stub.hpp:407:8: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)",
+  "default_template_depth": 900,
+  "compiles": 27
+ },
+ {
+  "compiler": "gcc-13",
+  "config": "path value",
+  "min_template_depth": {
+   "50": 154,
+   "100": 304,
+   "250": 754,
+   "500": 1504
+  },
+  "fit": {
+   "levels_per_hop": 3.0,
+   "intercept": 4.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 298,
+  "beyond_default": "template depth",
+  "beyond_default_error": "spikes/S2-memoization-cycles/stub.hpp:407:8: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)",
+  "default_template_depth": 900,
+  "compiles": 27
+ },
+ {
+  "compiler": "gcc-13",
+  "config": "memo value, check only",
+  "min_template_depth": {
+   "50": 110,
+   "100": 210,
+   "250": 510,
+   "500": 1010
+  },
+  "fit": {
+   "levels_per_hop": 2.0,
+   "intercept": 10.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 445,
+  "beyond_default": "template depth",
+  "beyond_default_error": "/usr/include/c++/13/type_traits:3416:44: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)",
+  "default_template_depth": 900,
+  "compiles": 28
+ },
+ {
+  "compiler": "gcc-13",
+  "config": "memo shared_ptr, check only",
+  "min_template_depth": {
+   "50": 110,
+   "100": 210,
+   "250": 510,
+   "500": 1010
+  },
+  "fit": {
+   "levels_per_hop": 2.0,
+   "intercept": 10.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 445,
+  "beyond_default": "template depth",
+  "beyond_default_error": "/usr/include/c++/13/type_traits:3249:46: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)",
+  "default_template_depth": 900,
+  "compiles": 28
+ },
+ {
+  "compiler": "gcc-14",
+  "config": "s1-stub value",
+  "min_template_depth": {
+   "50": 312,
+   "100": 612,
+   "250": 1512,
+   "500": 3012
+  },
+  "fit": {
+   "levels_per_hop": 6.0,
+   "intercept": 12.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 148,
+  "beyond_default": "template depth",
+  "beyond_default_error": "spikes/S1-deduced-discovery/deduce.hpp:230:45: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)",
+  "default_template_depth": 900,
+  "compiles": 27
+ },
+ {
+  "compiler": "gcc-14",
+  "config": "memo value",
+  "min_template_depth": {
+   "50": 155,
+   "100": 305,
+   "250": 755,
+   "500": 1505
+  },
+  "fit": {
+   "levels_per_hop": 3.0,
+   "intercept": 5.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 298,
+  "beyond_default": "template depth",
+  "beyond_default_error": "spikes/S2-memoization-cycles/stub.hpp:98:34: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)",
+  "default_template_depth": 900,
+  "compiles": 28
+ },
+ {
+  "compiler": "gcc-14",
+  "config": "memo shared_ptr",
+  "min_template_depth": {
+   "50": 215,
+   "100": 415,
+   "250": 1015,
+   "500": 2015
+  },
+  "fit": {
+   "levels_per_hop": 4.0,
+   "intercept": 15.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 221,
+  "beyond_default": "template depth",
+  "beyond_default_error": "/usr/include/c++/14/type_traits:194:41: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)",
+  "default_template_depth": 900,
+  "compiles": 27
+ },
+ {
+  "compiler": "gcc-14",
+  "config": "depth value",
+  "min_template_depth": {
+   "50": 155,
+   "100": 305,
+   "250": 755,
+   "500": 1505
+  },
+  "fit": {
+   "levels_per_hop": 3.0,
+   "intercept": 5.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 298,
+  "beyond_default": "template depth",
+  "beyond_default_error": "spikes/S2-memoization-cycles/stub.hpp:98:34: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)",
+  "default_template_depth": 900,
+  "compiles": 28
+ },
+ {
+  "compiler": "gcc-14",
+  "config": "path value",
+  "min_template_depth": {
+   "50": 155,
+   "100": 305,
+   "250": 755,
+   "500": 1505
+  },
+  "fit": {
+   "levels_per_hop": 3.0,
+   "intercept": 5.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 298,
+  "beyond_default": "template depth",
+  "beyond_default_error": "spikes/S2-memoization-cycles/stub.hpp:98:34: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)",
+  "default_template_depth": 900,
+  "compiles": 28
+ },
+ {
+  "compiler": "gcc-14",
+  "config": "memo value, check only",
+  "min_template_depth": {
+   "50": 110,
+   "100": 210,
+   "250": 510,
+   "500": 1010
+  },
+  "fit": {
+   "levels_per_hop": 2.0,
+   "intercept": 10.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 445,
+  "beyond_default": "template depth",
+  "beyond_default_error": "/usr/include/c++/14/type_traits:3571:44: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)",
+  "default_template_depth": 900,
+  "compiles": 28
+ },
+ {
+  "compiler": "gcc-14",
+  "config": "memo shared_ptr, check only",
+  "min_template_depth": {
+   "50": 110,
+   "100": 210,
+   "250": 510,
+   "500": 1010
+  },
+  "fit": {
+   "levels_per_hop": 2.0,
+   "intercept": 10.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 445,
+  "beyond_default": "template depth",
+  "beyond_default_error": "/usr/include/c++/14/type_traits:3383:46: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)",
+  "default_template_depth": 900,
+  "compiles": 28
+ },
+ {
+  "compiler": "clang-18",
+  "config": "s1-stub value",
+  "min_template_depth": {
+   "50": 418,
+   "100": 818,
+   "250": 2018,
+   "500": 4018
+  },
+  "fit": {
+   "levels_per_hop": 8.0,
+   "intercept": 18.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 125,
+  "beyond_default": "template depth",
+  "beyond_default_error": "/usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/type_traits:3599:5: fatal error: recursive template instantiation exceeded maximum depth of 1024",
+  "default_template_depth": 1024,
+  "compiles": 28
+ },
+ {
+  "compiler": "clang-18",
+  "config": "memo value",
+  "min_template_depth": {
+   "50": 218,
+   "100": 418,
+   "250": 1018,
+   "500": 2018
+  },
+  "fit": {
+   "levels_per_hop": 4.0,
+   "intercept": 18.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 251,
+  "beyond_default": "template depth",
+  "beyond_default_error": "/usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/type_traits:3599:5: fatal error: recursive template instantiation exceeded maximum depth of 1024",
+  "default_template_depth": 1024,
+  "compiles": 28
+ },
+ {
+  "compiler": "clang-18",
+  "config": "memo shared_ptr",
+  "min_template_depth": {
+   "50": 218,
+   "100": 418,
+   "250": 1018,
+   "500": 2018
+  },
+  "fit": {
+   "levels_per_hop": 4.0,
+   "intercept": 18.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 251,
+  "beyond_default": "template depth",
+  "beyond_default_error": "/usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/type_traits:3599:5: fatal error: recursive template instantiation exceeded maximum depth of 1024",
+  "default_template_depth": 1024,
+  "compiles": 28
+ },
+ {
+  "compiler": "clang-18",
+  "config": "depth value",
+  "min_template_depth": {
+   "50": 218,
+   "100": 418,
+   "250": 1018,
+   "500": 2018
+  },
+  "fit": {
+   "levels_per_hop": 4.0,
+   "intercept": 18.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 251,
+  "beyond_default": "template depth",
+  "beyond_default_error": "/usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/type_traits:3599:5: fatal error: recursive template instantiation exceeded maximum depth of 1024",
+  "default_template_depth": 1024,
+  "compiles": 28
+ },
+ {
+  "compiler": "clang-18",
+  "config": "path value",
+  "min_template_depth": {
+   "50": 218,
+   "100": 418,
+   "250": 1018
+  },
+  "fit": {
+   "levels_per_hop": 4.0,
+   "intercept": 18.0,
+   "linear": true
+  },
+  "notes": [
+   "500 hops: other error at -ftemplate-depth=8128: spikes/S2-memoization-cycles/stub.hpp:217:79: fatal error: instantiating fold expression with 257 a"
+  ],
+  "max_hops_default": 251,
+  "beyond_default": "template depth",
+  "beyond_default_error": "/usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/type_traits:3599:5: fatal error: recursive template instantiation exceeded maximum depth of 1024",
+  "default_template_depth": 1024,
+  "compiles": 28
+ },
+ {
+  "compiler": "clang-18",
+  "config": "memo value, check only",
+  "min_template_depth": {
+   "50": 217,
+   "100": 417,
+   "250": 1017,
+   "500": 2017
+  },
+  "fit": {
+   "levels_per_hop": 4.0,
+   "intercept": 17.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 251,
+  "beyond_default": "template depth",
+  "beyond_default_error": "/usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/concepts:57:27: fatal error: recursive template instantiation exceeded maximum depth of 1024",
+  "default_template_depth": 1024,
+  "compiles": 28
+ },
+ {
+  "compiler": "clang-18",
+  "config": "memo shared_ptr, check only",
+  "min_template_depth": {
+   "50": 217,
+   "100": 417,
+   "250": 1017,
+   "500": 2017
+  },
+  "fit": {
+   "levels_per_hop": 4.0,
+   "intercept": 17.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 251,
+  "beyond_default": "template depth",
+  "beyond_default_error": "/usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/concepts:57:27: fatal error: recursive template instantiation exceeded maximum depth of 1024",
+  "default_template_depth": 1024,
+  "compiles": 28
+ },
+ {
+  "compiler": "clang-20",
+  "config": "s1-stub value",
+  "min_template_depth": {
+   "50": 418,
+   "100": 818,
+   "250": 2018,
+   "500": 4018
+  },
+  "fit": {
+   "levels_per_hop": 8.0,
+   "intercept": 18.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 125,
+  "beyond_default": "template depth",
+  "beyond_default_error": "/usr/lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/concepts:63:9: fatal error: recursive template instantiation exceeded maximum depth of 1024",
+  "default_template_depth": 1024,
+  "compiles": 28
+ },
+ {
+  "compiler": "clang-20",
+  "config": "memo value",
+  "min_template_depth": {
+   "50": 218,
+   "100": 418,
+   "250": 1018,
+   "500": 2018
+  },
+  "fit": {
+   "levels_per_hop": 4.0,
+   "intercept": 18.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 251,
+  "beyond_default": "template depth",
+  "beyond_default_error": "/usr/lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/concepts:63:9: fatal error: recursive template instantiation exceeded maximum depth of 1024",
+  "default_template_depth": 1024,
+  "compiles": 28
+ },
+ {
+  "compiler": "clang-20",
+  "config": "memo shared_ptr",
+  "min_template_depth": {
+   "50": 218,
+   "100": 418,
+   "250": 1018,
+   "500": 2018
+  },
+  "fit": {
+   "levels_per_hop": 4.0,
+   "intercept": 18.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 251,
+  "beyond_default": "template depth",
+  "beyond_default_error": "/usr/lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/concepts:63:9: fatal error: recursive template instantiation exceeded maximum depth of 1024",
+  "default_template_depth": 1024,
+  "compiles": 28
+ },
+ {
+  "compiler": "clang-20",
+  "config": "depth value",
+  "min_template_depth": {
+   "50": 218,
+   "100": 418,
+   "250": 1018,
+   "500": 2018
+  },
+  "fit": {
+   "levels_per_hop": 4.0,
+   "intercept": 18.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 251,
+  "beyond_default": "template depth",
+  "beyond_default_error": "/usr/lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/concepts:63:9: fatal error: recursive template instantiation exceeded maximum depth of 1024",
+  "default_template_depth": 1024,
+  "compiles": 28
+ },
+ {
+  "compiler": "clang-20",
+  "config": "path value",
+  "min_template_depth": {
+   "50": 218,
+   "100": 418,
+   "250": 1018
+  },
+  "fit": {
+   "levels_per_hop": 4.0,
+   "intercept": 18.0,
+   "linear": true
+  },
+  "notes": [
+   "500 hops: other error at -ftemplate-depth=8128: spikes/S2-memoization-cycles/stub.hpp:217:79: fatal error: instantiating fold expression with 257 a"
+  ],
+  "max_hops_default": 251,
+  "beyond_default": "template depth",
+  "beyond_default_error": "/usr/lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/concepts:63:9: fatal error: recursive template instantiation exceeded maximum depth of 1024",
+  "default_template_depth": 1024,
+  "compiles": 28
+ },
+ {
+  "compiler": "clang-20",
+  "config": "memo value, check only",
+  "min_template_depth": {
+   "50": 217,
+   "100": 417,
+   "250": 1017,
+   "500": 2017
+  },
+  "fit": {
+   "levels_per_hop": 4.0,
+   "intercept": 17.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 251,
+  "beyond_default": "template depth",
+  "beyond_default_error": "/usr/lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/concepts:57:27: fatal error: recursive template instantiation exceeded maximum depth of 1024",
+  "default_template_depth": 1024,
+  "compiles": 28
+ },
+ {
+  "compiler": "clang-20",
+  "config": "memo shared_ptr, check only",
+  "min_template_depth": {
+   "50": 217,
+   "100": 417,
+   "250": 1017,
+   "500": 2017
+  },
+  "fit": {
+   "levels_per_hop": 4.0,
+   "intercept": 17.0,
+   "linear": true
+  },
+  "notes": [],
+  "max_hops_default": 251,
+  "beyond_default": "template depth",
+  "beyond_default_error": "/usr/lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/concepts:57:27: fatal error: recursive template instantiation exceeded maximum depth of 1024",
+  "default_template_depth": 1024,
+  "compiles": 28
+ }
+]

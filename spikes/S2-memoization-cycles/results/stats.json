@@ -1,0 +1,134 @@
+[
+ {
+  "n": 25,
+  "fan_in": "1-3",
+  "edges": 69,
+  "memo_nodes": 25,
+  "depth_nodes": 253,
+  "path_nodes": 35080,
+  "longest_path": 25,
+  "memo_stack": 7,
+  "memo_stack_reversed": 25
+ },
+ {
+  "n": 50,
+  "fan_in": "1-3",
+  "edges": 144,
+  "memo_nodes": 50,
+  "depth_nodes": 1080,
+  "path_nodes": 32665584,
+  "longest_path": 50,
+  "memo_stack": 11,
+  "memo_stack_reversed": 50
+ },
+ {
+  "n": 100,
+  "fan_in": "1-3",
+  "edges": 294,
+  "memo_nodes": 100,
+  "depth_nodes": 4278,
+  "path_nodes": 28816053369,
+  "longest_path": 100,
+  "memo_stack": 14,
+  "memo_stack_reversed": 100
+ },
+ {
+  "n": 250,
+  "fan_in": "1-3",
+  "edges": 743,
+  "memo_nodes": 250,
+  "depth_nodes": 28514,
+  "path_nodes": 31509504923319227,
+  "longest_path": 250,
+  "memo_stack": 35,
+  "memo_stack_reversed": 250
+ },
+ {
+  "n": 500,
+  "fan_in": "1-3",
+  "edges": 1493,
+  "memo_nodes": 500,
+  "depth_nodes": 118984,
+  "path_nodes": 6635653606333629839929064,
+  "longest_path": 500,
+  "memo_stack": 48,
+  "memo_stack_reversed": 500
+ },
+ {
+  "n": 1000,
+  "fan_in": "1-3",
+  "edges": 2993,
+  "memo_nodes": 1000,
+  "depth_nodes": 480163,
+  "path_nodes": 215617196707237273686598035352798422,
+  "longest_path": 1000,
+  "memo_stack": 66,
+  "memo_stack_reversed": 1000
+ },
+ {
+  "n": 25,
+  "fan_in": "10",
+  "edges": 195,
+  "memo_nodes": 25,
+  "depth_nodes": 282,
+  "path_nodes": 1298519,
+  "longest_path": 24,
+  "memo_stack": 4,
+  "memo_stack_reversed": 24
+ },
+ {
+  "n": 50,
+  "fan_in": "10",
+  "edges": 436,
+  "memo_nodes": 50,
+  "depth_nodes": 1162,
+  "path_nodes": 7289072130,
+  "longest_path": 46,
+  "memo_stack": 6,
+  "memo_stack_reversed": 46
+ },
+ {
+  "n": 100,
+  "fan_in": "10",
+  "edges": 901,
+  "memo_nodes": 100,
+  "depth_nodes": 4736,
+  "path_nodes": 797384079208541,
+  "longest_path": 91,
+  "memo_stack": 8,
+  "memo_stack_reversed": 91
+ },
+ {
+  "n": 250,
+  "fan_in": "10",
+  "edges": 2251,
+  "memo_nodes": 250,
+  "depth_nodes": 29953,
+  "path_nodes": 1183935592210810041385501,
+  "longest_path": 226,
+  "memo_stack": 16,
+  "memo_stack_reversed": 226
+ },
+ {
+  "n": 500,
+  "fan_in": "10",
+  "edges": 4501,
+  "memo_nodes": 500,
+  "depth_nodes": 121621,
+  "path_nodes": 899521790698629817022103952231161981,
+  "longest_path": 451,
+  "memo_stack": 21,
+  "memo_stack_reversed": 451
+ },
+ {
+  "n": 1000,
+  "fan_in": "10",
+  "edges": 9001,
+  "memo_nodes": 1000,
+  "depth_nodes": 488108,
+  "path_nodes": 360795031801089338979597797225015302460551055037231,
+  "longest_path": 901,
+  "memo_stack": 35,
+  "memo_stack_reversed": 901
+ }
+]
