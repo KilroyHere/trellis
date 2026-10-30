@@ -24,12 +24,36 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
 
 - **Still open:** D5, whether the runtime container ships in 1.0. Needed before T5.0.
 - **CI on a private repo:** Linux runs on every push; macOS and Windows run weekly or on demand to save Actions minutes. Making the repository public would allow the full matrix on every push.
-- **Stale branches on GitHub:** `wip/t0.1-scaffold` and `t0.2-ci` can be deleted; their content is on `main`. The proxy here refuses branch deletion.
+- **Stale branches on GitHub:** `wip/t0.1-scaffold`, `t0.2-ci` and `t0.10-goldens` can be deleted; their content is on `main`. The proxy here refuses branch deletion.
 - **Guardrail changes.** Auto mode treats edits to `scripts/hooks/` and `.claude/` as agent self-modification, so these are the owner's to make:
   - Make `scripts/hooks/protect_files.py` protect only committed files, so a task can fix tests it created itself.
   - Add `tests/golden_manifest.txt` to the protected paths.
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev` so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
+
+## 2026-10-30: T0.10 golden normalization (passed, owner-approved)
+
+- **What changed:**
+  - **`tools/golden.py` follows S3's rules:**
+    - It strips colour and OSC-8 links (both the ST and BEL terminators) and maps typographic quotes to `'`.
+    - It drops quoted source, carets, fix-its, include chains and the "N errors generated." and "compilation terminated." lines.
+    - It rewrites paths to `<src>/`, `<build>/`, `<std>/` or `<external>/`, always with `/`, and rewrites `:L:C` and MSVC's `(L,C)`.
+  - **`<external>/` is narrower:** it applies only where a diagnostic names a file (a location at line start, `… at <path>:N` in Clang's lambda and unnamed-struct names, and missing-file messages). Path-like text inside qualifiers and messages, such as `{"/db/primary:5432"}`, survives.
+  - **Beyond S3:** the `<build>/` and `<external>/` placeholders, a wider `<std>/` rule, MSVC's `(L,C)`, and the BEL terminator.
+  - **Clean environment:** both tools start compilers with an allowlisted environment and `LC_ALL=C`. Planted CPATH, GCC_EXEC_PREFIX, COMPILER_PATH, DEPENDENCIES_OUTPUT, CCC_OVERRIDE_OPTIONS and others are proven not to reach the compiler.
+  - **The sample golden** was regenerated through `golden.py --update`, going from 7 lines to 2, with the reason logged in `docs/golden-changes.md`.
+- **Reading accepted by the coordinator, as author of the acceptance text:** golden runs use the plain-output flags. Compile-fail runs keep the default user-visible output with colours off, so NFR-07's line budget measures what users see.
+- **Review:** the independent review passed three times:
+  - The first pass found that `<external>/` over-normalized path-like text. That was fixed before the merge, since changing goldens later needs approval.
+  - The second pass found a quoted `"/x:5432"` edge case, also fixed.
+  - The coordinator spot-checked the final rules.
+- **Evidence:**
+  - `scripts/tasks.py verify T0.10` on main: check-full 10 of 10 presets in 368 s; golden 1 of 1.
+  - **CI:** ci.yml is green on 8d7084f. Windows is green on 8d7084f, so `tools.golden_selftest` now passes on MSVC: https://github.com/KilroyHere/trellis/actions/runs/41138203055. macOS is green on fdc0a0f.
+- **Known limits:**
+  - Clang's `(lambda at …)` keeps its machine path when an external directory contains a space; this is documented.
+  - cl prints the source file name on its own line, which stays in future MSVC goldens.
+- **Branch:** `t0.10-goldens` can be deleted on GitHub; its squashed content is 92f48ba.
 
 ## 2026-10-30: T0.3 benchmark harness and equivalence oracle (passed)
 
