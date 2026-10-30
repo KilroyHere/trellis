@@ -69,3 +69,4 @@ set_tests_properties(tools.compile_fail_selftest PROPERTIES LABELS "compile_fail
 set_tests_properties(tools.golden_selftest PROPERTIES LABELS tools)
 
 add_subdirectory(unit)
+add_subdirectory(property)
