@@ -1,0 +1,48 @@
+{
+  "description": [
+    "Compile-time budgets: the targets NFR-03, NFR-04 and NFR-05 of plan §3.2, as the plan states them, relative to the hand-written wiring.",
+    "Every target compares a variant with the baseline variant built by the same compiler in the same run (plan §3.2 and §8.4), so that the machine's speed cancels out. Each compiler is checked on its own, as the plan quotes GCC and Clang separately, and a graph budget applies to every generated graph profile (fan-in and request forms) that is measured at the listed size.",
+    "compile_s is the median wall time of runs compiles of the program (plan §8.4: the median of 3); peak_rss_mb is the compiler's largest resident memory over those compiles. benchmarks/compile/run.py makes all runs compiles of every program a budget covers, however long they take, and doesn't check a budget against the median of fewer.",
+    "max_extra: the variant may take at most this much more than the baseline (NFR-03 is a difference, not a ratio). checkpoints: at each listed N, the variant may take at most max_ratio times the baseline. Differences and ratios are compared at 2 decimals, as run.py prints them.",
+    "growth and layouts quote the plan's conditions that are not a single number; benchmarks/compile/run.py does not check them. Plan §8.4 lists the layouts to measure: one module, one module per 10 components, and several translation units.",
+    "benchmarks/compile/run.py reads this file. Changing it needs the owner's sign-off: propose the change in docs/PROGRESS.md."
+  ],
+  "baseline": "manual",
+  "runs": 3,
+  "budgets": [
+    {
+      "id": "NFR-03",
+      "title": "Extra compile time for the scenario program, C++20",
+      "target": "≤ +0.3 s",
+      "research_baseline": "Boost.DI +0.27 / +0.23 s; Fruit +1.00 / +1.02; dingo +2.34 / +2.39",
+      "program": "scenario",
+      "measure": "compile_s",
+      "max_extra": 0.3
+    },
+    {
+      "id": "NFR-04",
+      "title": "Compile time for a generated 100-component graph",
+      "target": "≤ 1.3× hand-wired; linear growth to 1,000 components, ≤ 1.5× there",
+      "research_baseline": "Hand-wired 5.5 / 4.2 s; Boost.DI 6.8 / 6.3; Fruit 18.1 / 16.3",
+      "program": "graph",
+      "measure": "compile_s",
+      "checkpoints": [
+        { "n": 100, "max_ratio": 1.3 },
+        { "n": 1000, "max_ratio": 1.5 }
+      ],
+      "growth": "linear growth to 1,000 components"
+    },
+    {
+      "id": "NFR-05",
+      "title": "Peak compiler memory at 100 components",
+      "target": "≤ 1.5× hand-wired; no blow-ups that depend on how bindings are laid out",
+      "research_baseline": "Hand-wired 363 / 232 MB; Boost.DI 487 / 341; Fruit flat layout ran out of memory at 25",
+      "program": "graph",
+      "measure": "peak_rss_mb",
+      "checkpoints": [
+        { "n": 100, "max_ratio": 1.5 }
+      ],
+      "layouts": "no blow-ups that depend on how bindings are laid out"
+    }
+  ]
+}

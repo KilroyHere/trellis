@@ -59,7 +59,11 @@ jobs:
           cmake --build --preset tsan -j "$(nproc)"
           ccache --show-stats
 
+      # More property-test seeds than ci.yml's, and never the same ones: run N tries the 256 seeds
+      # from N × 1,000,000 + 500,000 (about 3 minutes on 2 cores).
       - name: Test
+        env:
+          TRELLIS_PROPERTY_SEEDS: ${{ github.run_number }}500000+256
         run: ctest --preset tsan -j "$(nproc)"
 
       - name: Save the compiler cache
@@ -83,14 +87,9 @@ jobs:
         run: echo "::add-matcher::.github/problem-matchers.json"
 
       # It compiles with g++-13 and clang++-18, which the runner image has, and never through
-      # ccache. Task T0.3 adds the script; until then there is nothing to run.
+      # ccache.
       - name: Run scripts/bench-compile.sh --quick
-        run: |
-          if [[ ! -e scripts/bench-compile.sh ]]; then
-            echo "::notice::scripts/bench-compile.sh doesn't exist yet (task T0.3 adds it); skipped"
-            exit 0
-          fi
-          scripts/bench-compile.sh --quick
+        run: scripts/bench-compile.sh --quick
 
   report:
     name: report a failed scheduled run

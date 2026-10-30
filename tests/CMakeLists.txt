@@ -67,5 +67,10 @@ foreach(selftest IN ITEMS compile_fail golden)
 endforeach()
 set_tests_properties(tools.compile_fail_selftest PROPERTIES LABELS "compile_fail;tools")
 set_tests_properties(tools.golden_selftest PROPERTIES LABELS tools)
+# The budget checker of benchmarks/compile/run.py, on synthetic records; it compiles nothing.
+add_test(NAME tools.bench_budgets_selftest
+  COMMAND "${Python3_EXECUTABLE}" -I "${CMAKE_CURRENT_SOURCE_DIR}/tools/bench_budgets_selftest.py")
+set_tests_properties(tools.bench_budgets_selftest PROPERTIES LABELS tools)
 
 add_subdirectory(unit)
+add_subdirectory(property)
