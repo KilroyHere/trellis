@@ -53,6 +53,28 @@
       "cacheVariables": { "CMAKE_CXX_FLAGS": "-fsanitize=thread" }
     },
     {
+      "name": "appleclang-debug",
+      "displayName": "Apple Clang, Debug (macOS only)",
+      "description": "The Xcode clang++ in /usr/bin, with its libc++. GoogleTest is built from source unless an installed package is found. Golden tests are registered only for the compilers tests/golden_manifest.txt lists, which Apple Clang isn't yet. Runs in CI (platforms.yml); untested locally.",
+      "inherits": "base",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Darwin" },
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "/usr/bin/clang",
+        "CMAKE_CXX_COMPILER": "/usr/bin/clang++"
+      }
+    },
+    {
+      "name": "msvc-debug",
+      "displayName": "MSVC, Debug (Windows only)",
+      "description": "cl with Ninja. Run it from a Visual Studio developer prompt (vcvars64.bat), which puts cl, link and the SDK on the path. GoogleTest is built from source, so C is set too. Golden tests are registered only for the compilers tests/golden_manifest.txt lists, which MSVC isn't yet. Runs in CI (platforms.yml); untested locally.",
+      "inherits": "base",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" },
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl"
+      }
+    },
+    {
       "name": "timetrace",
       "displayName": "Clang 18 with -ftime-trace, no ccache",
       "description": "Writes a Chrome trace (.json) next to each object file. Never cached, so the timings are real.",
@@ -75,6 +97,18 @@
     { "name": "clang-18-release", "configurePreset": "clang-18-release", "inherits": "build-base" },
     { "name": "asan-ubsan", "configurePreset": "asan-ubsan", "inherits": "build-base" },
     { "name": "tsan", "configurePreset": "tsan", "inherits": "build-base" },
+    {
+      "name": "appleclang-debug",
+      "configurePreset": "appleclang-debug",
+      "inherits": "build-base",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Darwin" }
+    },
+    {
+      "name": "msvc-debug",
+      "configurePreset": "msvc-debug",
+      "inherits": "build-base",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+    },
     { "name": "timetrace", "configurePreset": "timetrace", "inherits": "build-base" }
   ],
   "testPresets": [
@@ -105,6 +139,18 @@
       "configurePreset": "tsan",
       "inherits": "test-base",
       "environment": { "TSAN_OPTIONS": "halt_on_error=1:second_deadlock_stack=1" }
+    },
+    {
+      "name": "appleclang-debug",
+      "configurePreset": "appleclang-debug",
+      "inherits": "test-base",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Darwin" }
+    },
+    {
+      "name": "msvc-debug",
+      "configurePreset": "msvc-debug",
+      "inherits": "test-base",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
     },
     { "name": "timetrace", "configurePreset": "timetrace", "inherits": "test-base" }
   ]

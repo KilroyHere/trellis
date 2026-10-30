@@ -15,13 +15,28 @@ Trellis is pre-alpha. The design is in [`docs/plan.md`](docs/plan.md), and the w
 |---|---|
 | `scripts/init.sh` | Checks the tools, then configures, builds and tests `clang-18-debug` |
 | `scripts/check-fast.sh` | Checks the format of changed files, then builds and tests `clang-18-debug`. Run it before every commit. |
-| `scripts/check-full.sh [preset...]` | Every preset in `CMakePresets.json`, one at a time, including the sanitizers |
+| `scripts/check-full.sh [preset...]` | Every preset in `CMakePresets.json` that this host can run, one at a time, including the sanitizers |
 | `scripts/tidy.sh [file...]` | clang-tidy on the given files, or on the lines you changed |
+| `scripts/ci-status.sh [--wait] [branch]` | The latest GitHub Actions runs of a branch (default: the current one) and the first errors of failed jobs. Exits 0 only when the `ci` run for HEAD passed. |
 | `cmake --preset P && cmake --build --preset P && ctest --preset P` | One preset by hand |
 
 The scripts print one line per step and keep the full output in `build/logs/`. Builds and tests use 2 parallel jobs. To change that, set `TRELLIS_JOBS` for the scripts, or pass `-j N` to `cmake --build` and `ctest`.
 
 Test labels: `unit`, `headers`, `compile_fail`, `golden` and `tools`, so `ctest --preset clang-18-debug -L compile_fail` runs one kind. A selection that matches no test is an error rather than a silent pass.
+
+`appleclang-debug` (macOS) and `msvc-debug` (Windows, from a Visual Studio developer prompt, with Ninja) are enabled only on their own host system.
+
+## Continuous integration
+
+The repository is private and GitHub Actions minutes are limited, so only Linux runs on every push:
+
+| Workflow | When | What |
+|---|---|---|
+| `.github/workflows/ci.yml` | Every push to a branch; pull requests from forks | The presets `gcc-13-debug`, `gcc-14-debug`, `clang-18-debug`, `clang-20-debug`, `clang-18-libcxx-debug` and `asan-ubsan` on Ubuntu 24.04 |
+| `.github/workflows/nightly.yml` | Daily on `main`; `gh workflow run nightly.yml --ref <branch>` | `tsan`, and `scripts/bench-compile.sh --quick` once it exists |
+| `.github/workflows/platforms.yml` | Weekly on `main`; `gh workflow run platforms.yml --ref <branch> [-f os=macos\|windows]` | `appleclang-debug` on macOS and `msvc-debug` on Windows |
+
+A failed scheduled run of `nightly.yml` or `platforms.yml` opens an issue. Actions are pinned to full commit SHAs, with the release tag in a comment. The problem matchers in `.github/problem-matchers.json` turn error lines into annotations, which `scripts/ci-status.sh` shows when the job logs can't be downloaded.
 
 ## Tests
 

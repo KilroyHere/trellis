@@ -1,0 +1,120 @@
+# The heavier Linux jobs, daily on the default branch and on demand
+# (gh workflow run nightly.yml --ref <branch>): the ThreadSanitizer preset and the quick
+# compile-time benchmark. A failed scheduled run opens an issue (plan §9.2, risk R12).
+name: nightly
+
+on:
+  schedule:
+    - cron: '37 3 * * *' # every day at 03:37 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tsan:
+    name: tsan
+    runs-on: ubuntu-24.04 # not ubuntu-latest; see ci.yml
+    timeout-minutes: 30
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.cache/ccache
+      CCACHE_BASEDIR: ${{ github.workspace }}
+      CCACHE_MAXSIZE: 200M
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Error lines become annotations, for scripts/ci-status.sh; see ci.yml.
+      - name: Register the problem matchers
+        run: echo "::add-matcher::.github/problem-matchers.json"
+
+      # libclang-rt-18-dev holds the ThreadSanitizer runtime.
+      - name: Install packages
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends ccache ninja-build \
+            libgtest-dev libgmock-dev libclang-rt-18-dev
+
+      # The runner's kernel randomizes mmap addresses with 32 bits; Clang 18's ThreadSanitizer
+      # expects at most 28 and fails with "unexpected memory mapping" otherwise.
+      - name: Reduce address randomization for the sanitizer
+        run: sudo sysctl -w vm.mmap_rnd_bits=28
+
+      - name: Restore the compiler cache
+        id: ccache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/ccache
+          key: ccache-tsan-${{ github.sha }}
+          restore-keys: ccache-tsan-
+
+      - name: Configure
+        run: cmake --preset tsan
+
+      - name: Build
+        id: build
+        run: |
+          ccache --zero-stats
+          cmake --build --preset tsan -j "$(nproc)"
+          ccache --show-stats
+
+      - name: Test
+        run: ctest --preset tsan -j "$(nproc)"
+
+      - name: Save the compiler cache
+        if: ${{ !cancelled() && steps.build.outcome != 'skipped' && steps.ccache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/ccache
+          key: ${{ steps.ccache.outputs.cache-primary-key }}
+
+  bench-compile:
+    name: compile-time benchmark (quick)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Error lines become annotations, for scripts/ci-status.sh; see ci.yml.
+      - name: Register the problem matchers
+        run: echo "::add-matcher::.github/problem-matchers.json"
+
+      # It compiles with g++-13 and clang++-18, which the runner image has, and never through
+      # ccache. Task T0.3 adds the script; until then there is nothing to run.
+      - name: Run scripts/bench-compile.sh --quick
+        run: |
+          if [[ ! -e scripts/bench-compile.sh ]]; then
+            echo "::notice::scripts/bench-compile.sh doesn't exist yet (task T0.3 adds it); skipped"
+            exit 0
+          fi
+          scripts/bench-compile.sh --quick
+
+  report:
+    name: report a failed scheduled run
+    needs: [tsan, bench-compile]
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      # One open issue collects the failures until someone closes it.
+      - name: Open an issue, or comment on the open one
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TITLE: The nightly CI run failed
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SHA: ${{ github.sha }}
+        run: |
+          number=$(gh issue list --state open --search "\"$TITLE\" in:title" --json number,title \
+            --jq 'map(select(.title == env.TITLE)) | .[0].number // empty')
+          if [[ -n $number ]]; then
+            gh issue comment "$number" --body "It failed again on $SHA: $RUN_URL"
+          else
+            gh issue create --title "$TITLE" \
+              --body "The scheduled nightly run failed on $SHA: $RUN_URL. A red nightly blocks releases (plan §9.2); close this issue once it passes again."
+          fi

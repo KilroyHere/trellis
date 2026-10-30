@@ -1,0 +1,103 @@
+# Linux CI on every push to a branch, and on pull requests from forks. Each job configures, builds
+# and tests one CMake preset, as scripts/check-full.sh does locally, so every test runs: unit,
+# headers, compile_fail, golden and tools. The repository is private and Actions minutes are
+# limited, so TSan and the benchmarks run nightly (nightly.yml), and macOS and Windows weekly
+# (platforms.yml). scripts/ci-status.sh summarizes the results.
+name: ci
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch, or to the same pull request, cancels the run it supersedes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    # A pull request from a branch of this repository has already been tested by the push run of
+    # the same commit, so pull_request runs only test forks.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    name: ${{ matrix.preset }}
+    # Not ubuntu-latest: that label moves to Ubuntu 26.04 in November 2026, and the presets name
+    # versioned compilers (g++-13, clang++-18) that Ubuntu 24.04 provides.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # packages: what the runner image lacks for this preset. It has GCC 12 to 14, Clang 16 to
+        # 18, CMake and Ninja; the libc++ preset builds GoogleTest from source.
+        include:
+          - preset: gcc-13-debug
+            packages: libgtest-dev libgmock-dev
+          - preset: gcc-14-debug
+            packages: libgtest-dev libgmock-dev
+          - preset: clang-18-debug
+            packages: libgtest-dev libgmock-dev
+          - preset: clang-20-debug
+            packages: clang-20 libgtest-dev libgmock-dev
+          - preset: clang-18-libcxx-debug
+            packages: libc++-18-dev libc++abi-18-dev
+          - preset: asan-ubsan
+            packages: libgtest-dev libgmock-dev libclang-rt-18-dev
+    env:
+      # Inside the checkout but ignored by git (.gitignore has .cache/).
+      CCACHE_DIR: ${{ github.workspace }}/.cache/ccache
+      CCACHE_BASEDIR: ${{ github.workspace }}
+      CCACHE_MAXSIZE: 200M
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Compiler, CMake, CTest, GoogleTest, sanitizer and tools/*.py errors become annotations.
+      # The checks API serves those even where job logs cannot be downloaded, and
+      # scripts/ci-status.sh falls back to them.
+      - name: Register the problem matchers
+        run: echo "::add-matcher::.github/problem-matchers.json"
+
+      - name: Install packages
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends ccache ninja-build ${{ matrix.packages }}
+
+      # The runner's kernel randomizes mmap addresses with 32 bits; the sanitizer runtimes of
+      # Clang 18 expect at most 28 and can fail at startup otherwise.
+      - name: Reduce address randomization for the sanitizers
+        if: matrix.preset == 'asan-ubsan'
+        run: sudo sysctl -w vm.mmap_rnd_bits=28
+
+      - name: Restore the compiler cache
+        id: ccache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/ccache
+          key: ccache-${{ matrix.preset }}-${{ github.sha }}
+          restore-keys: ccache-${{ matrix.preset }}-
+
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }}
+
+      - name: Build
+        id: build
+        run: |
+          ccache --zero-stats
+          cmake --build --preset ${{ matrix.preset }} -j "$(nproc)"
+          ccache --show-stats
+
+      - name: Test
+        run: ctest --preset ${{ matrix.preset }} -j "$(nproc)"
+
+      # Saved even when the tests fail, so that the next run doesn't compile everything again.
+      - name: Save the compiler cache
+        if: ${{ !cancelled() && steps.build.outcome != 'skipped' && steps.ccache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/ccache
+          key: ${{ steps.ccache.outputs.cache-primary-key }}
