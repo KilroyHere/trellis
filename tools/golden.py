@@ -33,7 +33,9 @@ the path separator everywhere, applied in this order:
      "N errors generated.", GCC's "compilation terminated." and compiler version banners;
   4. paths: the build directory becomes <build>/, the source directory <src>/, the standard
      library's include directory <std>/ (libstdc++, libc++ or MSVC's), and any other absolute
-     path <external>/<file name>; what follows a placeholder uses '/', also on Windows;
+     path <external>/<file name>, but only where a diagnostic names a file (a location, or the
+     file of a missing-file message): path-like text in messages and type names stays; what
+     follows a placeholder uses '/', also on Windows;
   5. the line and column after a path (or after Clang's <built-in>, <command line> and
      <scratch space>) become :L:C, and MSVC's (line,column) (L,C), also when the compiler
      printed only a line;
@@ -107,15 +109,26 @@ STD_DIR = re.compile(
 MSVC_STD_DIR = re.compile(
     rf"{_PATH_START}[A-Za-z]:[\\/](?:[^\\/:*?\"<>|\r\n]+[\\/])*?"
     r"VC[\\/]Tools[\\/]MSVC[\\/][^\\/:*?\"<>|\r\n]+[\\/]include[\\/]", re.IGNORECASE)
-# Other absolute paths. The last group is the file name, which is kept. In quotes, a path may
-# contain spaces and parentheses, as in MSVC's "Cannot open include file: 'C:\Program Files
-# (x86)\...\x.h'"; it needs a directory, so that a quoted '/' or '/ x' stays. Unquoted, POSIX and
-# Windows paths end at whitespace.
-QUOTED_PATH = re.compile(
-    r"(?<=['\"])(?:[A-Za-z]:)?[\\/](?:[^'\"\\/\r\n]+[\\/])+([^'\"\\/\r\n]+)(?=['\"])")
-POSIX_PATH = re.compile(rf"{_PATH_START}/(?:{_DIRECTORY}/)+({_DIRECTORY})")
-WINDOWS_PATH = re.compile(
-    rf"{_PATH_START}[A-Za-z]:[\\/](?:[^\s\\/:'\"(),<>]+[\\/])*([^\s\\/:'\"(),<>]+)")
+# Other absolute paths become <external>/<file name>, but only where a diagnostic names a file
+# that the compiler read or looked for. Path-like text anywhere else stays as it is, such as the
+# string in named<fixed_string<12>{"/db/primary"}> or a message's "see /docs/db/E001": it is the
+# same on every machine, and rewriting it would make snippets that differ in it look alike.
+_ABSOLUTE = r"(?:[A-Za-z]:)?[\\/]"  # a POSIX root or a Windows drive
+# A location at the start of a line, up to its ":12", or on a GCC context line up to ": In" or
+# ": At" ("/x/a.hpp: In function 'f':"). The line start anchors it, so it may contain spaces.
+LINE_START_LOCATION = re.compile(rf"^{_ABSOLUTE}[^:\r\n]*?(?=:\d|: (?:In|At) )")
+# A location elsewhere: a path followed by ":12" or MSVC's "(12", as in Clang's
+# "(lambda at /x/a.cpp:3:9)". Nothing anchors its start, so it ends at whitespace.
+LOCATION = re.compile(rf"{_PATH_START}{_ABSOLUTE}(?:{_DIRECTORY}[\\/])*{_DIRECTORY}(?=:\d|\(\d)")
+# The file of a missing-file message, which ends where the message's fixed text starts, so it may
+# contain spaces: GCC's "fatal error: /x/a.hpp: No such file or directory" (also its warnings about
+# include directories), Clang's "'/x/a.hpp' file not found", Clang's driver's
+# "no such file or directory: '/x/a.cpp'", and MSVC's "Cannot open include file: 'C:\x\a.h': No
+# such file or directory".
+MISSING_FILE = re.compile(
+    rf"(?<=: ){_ABSOLUTE}[^\r\n]*?(?=: No such file or directory)"
+    rf"|(?<='){_ABSOLUTE}[^'\r\n]*(?=' file not found|': No such file or directory)"
+    rf"|(?<=no such file or directory: '){_ABSOLUTE}[^'\r\n]*(?=')")
 # A normalized path: a placeholder and what follows it, up to the punctuation that ends a path.
 NORMALIZED_PATH = r"<(?:src|build|std|external)>/[^\s:'\"(),<>]*"
 # Clang's locations in no file: macros defined on the command line or predefined, and the scratch
@@ -156,12 +169,17 @@ def _prefix_rules(source_dir, binary_dir):
     return rules
 
 
+def _external(path):
+    """<external>/ and the file name of an absolute PATH, which may use either separator."""
+    return "<external>/" + re.split(r"[\\/]", path)[-1]
+
+
 def _msvc_location(match):
     """An MSVC location with (L,C) for its (line,column); an absolute file outside the known
     directories becomes <external>/name."""
     file = match.group("file")
-    if re.match(r"^(?:[A-Za-z]:)?[\\/]", file):
-        file = "<external>/" + re.split(r"[\\/]", file)[-1]
+    if re.match(rf"^{_ABSOLUTE}", file):
+        file = _external(file)
     return file + "(L,C)"
 
 
@@ -172,9 +190,8 @@ def _normalize_paths(line, prefix_rules):
     line = MSVC_STD_DIR.sub("<std>/", line)
     line = STD_DIR.sub("<std>/", line)
     line = MSVC_LOCATION.sub(_msvc_location, line)
-    line = QUOTED_PATH.sub(r"<external>/\1", line)  # before POSIX_PATH, which stops at a space
-    line = POSIX_PATH.sub(r"<external>/\1", line)
-    line = WINDOWS_PATH.sub(r"<external>/\1", line)
+    for pattern in (MISSING_FILE, LINE_START_LOCATION, LOCATION):
+        line = pattern.sub(lambda m: _external(m.group(0)), line)
     line = re.sub(NORMALIZED_PATH, lambda m: m.group(0).replace("\\", "/"), line)
     return LINE_COLUMN.sub(r"\1:L:C", line)
 

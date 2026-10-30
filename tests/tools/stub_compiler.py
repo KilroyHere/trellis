@@ -35,12 +35,15 @@ SCENARIOS = {
 }
 
 # What the self-tests add to a runner's environment before a report-invocation run: include paths,
-# color, URL and terminal-width settings, a translation, options that GCC, Clang and MSVC take
-# from the environment, and a variable that no compiler needs. None of them may reach the compiler.
+# color, URL and terminal-width settings, a translation, where GCC's driver finds its programs,
+# a request for dependency files, options that GCC, Clang and MSVC take from the environment, and
+# a variable that no compiler needs. None of them may reach the compiler.
 INHERITED = {
     "CPATH": "inherited", "C_INCLUDE_PATH": "inherited", "CPLUS_INCLUDE_PATH": "inherited",
     "GCC_COLORS": "error=01;31", "GCC_URLS": "st", "TERM_URLS": "st", "COLUMNS": "40",
     "GCC_EXTRA_DIAGNOSTIC_OUTPUT": "fixits-v2", "CCC_OVERRIDE_OPTIONS": "#+-fcolor-diagnostics",
+    "GCC_EXEC_PREFIX": "/nonexistent/gcc/", "COMPILER_PATH": "/nonexistent/bin",
+    "DEPENDENCIES_OUTPUT": "/nonexistent/deps.d",
     "CL": "/Wall", "_CL_": "/Wall", "LANGUAGE": "de", "LC_MESSAGES": "de_DE.UTF-8",
     "TRELLIS_SELFTEST_INHERITED": "1",
 }

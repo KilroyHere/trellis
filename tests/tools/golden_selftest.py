@@ -208,6 +208,53 @@ class NormalizeTest(unittest.TestCase):
         output = "   from 'x',\n   from here:\n"
         self.assertEqual(golden.normalize(output, "/work/trellis"), output)
 
+    def test_path_like_text_that_names_no_file_stays(self):
+        # Named qualifiers are string literals, and messages may mention paths. Neither names a
+        # file the compiler read, so neither is rewritten; otherwise snippets that differ only
+        # in /db/ and /xy/ would normalize to the same text.
+        def output(directory):
+            return (
+                "/work/trellis/a.cpp:10:51: error: static assertion failed due to requirement "
+                f"'always_false<named<fixed_string<12>{{\"/{directory}/primary\"}}>>': "
+                f"TRL-E000: see /docs/{directory}/E001\n"
+                "/work/trellis/a.cpp: In instantiation of 'void require() [with T = "
+                f"named<fixed_string<12>{{\"/{directory}/primary\"}}>]':\n"
+                f"/work/trellis/a.cpp:3:4: error: '/{directory}/x', 'C:\\{directory}\\y', "
+                f"/{directory}/z: 'w'\n")
+        expected = (
+            "<src>/a.cpp:L:C: error: static assertion failed due to requirement "
+            "'always_false<named<fixed_string<12>{\"/db/primary\"}>>': "
+            "TRL-E000: see /docs/db/E001\n"
+            "<src>/a.cpp: In instantiation of 'void require() [with T = "
+            "named<fixed_string<12>{\"/db/primary\"}>]':\n"
+            "<src>/a.cpp:L:C: error: '/db/x', 'C:\\db\\y', /db/z: 'w'\n")
+        self.assertEqual(golden.normalize(output("db"), "/work/trellis"), expected)
+        self.assertNotEqual(golden.normalize(output("db"), "/work/trellis"),
+                            golden.normalize(output("xy"), "/work/trellis"))
+
+    def test_locations_and_missing_files_may_contain_spaces(self):
+        # A location at the start of a line ends at its line number, or at ": In" on a GCC context
+        # line; a missing file at the end of its message.
+        output = (
+            "/home/J Doe/lib/x.hpp:3:4: error: a\n"
+            "/home/J Doe/lib/x.hpp: In function 'int main()':\n"
+            "/work/trellis/a.cpp:3:10: fatal error: /nonexistent/reviewer dir/missing.hpp: "
+            "No such file or directory\n"
+            "/work/trellis/b.cpp:3:10: fatal error: '/nonexistent/reviewer dir/missing.hpp' "
+            "file not found\n"
+            "clang++: error: no such file or directory: '/tmp/a b/c.cpp'\n"
+            "cc1plus: warning: /opt/x y/include: No such file or directory "
+            "[-Wmissing-include-dirs]\n")
+        expected = (
+            "<external>/x.hpp:L:C: error: a\n"
+            "<external>/x.hpp: In function 'int main()':\n"
+            "<src>/a.cpp:L:C: fatal error: <external>/missing.hpp: No such file or directory\n"
+            "<src>/b.cpp:L:C: fatal error: '<external>/missing.hpp' file not found\n"
+            "clang++: error: no such file or directory: '<external>/c.cpp'\n"
+            "cc1plus: warning: <external>/include: No such file or directory "
+            "[-Wmissing-include-dirs]\n")
+        self.assertEqual(golden.normalize(output, "/work/trellis"), expected)
+
     def test_quoted_paths_may_contain_spaces(self):
         output = (
             "C:\\src\\trellis\\tests\\a.cpp(3): fatal error C1083: Cannot open include file: "
