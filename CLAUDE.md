@@ -18,14 +18,14 @@ The project runs across many sessions. The task list, the progress log and the g
 
 ## Commands
 
-The scripts arrive with T0.1. If a command here disagrees with a script, the script is right; fix this file.
+`init.sh`, `check-fast.sh`, `check-full.sh` and `tidy.sh` arrive with T0.1, `ci-status.sh` with T0.2, and `bench-compile.sh` and `bench-runtime.sh` with T0.3. If a command here disagrees with a script, the script is right; fix this file.
 
 - Smoke test: `scripts/init.sh`
 - Fast check (format, clang-18 debug build, tests): `scripts/check-fast.sh`
-- Full local matrix (gcc-13, gcc-14, clang-18, clang-20, clang-18 + libc++, ASan/UBSan, TSan): `scripts/check-full.sh`
+- Full local matrix, every preset one at a time (gcc-13, gcc-14, clang-18, clang-20 and clang-18 + libc++ debug; gcc-13 and clang-18 release; ASan/UBSan; TSan; timetrace): `scripts/check-full.sh`, or `scripts/check-full.sh <preset>...` for some
 - One preset: `cmake --preset clang-18-debug && cmake --build --preset clang-18-debug && ctest --preset clang-18-debug`
 - One test: `ctest --preset clang-18-debug -R <regex>`
-- By label: `ctest --preset clang-18-debug -L compile_fail` (or `-L golden`, `-L property`, `-L module`)
+- By label: `ctest --preset clang-18-debug -L compile_fail` (or `-L unit`, `-L golden`, `-L tools`). `-L property` has tests from T0.3 and `-L module` from T1.8; until then they fail, because a label that selects no tests is an error.
 - Compile-time budgets: `scripts/bench-compile.sh --quick`. Runtime: `scripts/bench-runtime.sh`
 - CI status and the first errors of failed jobs: `scripts/ci-status.sh`. MSVC and macOS run only in CI.
 - Lint changed lines: `scripts/tidy.sh`. Formatting is automatic: a hook runs clang-format-18 on edited files.
