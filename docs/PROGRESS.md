@@ -31,6 +31,42 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev` so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
 
+## 2026-10-30: T0.3 benchmark harness and equivalence oracle (passed)
+
+- **What changed:**
+  - `benchmarks/compile/`:
+    - `gen_graph.py`: deterministic graphs. Fan-in 1–3 with the default seed reproduces the research graph exactly, fan-in 10 matches Fruit's setting, and the request forms are shared_ptr, reference or mixed.
+    - `run.py`: median of 3, peak memory from wait4, a process-group kill on timeout, a memory cap, and no ccache.
+    - `budgets.json`: NFR-03, NFR-04 and NFR-05 quoted verbatim from plan §3.2. It is now protected.
+  - `benchmarks/scenario/` and `benchmarks/runtime/`: the research scenario, wired by hand, with a Google Benchmark program (1.8 or later).
+  - `tests/property/`: the equivalence oracle. Each program resolves its root twice from one injector and once from a second, walks the object graph, and prints an identity checksum plus `constructed=`/`instances=`. A Python model predicts both.
+  - `scripts/bench-compile.sh [--quick]` and `scripts/bench-runtime.sh`, the latter building in `build/bench/runtime/<preset>/`.
+  - CI gives the property tests fresh seeds on every run: ci.yml uses `<run>000000+64`; nightly uses `<run>500000+256` under TSan.
+  - T0.9's fifth criterion is already done here: nightly no longer skips the benchmark silently.
+- **Review, two independent rounds:**
+  - **Round 1 failed** on two points. The oracle missed a singleton built twice when the extra copy was unreachable, and `budgets.json` said "median of 3" although large compiles took one sample.
+  - **Round 2 passed.** Over 82 graphs:
+    - the correct wiring was never flagged;
+    - every planted sharing bug was caught;
+    - a legitimate move into storage wasn't flagged.
+- **Evidence:** `scripts/tasks.py verify T0.3` on main:
+  - bench-compile --quick: 8 programs, 0 budgets missed;
+  - bench-runtime: passed;
+  - property: 5 tests.
+
+  `check-full.sh`: 10 of 10 presets pass.
+- **Hand-wired baselines** (gcc-13 / clang-18; this VM is slower than in the research, but budgets are ratios):
+  - Scenario: 1.50 / 1.79 s; 164 / 158 MB; 18,736 / 14,744 B stripped (identical to the research).
+  - N=100: 7.4 / 8.1 s; 383 / 248 MB.
+  - Runtime: graph 57 / 58 ns; resolve 27 / 30 ns.
+  - Hand-wiring itself grows superlinearly on gcc-13, from 50 s at N=500 to 172 s at N=1000, so NFR-04's N=1000 ratio is measured against a superlinear baseline.
+- **Readings now fixed in `budgets.json`**, recorded for the owner:
+  - NFR-03 is a difference (at most +0.3 s), which depends on the machine.
+  - The growth and layout targets are kept as quoted text, not automated checks.
+  - Budgets apply to every measured profile, which is stricter than the research's shared_ptr fan-in 1–3 runs.
+  - Ratios are compared at 2 decimals, so 1.304× passes "≤ 1.3×".
+- **Note:** a verify that calls `ctest` directly needs `scripts/init.sh` first after other tasks change the CMake setup, as the session protocol's step 2 already says.
+
 ## 2026-10-30: T0.2 CI workflows (passed)
 
 - **What changed:**
