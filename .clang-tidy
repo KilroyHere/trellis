@@ -1,0 +1,11 @@
+# clang-tidy-18, run by scripts/tidy.sh on changed lines (plan §9.1: bugprone, performance and
+# modernize, as errors). Headers are checked through the translation units that include them.
+Checks: >
+  -*,
+  bugprone-*,
+  performance-*,
+  modernize-*,
+  -modernize-use-trailing-return-type,
+  misc-include-cleaner
+WarningsAsErrors: "*"
+HeaderFilterRegex: "include/trellis/.*"

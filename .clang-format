@@ -1,0 +1,19 @@
+# clang-format-18 is the pinned formatter: the edit hook, scripts/check-fast.sh and CI all use it.
+BasedOnStyle: Google
+Standard: c++20
+ColumnLimit: 100
+DerivePointerAlignment: false
+PointerAlignment: Left
+InsertNewlineAtEOF: true
+# Compile-fail directives (`// expect-regex: ...`) must stay on one line, so they are never reflowed.
+CommentPragmas: '^ (IWYU pragma|compile-fail|expect-[a-z-]+):'
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^<trellis/'
+    Priority: 1
+  - Regex: '^<(gtest|gmock|benchmark)/'
+    Priority: 3
+  - Regex: '^<'
+    Priority: 2
+  - Regex: '.*'
+    Priority: 4

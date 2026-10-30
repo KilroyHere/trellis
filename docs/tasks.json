@@ -6,7 +6,12 @@
       "phase": 0,
       "title": "Build, test and check scaffold",
       "description": "Create the CMake project, presets, warning and sanitizer setup, GoogleTest wiring, the compile-fail and golden-diagnostics runners, the developer scripts and the formatting and lint configuration that every later task relies on. The library stays empty apart from version and feature-detection headers. Verified preset, pre-commit, clang-tidy and GoogleTest snippets are in research/research_notes/Claude Code implementation practices/tooling_and_graphify.md.",
-      "plan_refs": ["§5.2", "§9.1", "§10", "ADR-08"],
+      "plan_refs": [
+        "§5.2",
+        "§9.1",
+        "§10",
+        "ADR-08"
+      ],
       "acceptance": [
         "An INTERFACE target trellis::trellis with install rules and a CMake package config; a consumer project in tests/package/ builds against an installed copy with find_package(trellis CONFIG REQUIRED).",
         "CMakePresets.json with configure, build and test presets gcc-13-debug, gcc-14-debug, clang-18-debug, clang-20-debug, clang-18-libcxx-debug, gcc-13-release, clang-18-release, asan-ubsan (clang-18), tsan (clang-18) and timetrace (clang-18 with -ftime-trace, no ccache): Ninja generator, build directories build/<preset>, CMAKE_EXPORT_COMPILE_COMMANDS=ON, ccache as compiler launcher when it is installed (never for timing builds).",
@@ -24,14 +29,17 @@
         "cmake --install build/clang-18-debug --prefix build/install-test && cmake -S tests/package -B build/package-test -G Ninja -DCMAKE_CXX_COMPILER=clang++-18 -DCMAKE_PREFIX_PATH=$PWD/build/install-test && cmake --build build/package-test"
       ],
       "depends_on": [],
-      "passes": false
+      "passes": true
     },
     {
       "id": "T0.2",
       "phase": 0,
       "title": "CI workflows",
       "description": "GitHub Actions workflows that mirror the local scripts. The repository is private, so Actions minutes are limited: Linux runs on every push and pull request, and the heavier and non-Linux jobs run on a schedule and on demand.",
-      "plan_refs": ["§9.2", "R12"],
+      "plan_refs": [
+        "§9.2",
+        "R12"
+      ],
       "acceptance": [
         ".github/workflows/ci.yml (push and pull_request): Linux jobs for gcc-13, gcc-14, clang-18, clang-20, clang-18-libcxx and asan-ubsan using the CMake presets, running the unit, compile_fail and golden tests; a ccache cache per preset; a concurrency group that cancels superseded runs.",
         ".github/workflows/nightly.yml (daily schedule and workflow_dispatch): tsan and the quick compile-time benchmark on Linux.",
@@ -44,7 +52,9 @@
         "actionlint .github/workflows/*.yml",
         "scripts/ci-status.sh"
       ],
-      "depends_on": ["T0.1"],
+      "depends_on": [
+        "T0.1"
+      ],
       "passes": false
     },
     {
@@ -52,7 +62,11 @@
       "phase": 0,
       "title": "Benchmark harness and equivalence oracle",
       "description": "Port the research harness (research/experiments) into benchmarks/: generated dependency graphs for compile-time measurements, a runtime microbenchmark baseline, the budgets, and a generator that emits hand-wired programs with an identity checksum, so that later tasks can check Trellis against hand-written wiring.",
-      "plan_refs": ["§8.4", "§9.1", "§3.2"],
+      "plan_refs": [
+        "§8.4",
+        "§9.1",
+        "§3.2"
+      ],
       "acceptance": [
         "benchmarks/compile/gen_graph.py generates deterministic graphs of N components (fan-in 1 to 3, and 10) from a seed, emits a hand-wired program, and has an extension point for a trellis variant.",
         "benchmarks/compile/run.py compiles generated programs one at a time with a timeout and a memory cap, never through ccache, records median wall time, peak RSS, and object and stripped binary sizes as JSON under build/bench/, and prints a table.",
@@ -66,7 +80,9 @@
         "scripts/bench-runtime.sh",
         "ctest --preset clang-18-debug -L property"
       ],
-      "depends_on": ["T0.1"],
+      "depends_on": [
+        "T0.1"
+      ],
       "passes": false
     },
     {
@@ -74,7 +90,11 @@
       "phase": 0,
       "title": "Spike S1: deduced constructor discovery",
       "description": "Find the set of conversion operators for placeholder arguments that resolves every constructor-parameter form without ambiguity, measure the cost of arity probing, and document the limits. Use the /spike skill.",
-      "plan_refs": ["§7.2", "§12.1 S1", "ADR-03"],
+      "plan_refs": [
+        "§7.2",
+        "§12.1 S1",
+        "ADR-03"
+      ],
       "acceptance": [
         "spikes/S1-deduced-discovery/ contains the prototype header, the test programs, and run.sh, which reproduces every result on gcc-13, gcc-14, clang-18, clang-20 and clang-18 with libc++.",
         "docs/spikes/S1-deduced-discovery.md has a table of at least 12 parameter forms by compiler (T, T&, const T&, T&&, T*, const T*, unique_ptr<T>, shared_ptr<T>, const shared_ptr<T>&, std::function, std::span, std::optional, plus any others found relevant). Every cell is either resolved or explained.",
@@ -82,7 +102,9 @@
         "Each limit has a detection strategy and an intended error: constructor templates, variadic constructors, same-arity overloads, defaulted parameters, aggregates, private or deleted constructors, abstract types.",
         "Includes an MSVC risk assessment (MSVC cannot be tested here) and a recommendation that confirms or amends ADR-03."
       ],
-      "verify": ["bash spikes/S1-deduced-discovery/run.sh"],
+      "verify": [
+        "bash spikes/S1-deduced-discovery/run.sh"
+      ],
       "depends_on": [],
       "review": "owner",
       "passes": false
@@ -92,7 +114,12 @@
       "phase": 0,
       "title": "Spike S3: diagnostics rendering",
       "description": "Prototype how Trellis reports wiring errors in C++20 (a static_assert whose condition names an error type) and in C++26 (user-generated static_assert messages), and measure what each compiler prints. Use the /spike skill.",
-      "plan_refs": ["§7.8", "§12.1 S3", "ADR-06", "NFR-07"],
+      "plan_refs": [
+        "§7.8",
+        "§12.1 S3",
+        "ADR-06",
+        "NFR-07"
+      ],
       "acceptance": [
         "spikes/S3-diagnostics/ prototypes E001, E005 and E012, each at the root and three levels deep, with run.sh reproducing everything on gcc-13, gcc-14, clang-18 and clang-20. C++26 message forms are tested with clang -std=c++2c and gcc-14 -std=c++26.",
         "docs/spikes/S3-diagnostics.md records, per compiler and form: the first error line, total lines and bytes, and whether errors cascade, together with the technique used to stop cascades.",
@@ -100,7 +127,9 @@
         "Compares against the Boost.DI and Fruit outputs in research/experiments/results/logs/diagnostics.",
         "Gives a recommendation for ADR-06 and a verdict on whether the 40-line budget is feasible."
       ],
-      "verify": ["bash spikes/S3-diagnostics/run.sh"],
+      "verify": [
+        "bash spikes/S3-diagnostics/run.sh"
+      ],
       "depends_on": [],
       "review": "owner",
       "passes": false
@@ -110,14 +139,22 @@
       "phase": 0,
       "title": "Spike S4: storage and threading",
       "description": "Choose the design of lazily initialized singleton slots and of the teardown stack by measurement. Use the /spike skill.",
-      "plan_refs": ["§7.5", "§7.6", "§12.1 S4", "ADR-05", "ADR-12"],
+      "plan_refs": [
+        "§7.5",
+        "§7.6",
+        "§12.1 S4",
+        "ADR-05",
+        "ADR-12"
+      ],
       "acceptance": [
         "spikes/S4-storage-threading/ compares std::call_once per slot with an atomic state machine: slot size, warm and cold access cost, and contention with 8 threads (Google Benchmark), with run.sh.",
         "Covers retry after an exception during construction, re-entrancy detection (R004), teardown order, and shared_ptr versus inline storage.",
         "ThreadSanitizer is clean on the stress tests.",
         "docs/spikes/S4-storage-threading.md recommends a design for ADR-12 and §7.6."
       ],
-      "verify": ["bash spikes/S4-storage-threading/run.sh"],
+      "verify": [
+        "bash spikes/S4-storage-threading/run.sh"
+      ],
       "depends_on": [],
       "review": "owner",
       "passes": false
@@ -127,15 +164,26 @@
       "phase": 0,
       "title": "Spike S2: memoization and cycles",
       "description": "Measure how resolution strategies scale at compile time and decide how deduced mode handles dependency cycles. Build on S1's prototype and T0.3's graph generator. Use the /spike skill.",
-      "plan_refs": ["§7.3", "§12.1 S2", "NFR-04", "NFR-05", "NFR-09"],
+      "plan_refs": [
+        "§7.3",
+        "§12.1 S2",
+        "NFR-04",
+        "NFR-05",
+        "NFR-09"
+      ],
       "acceptance": [
         "spikes/S2-memoization-cycles/ compares per-key memoization, depth-bounded and path-tracked variants at N = 25, 50, 100 and 250 (500 and 1000 if within the memory caps), with fan-in 3 and 10, on gcc-13 and clang-18. run.sh supports --quick.",
         "Measures instantiation depth per dependency hop with -ftemplate-depth sweeps on chains of 50 to 500.",
         "Records what each compiler reports for a cycle under each variant.",
         "docs/spikes/S2-memoization-cycles.md recommends the cycle option for §7.3 and confirms or revises NFR-09."
       ],
-      "verify": ["bash spikes/S2-memoization-cycles/run.sh --quick"],
-      "depends_on": ["T0.3", "T0.4"],
+      "verify": [
+        "bash spikes/S2-memoization-cycles/run.sh --quick"
+      ],
+      "depends_on": [
+        "T0.3",
+        "T0.4"
+      ],
       "review": "owner",
       "passes": false
     },
@@ -144,7 +192,10 @@
       "phase": 0,
       "title": "Architecture decision records",
       "description": "Write one ADR per decision in plan §4, updated with the spike results.",
-      "plan_refs": ["§4", "§12.1"],
+      "plan_refs": [
+        "§4",
+        "§12.1"
+      ],
       "acceptance": [
         "docs/adr/0001-*.md to 0013-*.md, one per ADR in plan §4. Each has a Status line plus Context, Decision, Alternatives and Consequences sections.",
         "Spike outcomes are folded in. Decisions a spike changed are marked 'Accepted (provisional, awaiting owner review)' and listed in docs/PROGRESS.md.",
@@ -154,7 +205,12 @@
         "test $(ls docs/adr/*.md | wc -l) -ge 13",
         "! grep -L 'Status' docs/adr/*.md"
       ],
-      "depends_on": ["T0.4", "T0.5", "T0.6", "T0.7"],
+      "depends_on": [
+        "T0.4",
+        "T0.5",
+        "T0.6",
+        "T0.7"
+      ],
       "review": "owner",
       "passes": false
     },
@@ -163,7 +219,11 @@
       "phase": 1,
       "title": "Meta toolkit",
       "description": "The compile-time utilities the engine is built on: type lists, an inheritance-based type map with duplicate detection, fixed strings, constexpr type names and the result type.",
-      "plan_refs": ["§7.1", "§8.1 C2-C3", "NFR-12"],
+      "plan_refs": [
+        "§7.1",
+        "§8.1 C2-C3",
+        "NFR-12"
+      ],
       "interfaces": [
         "trellis::detail::type_list<Ts...>; contains_v<T, List>; index_of_v<T, List>; at_t<I, List>",
         "trellis::detail::type_map<entry<K, V>...>; lookup_t<K, Map>; has_duplicate_keys_v<Map>",
@@ -177,8 +237,13 @@
         "No recursive variadic templates: algorithms use fold expressions, and lookups use overload resolution.",
         "Headers are self-contained and warning-free (NFR-10)."
       ],
-      "verify": ["scripts/check-full.sh"],
-      "depends_on": ["T0.1", "T0.8"],
+      "verify": [
+        "scripts/check-full.sh"
+      ],
+      "depends_on": [
+        "T0.1",
+        "T0.8"
+      ],
       "passes": false
     },
     {
@@ -186,7 +251,10 @@
       "phase": 1,
       "title": "Explicit constructor declaration",
       "description": "The explicit discovery strategy: a trait the user can specialize, an opt-in member alias, and a hook point for .with_ctor<Args...>().",
-      "plan_refs": ["§7.2 explicit", "ADR-03"],
+      "plan_refs": [
+        "§7.2 explicit",
+        "ADR-03"
+      ],
       "interfaces": [
         "template <class T> struct trellis::ctor_traits;",
         "template <class... Args> struct trellis::ctor;",
@@ -197,8 +265,12 @@
         "A declaration that doesn't match any constructor is a compile error with a clear message (compile-fail test).",
         "Unit tests pass on all local presets."
       ],
-      "verify": ["scripts/check-full.sh"],
-      "depends_on": ["T1.1"],
+      "verify": [
+        "scripts/check-full.sh"
+      ],
+      "depends_on": [
+        "T1.1"
+      ],
       "passes": false
     },
     {
@@ -206,14 +278,22 @@
       "phase": 1,
       "title": "Deduced constructor discovery",
       "description": "Automatic, macro-free constructor discovery using the placeholder-argument technique chosen in spike S1.",
-      "plan_refs": ["§7.2 deduced", "docs/spikes/S1-deduced-discovery.md", "ADR-03"],
+      "plan_refs": [
+        "§7.2 deduced",
+        "docs/spikes/S1-deduced-discovery.md",
+        "ADR-03"
+      ],
       "acceptance": [
         "any_arg follows S1's chosen set of conversion operators. Arity probing goes up to options.max_ctor_arity (default 16), excludes copy and move constructors, and handles aggregates.",
         "Every limit found in S1 has a compile-fail test producing E004, E010 or the documented message.",
         "Each parameter form in the S1 table has a resolution test, run on all local presets."
       ],
-      "verify": ["scripts/check-full.sh"],
-      "depends_on": ["T1.2"],
+      "verify": [
+        "scripts/check-full.sh"
+      ],
+      "depends_on": [
+        "T1.2"
+      ],
       "passes": false
     },
     {
@@ -221,7 +301,15 @@
       "phase": 1,
       "title": "Binding vocabulary and modules",
       "description": "The binding vocabulary, lifetimes, modules and options, plus the request-form compatibility table.",
-      "plan_refs": ["§6.1", "§6.2", "§6.3", "§6.9", "§6.13", "ADR-04", "ADR-10"],
+      "plan_refs": [
+        "§6.1",
+        "§6.2",
+        "§6.3",
+        "§6.9",
+        "§6.13",
+        "ADR-04",
+        "ADR-10"
+      ],
       "interfaces": [
         "trellis::bind<I>.to<C>().in(trellis::singleton)",
         ".to_ref(x), .to_ptr(p), .to_value(v), .to_shared(sp)",
@@ -234,8 +322,12 @@
         "The request-form table in plan §6.3 is encoded as constexpr data with a test for each cell. E005 and E012 have compile-fail tests.",
         "Modules are flattened once, and no fluent chain accumulates bindings in a type."
       ],
-      "verify": ["scripts/check-full.sh"],
-      "depends_on": ["T1.1"],
+      "verify": [
+        "scripts/check-full.sh"
+      ],
+      "depends_on": [
+        "T1.1"
+      ],
       "passes": false
     },
     {
@@ -243,7 +335,13 @@
       "phase": 1,
       "title": "Storage, lifetimes and create<T>",
       "description": "Per-injector storage, teardown and object creation for every allowed request form. The research scenario is wired with Trellis end to end.",
-      "plan_refs": ["§5.3", "§7.5", "ADR-05", "ADR-12", "docs/spikes/S4-storage-threading.md"],
+      "plan_refs": [
+        "§5.3",
+        "§7.5",
+        "ADR-05",
+        "ADR-12",
+        "docs/spikes/S4-storage-threading.md"
+      ],
       "acceptance": [
         "Singleton slots are per injector (shared_ptr storage by default, inline as an option). Teardown runs in reverse order of construction, shown by recorded-destructor tests.",
         "unique, external and value lifetimes work. create<T>() supports every request form the table allows, and identity tests check sharing.",
@@ -253,7 +351,10 @@
         "scripts/check-full.sh",
         "ctest --preset clang-18-debug -R scenario"
       ],
-      "depends_on": ["T1.3", "T1.4"],
+      "depends_on": [
+        "T1.3",
+        "T1.4"
+      ],
       "passes": false
     },
     {
@@ -261,7 +362,12 @@
       "phase": 1,
       "title": "Diagnostics in C++20 form",
       "description": "Root-cause compile errors with stable IDs and the dependency path, rendered as S3 recommends.",
-      "plan_refs": ["§7.8", "ADR-06", "NFR-07", "docs/spikes/S3-diagnostics.md"],
+      "plan_refs": [
+        "§7.8",
+        "ADR-06",
+        "NFR-07",
+        "docs/spikes/S3-diagnostics.md"
+      ],
       "acceptance": [
         "Error types exist for E001-E005, E009, E010 and E012. Exactly one static_assert fires per root cause, with no cascading errors.",
         "A minimal explain pass reports the path from the root.",
@@ -273,7 +379,9 @@
         "ctest --preset gcc-13-debug -L golden",
         "ctest --preset clang-18-debug -L golden"
       ],
-      "depends_on": ["T1.5"],
+      "depends_on": [
+        "T1.5"
+      ],
       "passes": false
     },
     {
@@ -281,14 +389,20 @@
       "phase": 1,
       "title": "Test overrides and testing helpers",
       "description": "Overrides for tests, plus helpers to check that a graph can be wired.",
-      "plan_refs": ["§6.10"],
+      "plan_refs": [
+        "§6.10"
+      ],
       "acceptance": [
         "trellis::override<K> replaces an existing binding. With nothing to override, it is error E009 (compile-fail test).",
         "trellis::testing::wireable<Injector, Root> and trellis::testing::create_all work.",
         "A gMock example test exists, and a test shows that singletons are isolated per injector."
       ],
-      "verify": ["scripts/check-full.sh"],
-      "depends_on": ["T1.6"],
+      "verify": [
+        "scripts/check-full.sh"
+      ],
+      "depends_on": [
+        "T1.6"
+      ],
       "passes": false
     },
     {
@@ -296,7 +410,11 @@
       "phase": 1,
       "title": "C++20 module and single header",
       "description": "Deliver the library as a C++20 module and as a generated single header, both tested.",
-      "plan_refs": ["§10", "R15", "ADR-08"],
+      "plan_refs": [
+        "§10",
+        "R15",
+        "ADR-08"
+      ],
       "acceptance": [
         "modules/trellis.cppm exports the public API. It builds and passes a smoke test with CMake 3.28 and Ninja on clang-18 and clang-20, and on gcc-14 if its module support is sufficient (otherwise documented).",
         "tools/amalgamate.py produces single_include/trellis.hpp, a gitignored build artifact that passes the unit tests."
@@ -305,7 +423,9 @@
         "ctest --preset clang-18-debug -L module",
         "python3 -I tools/amalgamate.py --check"
       ],
-      "depends_on": ["T1.7"],
+      "depends_on": [
+        "T1.7"
+      ],
       "passes": false
     },
     {
@@ -313,7 +433,14 @@
       "phase": 1,
       "title": "v0.1 benchmarks against budgets",
       "description": "Measure Trellis against hand-written wiring and the budgets, and check it against the equivalence oracle.",
-      "plan_refs": ["§3.2", "§8.4", "NFR-01", "NFR-03", "NFR-04", "NFR-06"],
+      "plan_refs": [
+        "§3.2",
+        "§8.4",
+        "NFR-01",
+        "NFR-03",
+        "NFR-04",
+        "NFR-06"
+      ],
       "acceptance": [
         "There is a trellis variant in gen_graph.py and in the runtime benchmark.",
         "The equivalence oracle passes on 200 random graphs (Trellis versus hand-wired checksums).",
@@ -325,7 +452,11 @@
         "scripts/bench-runtime.sh",
         "ctest --preset clang-18-release -L property"
       ],
-      "depends_on": ["T1.5", "T1.6", "T0.3"],
+      "depends_on": [
+        "T1.5",
+        "T1.6",
+        "T0.3"
+      ],
       "passes": false
     },
     {
@@ -333,7 +464,11 @@
       "phase": 1,
       "title": "v0.1 release",
       "description": "Docs, a cleanup pass and the phase gate for the first release.",
-      "plan_refs": ["§11", "§12.2 phase 1", "NFR-12"],
+      "plan_refs": [
+        "§11",
+        "§12.2 phase 1",
+        "NFR-12"
+      ],
       "acceptance": [
         "README has a quick start whose hello world (plan §6.1) compiles as a test. docs/getting-started.md and CHANGELOG.md exist.",
         "A cleanup and simplification pass reports the core line count (NFR-12).",
@@ -344,7 +479,10 @@
         "scripts/check-full.sh",
         "test -f docs/gates/phase-1.md"
       ],
-      "depends_on": ["T1.8", "T1.9"],
+      "depends_on": [
+        "T1.8",
+        "T1.9"
+      ],
       "review": "owner",
       "passes": false
     },
@@ -353,10 +491,22 @@
       "phase": 2,
       "title": "Expand Phase 2 (lifetimes and safety) into tasks",
       "description": "Break Phase 2 of plan §12.2 into tasks of the same shape as the Phase 1 tasks and append them with scripts/tasks.py add. Each task gets interfaces, acceptance criteria and verify commands. Every new task depends on T2.0.",
-      "plan_refs": ["§12.2 phase 2", "§6.4", "§6.8", "§7.3", "§7.6"],
-      "acceptance": ["Phase 2 tasks are appended with acceptance criteria and verify commands that cover every exit criterion of the phase."],
-      "verify": ["scripts/tasks.py list --phase 2"],
-      "depends_on": ["T1.10"],
+      "plan_refs": [
+        "§12.2 phase 2",
+        "§6.4",
+        "§6.8",
+        "§7.3",
+        "§7.6"
+      ],
+      "acceptance": [
+        "Phase 2 tasks are appended with acceptance criteria and verify commands that cover every exit criterion of the phase."
+      ],
+      "verify": [
+        "scripts/tasks.py list --phase 2"
+      ],
+      "depends_on": [
+        "T1.10"
+      ],
       "review": "owner",
       "passes": false
     },
@@ -365,10 +515,19 @@
       "phase": 3,
       "title": "Expand Phase 3 (binding features) into tasks",
       "description": "As T2.0, for Phase 3. The plan recommends considering Phase 4 (diagnostics) before Phase 3; the owner decides.",
-      "plan_refs": ["§12.2 phase 3", "§6.5-6.7"],
-      "acceptance": ["Phase 3 tasks are appended with acceptance criteria and verify commands."],
-      "verify": ["scripts/tasks.py list --phase 3"],
-      "depends_on": ["T2.0"],
+      "plan_refs": [
+        "§12.2 phase 3",
+        "§6.5-6.7"
+      ],
+      "acceptance": [
+        "Phase 3 tasks are appended with acceptance criteria and verify commands."
+      ],
+      "verify": [
+        "scripts/tasks.py list --phase 3"
+      ],
+      "depends_on": [
+        "T2.0"
+      ],
       "review": "owner",
       "passes": false
     },
@@ -377,10 +536,19 @@
       "phase": 4,
       "title": "Expand Phase 4 (diagnostics) into tasks",
       "description": "As T2.0, for Phase 4.",
-      "plan_refs": ["§12.2 phase 4", "§7.8"],
-      "acceptance": ["Phase 4 tasks are appended with acceptance criteria and verify commands."],
-      "verify": ["scripts/tasks.py list --phase 4"],
-      "depends_on": ["T3.0"],
+      "plan_refs": [
+        "§12.2 phase 4",
+        "§7.8"
+      ],
+      "acceptance": [
+        "Phase 4 tasks are appended with acceptance criteria and verify commands."
+      ],
+      "verify": [
+        "scripts/tasks.py list --phase 4"
+      ],
+      "depends_on": [
+        "T3.0"
+      ],
       "review": "owner",
       "passes": false
     },
@@ -389,10 +557,20 @@
       "phase": 5,
       "title": "Expand Phase 5 (runtime container) into tasks",
       "description": "As T2.0, for Phase 5. First confirm with the owner that the runtime container belongs in 1.0 (open decision D5).",
-      "plan_refs": ["§12.2 phase 5", "§6.11", "§7.9"],
-      "acceptance": ["Phase 5 tasks are appended with acceptance criteria and verify commands, or the phase is deferred by owner decision."],
-      "verify": ["scripts/tasks.py list --phase 5"],
-      "depends_on": ["T4.0"],
+      "plan_refs": [
+        "§12.2 phase 5",
+        "§6.11",
+        "§7.9"
+      ],
+      "acceptance": [
+        "Phase 5 tasks are appended with acceptance criteria and verify commands, or the phase is deferred by owner decision."
+      ],
+      "verify": [
+        "scripts/tasks.py list --phase 5"
+      ],
+      "depends_on": [
+        "T4.0"
+      ],
       "review": "owner",
       "passes": false
     },
@@ -401,10 +579,20 @@
       "phase": 6,
       "title": "Expand Phase 6 (reflection backend) into tasks",
       "description": "As T2.0, for Phase 6. This phase needs a GCC 16 (or clang-p2996) toolchain, either in CI or in a newer container.",
-      "plan_refs": ["§12.2 phase 6", "§6.12", "§7.10"],
-      "acceptance": ["Phase 6 tasks are appended with acceptance criteria and verify commands, with the toolchain plan recorded."],
-      "verify": ["scripts/tasks.py list --phase 6"],
-      "depends_on": ["T5.0"],
+      "plan_refs": [
+        "§12.2 phase 6",
+        "§6.12",
+        "§7.10"
+      ],
+      "acceptance": [
+        "Phase 6 tasks are appended with acceptance criteria and verify commands, with the toolchain plan recorded."
+      ],
+      "verify": [
+        "scripts/tasks.py list --phase 6"
+      ],
+      "depends_on": [
+        "T5.0"
+      ],
       "review": "owner",
       "passes": false
     },
@@ -413,10 +601,20 @@
       "phase": 7,
       "title": "Expand Phase 7 (ecosystem and docs) into tasks",
       "description": "As T2.0, for Phase 7.",
-      "plan_refs": ["§12.2 phase 7", "§10", "§11"],
-      "acceptance": ["Phase 7 tasks are appended with acceptance criteria and verify commands."],
-      "verify": ["scripts/tasks.py list --phase 7"],
-      "depends_on": ["T6.0"],
+      "plan_refs": [
+        "§12.2 phase 7",
+        "§10",
+        "§11"
+      ],
+      "acceptance": [
+        "Phase 7 tasks are appended with acceptance criteria and verify commands."
+      ],
+      "verify": [
+        "scripts/tasks.py list --phase 7"
+      ],
+      "depends_on": [
+        "T6.0"
+      ],
       "review": "owner",
       "passes": false
     },
@@ -425,10 +623,19 @@
       "phase": 8,
       "title": "Expand Phase 8 (beta to 1.0) into tasks",
       "description": "As T2.0, for Phase 8.",
-      "plan_refs": ["§12.2 phase 8", "§15"],
-      "acceptance": ["Phase 8 tasks are appended with acceptance criteria and verify commands."],
-      "verify": ["scripts/tasks.py list --phase 8"],
-      "depends_on": ["T7.0"],
+      "plan_refs": [
+        "§12.2 phase 8",
+        "§15"
+      ],
+      "acceptance": [
+        "Phase 8 tasks are appended with acceptance criteria and verify commands."
+      ],
+      "verify": [
+        "scripts/tasks.py list --phase 8"
+      ],
+      "depends_on": [
+        "T7.0"
+      ],
       "review": "owner",
       "passes": false
     }

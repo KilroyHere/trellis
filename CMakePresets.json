@@ -1,0 +1,111 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": { "major": 3, "minor": 21, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "TRELLIS_BUILD_TESTS": "ON",
+        "TRELLIS_USE_CCACHE": "ON"
+      }
+    },
+    { "name": "gcc-13", "hidden": true, "cacheVariables": { "CMAKE_CXX_COMPILER": "g++-13" } },
+    { "name": "gcc-14", "hidden": true, "cacheVariables": { "CMAKE_CXX_COMPILER": "g++-14" } },
+    { "name": "clang-18", "hidden": true, "cacheVariables": { "CMAKE_CXX_COMPILER": "clang++-18" } },
+    { "name": "clang-20", "hidden": true, "cacheVariables": { "CMAKE_CXX_COMPILER": "clang++-20" } },
+    { "name": "release", "hidden": true, "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" } },
+
+    { "name": "gcc-13-debug", "displayName": "GCC 13, Debug", "inherits": ["gcc-13", "base"] },
+    { "name": "gcc-14-debug", "displayName": "GCC 14, Debug", "inherits": ["gcc-14", "base"] },
+    { "name": "clang-18-debug", "displayName": "Clang 18, Debug", "inherits": ["clang-18", "base"] },
+    { "name": "clang-20-debug", "displayName": "Clang 20, Debug", "inherits": ["clang-20", "base"] },
+    {
+      "name": "clang-18-libcxx-debug",
+      "displayName": "Clang 18 with libc++, Debug",
+      "description": "GoogleTest is built from source here, because the installed package is built against libstdc++. Golden tests are off: libc++ spells standard-library names differently (std::__1, __memory/ headers), so its output can't match the clang-18 goldens, which were made with libstdc++.",
+      "inherits": ["clang-18", "base"],
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang-18",
+        "CMAKE_CXX_FLAGS": "-stdlib=libc++",
+        "CMAKE_DISABLE_FIND_PACKAGE_GTest": "ON",
+        "TRELLIS_GOLDEN_TESTS": "OFF"
+      }
+    },
+    { "name": "gcc-13-release", "displayName": "GCC 13, Release", "inherits": ["release", "gcc-13", "base"] },
+    { "name": "clang-18-release", "displayName": "Clang 18, Release", "inherits": ["release", "clang-18", "base"] },
+    {
+      "name": "asan-ubsan",
+      "displayName": "Clang 18, AddressSanitizer and UndefinedBehaviorSanitizer",
+      "inherits": ["clang-18", "base"],
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=all"
+      }
+    },
+    {
+      "name": "tsan",
+      "displayName": "Clang 18, ThreadSanitizer",
+      "inherits": ["clang-18", "base"],
+      "cacheVariables": { "CMAKE_CXX_FLAGS": "-fsanitize=thread" }
+    },
+    {
+      "name": "timetrace",
+      "displayName": "Clang 18 with -ftime-trace, no ccache",
+      "description": "Writes a Chrome trace (.json) next to each object file. Never cached, so the timings are real.",
+      "inherits": ["clang-18", "base"],
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-ftime-trace",
+        "TRELLIS_USE_CCACHE": "OFF",
+        "CMAKE_CXX_COMPILER_LAUNCHER": ""
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "build-base", "hidden": true, "jobs": 2 },
+    { "name": "gcc-13-debug", "configurePreset": "gcc-13-debug", "inherits": "build-base" },
+    { "name": "gcc-14-debug", "configurePreset": "gcc-14-debug", "inherits": "build-base" },
+    { "name": "clang-18-debug", "configurePreset": "clang-18-debug", "inherits": "build-base" },
+    { "name": "clang-20-debug", "configurePreset": "clang-20-debug", "inherits": "build-base" },
+    { "name": "clang-18-libcxx-debug", "configurePreset": "clang-18-libcxx-debug", "inherits": "build-base" },
+    { "name": "gcc-13-release", "configurePreset": "gcc-13-release", "inherits": "build-base" },
+    { "name": "clang-18-release", "configurePreset": "clang-18-release", "inherits": "build-base" },
+    { "name": "asan-ubsan", "configurePreset": "asan-ubsan", "inherits": "build-base" },
+    { "name": "tsan", "configurePreset": "tsan", "inherits": "build-base" },
+    { "name": "timetrace", "configurePreset": "timetrace", "inherits": "build-base" }
+  ],
+  "testPresets": [
+    {
+      "name": "test-base",
+      "hidden": true,
+      "output": { "outputOnFailure": true },
+      "execution": { "jobs": 2, "noTestsAction": "error", "timeout": 600 }
+    },
+    { "name": "gcc-13-debug", "configurePreset": "gcc-13-debug", "inherits": "test-base" },
+    { "name": "gcc-14-debug", "configurePreset": "gcc-14-debug", "inherits": "test-base" },
+    { "name": "clang-18-debug", "configurePreset": "clang-18-debug", "inherits": "test-base" },
+    { "name": "clang-20-debug", "configurePreset": "clang-20-debug", "inherits": "test-base" },
+    { "name": "clang-18-libcxx-debug", "configurePreset": "clang-18-libcxx-debug", "inherits": "test-base" },
+    { "name": "gcc-13-release", "configurePreset": "gcc-13-release", "inherits": "test-base" },
+    { "name": "clang-18-release", "configurePreset": "clang-18-release", "inherits": "test-base" },
+    {
+      "name": "asan-ubsan",
+      "configurePreset": "asan-ubsan",
+      "inherits": "test-base",
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:detect_stack_use_after_return=1:strict_init_order=1:check_initialization_order=1",
+        "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1"
+      }
+    },
+    {
+      "name": "tsan",
+      "configurePreset": "tsan",
+      "inherits": "test-base",
+      "environment": { "TSAN_OPTIONS": "halt_on_error=1:second_deadlock_stack=1" }
+    },
+    { "name": "timetrace", "configurePreset": "timetrace", "inherits": "test-base" }
+  ]
+}

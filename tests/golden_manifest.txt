@@ -1,0 +1,11 @@
+# Golden diagnostics: the compile-fail tests whose normalized compiler output is compared with a
+# snapshot, and the compilers that have one. One line per test:
+#
+#   <test: its path under tests/compile_fail/, without .cpp>  <compiler>-<major> ...
+#
+# CTest registers a golden test for every compiler listed, so a missing or deleted golden
+# (tests/diagnostics_golden/<compiler>-<major>/<test>.txt) fails rather than going untested, and
+# the tools.golden_manifest test fails on goldens that no line lists. tools/golden.py --update
+# writes goldens only for the tests and compilers listed here. Removing a line removes tests: treat
+# it like deleting one.
+sample/static_assert_message clang-18
