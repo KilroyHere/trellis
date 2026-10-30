@@ -26,24 +26,27 @@ graphs, on up to two more).
   shared_ptr  Every component is a singleton requested as std::shared_ptr<I<k>>: the research
               setting, and the default.
   reference   Every component is a singleton requested as I<k>&.
-  mixed       Random lifetimes, interfaces and request forms, as plan §6.3 allows them, with
-              owning forms for unique dependencies of singletons (the captive rule). A unique
-              component that would create more than UNIQUE_CAP objects per request becomes a
-              singleton, so that object counts stay small. The property tests use this.
+  mixed       Random lifetimes, interfaces and request forms: the seven forms above, wherever
+              plan §6.3 allows them (weak_ptr, lazy and provider are not generated), with owning
+              forms for unique dependencies of singletons (the captive rule). A unique component
+              that would create more than UNIQUE_CAP objects per request becomes a singleton, so
+              that object counts stay small. The property tests use this.
 
-The identity checksum. Every class derives from gen::node. A program resolves Root twice from one
-injector and once from a second injector, then walks the three roots depth-first, visiting
-constructor dependencies in parameter order and numbering each object the first time the walk
-reaches it. It prints, per graph,
+The checksums. Every class derives from gen::node, whose constructor counts the objects that the
+components' constructors build (copies and moves aren't counted). A program resolves Root twice
+from one injector and once from a second injector, then walks the three roots depth-first,
+visiting constructor dependencies in parameter order and numbering each object the first time the
+walk reaches it. It prints, per graph,
 
-  graph <name>: instances=<objects reached> identity=<16 hex digits>
+  graph <name>: instances=<objects reached> constructed=<objects built> identity=<16 hex digits>
 
-where the identity hashes the sequence of numbers the walk sees. That sequence depends only on
-which requests share an object: not on addresses, construction order or the order in which
-arguments are evaluated. identity() computes the same line from this script's model of the graph.
-A wiring that shares a unique object, makes two objects of a singleton, or shares singletons
-between injectors prints a different line. That is the equivalence oracle: every variant of a
-graph must print the line identity() predicts.
+identity hashes the sequence of numbers the walk sees. That sequence depends only on which requests
+share an object: not on addresses, construction order or the order in which arguments are
+evaluated. constructed must equal instances, because a correct wiring builds no object that the
+walk doesn't reach. identity() computes the whole line from this script's model of the graph. A
+wiring that shares a unique object, builds a second object of a singleton (whether or not anything
+reaches it), or shares singletons between injectors prints a different line. That is the
+equivalence oracle: every variant of a graph must print the line identity() predicts.
 
 Variants. A variant emits the wiring of a graph: `includes()` gives the #include lines it needs
 and `wiring()` the code, inside the graph's namespace, that defines
@@ -315,7 +318,8 @@ def identity(graph):
             value = ((value ^ obj.label) * HASH_PRIME) & MASK64
             if fresh:
                 stack.append(iter(obj.children))
-    return f"graph {graph.name}: instances={objects} identity={value:016x}"
+    # Every object a correct wiring builds is reachable, so it builds exactly `objects` of them.
+    return f"graph {graph.name}: instances={objects} constructed={objects} identity={value:016x}"
 
 
 # The C++ program.
@@ -333,11 +337,15 @@ _PARAMETER = {  # form -> (parameter, member, member initializer, object the wal
 _SUPPORT = r"""namespace gen {
 struct walker;
 
-// Every class of a generated graph derives from node, so that a walker can visit the objects.
+// Every class of a generated graph derives from node, so that a walker can visit the objects, and
+// so that the objects the components' constructors build are counted. Copies and moves use the
+// implicit copy constructor and aren't counted, so a dependency taken by value counts once.
 struct node {
+  node() { ++constructed; }
   virtual ~node() = default;
   virtual void visit(walker& w) const = 0;
   mutable std::uint64_t label = 0;  // 0 until the walk reaches this object
+  static inline std::uint64_t constructed = 0;
 };
 
 // Walks object graphs depth-first, in constructor-parameter order, numbering each object the
@@ -354,11 +362,15 @@ struct walker {
   }
 };
 
+// A correct wiring builds no object that the walk doesn't reach, so constructed equals instances.
 inline void report(const char* name, void (*walk_roots)(walker&)) {
   walker w;
+  const std::uint64_t before = node::constructed;
   walk_roots(w);
-  std::printf("graph %s: instances=%llu identity=%016llx\n", name,
-              static_cast<unsigned long long>(w.objects), static_cast<unsigned long long>(w.hash));
+  std::printf("graph %s: instances=%llu constructed=%llu identity=%016llx\n", name,
+              static_cast<unsigned long long>(w.objects),
+              static_cast<unsigned long long>(node::constructed - before),
+              static_cast<unsigned long long>(w.hash));
 }
 }  // namespace gen
 """
@@ -419,8 +431,7 @@ class ManualVariant:
         singletons = [c for c in graph.components if c.lifetime == SINGLETON]
         lines = ["struct wiring {", "  wiring() {"]
         for comp in singletons:
-            lines.append(f"    s{comp.index} = "
-                         f"std::make_shared<C{comp.index}>({self.arguments(graph, comp.deps)});")
+            lines += self.singleton(graph, comp)
         lines.append("  }")
         for comp in graph.components:
             if comp.lifetime == UNIQUE:
@@ -430,6 +441,11 @@ class ManualVariant:
         lines += [f"  std::shared_ptr<{comp.type}> s{comp.index};" for comp in singletons]
         lines.append("};")
         return lines + self.walk_roots(graph)
+
+    def singleton(self, graph, comp):
+        """The constructor's statements that create one singleton."""
+        return [f"    s{comp.index} = "
+                f"std::make_shared<C{comp.index}>({self.arguments(graph, comp.deps)});"]
 
     def arguments(self, graph, edges):
         return ", ".join(self.argument(graph, e) for e in edges)

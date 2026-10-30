@@ -4,8 +4,11 @@
 # scenario's graph and resolve, measured as the research harness did: 7 repetitions of 200,000
 # iterations each (TRELLIS_BENCH_REPETITIONS and TRELLIS_BENCH_ITERATIONS change that).
 #   scripts/bench-runtime.sh [PRESET...]
-# Prints the table of medians. Results go to build/bench/runtime/: <preset>.json (Google Benchmark's
-# output) and summary.json; the full output to build/logs/bench-runtime/.
+# Each preset is configured in its own build directory, build/bench/runtime/<preset>/, with the
+# benchmarks on and the tests off, so the preset's own build (build/<preset>, which check-full.sh
+# uses) never needs Google Benchmark. Prints the table of medians. Results go to
+# build/bench/runtime/: <preset>.json (Google Benchmark's output) and summary.json; the full output
+# to build/logs/bench-runtime/.
 set -uo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 cd "$TRELLIS_ROOT" || exit 1
@@ -32,14 +35,18 @@ for preset in "${presets[@]}"; do
   prefix="$LOG_DIR/$preset"
   rm -f "$OUT/$preset.json"
   ok=1
+  build_dir="$OUT/$preset"
   for step in configure build run; do
     log="$prefix-$step.log"
     case $step in
-      configure) command=(cmake --preset "$preset" -DTRELLIS_BUILD_BENCHMARKS=ON) ;;
-      build) command=(cmake --build --preset "$preset" --target trellis_runtime_bench -j "$TRELLIS_JOBS") ;;
+      configure)
+        command=(cmake --preset "$preset" -B "$build_dir" -DTRELLIS_BUILD_TESTS=OFF
+          -DTRELLIS_BUILD_BENCHMARKS=ON)
+        ;;
+      build) command=(cmake --build "$build_dir" --target trellis_runtime_bench -j "$TRELLIS_JOBS") ;;
       run)
         # ${pin[@]+...}: an empty array is an error under set -u before bash 4.4 (macOS has 3.2).
-        command=(${pin[@]+"${pin[@]}"} "build/$preset/benchmarks/runtime/trellis_runtime_bench"
+        command=(${pin[@]+"${pin[@]}"} "$build_dir/benchmarks/runtime/trellis_runtime_bench"
           "--benchmark_repetitions=$REPETITIONS" "--benchmark_min_time=${ITERATIONS}x"
           --benchmark_min_warmup_time=0.02 "--benchmark_out=$OUT/$preset.json"
           --benchmark_out_format=json)

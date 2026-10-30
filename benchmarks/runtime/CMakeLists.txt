@@ -1,7 +1,8 @@
 # Runtime microbenchmarks (plan §8.4), built when TRELLIS_BUILD_BENCHMARKS is on.
-# scripts/bench-runtime.sh configures the release presets with it, builds trellis_runtime_bench and
-# runs it. Needs Google Benchmark (Ubuntu: libbenchmark-dev).
-find_package(benchmark 1.6 CONFIG REQUIRED)
+# scripts/bench-runtime.sh configures each release preset with it in a build directory of its own,
+# builds trellis_runtime_bench and runs it. Needs Google Benchmark 1.8 or later (Ubuntu:
+# libbenchmark-dev): the script passes --benchmark_min_time=<iterations>x, which 1.8.0 introduced.
+find_package(benchmark 1.8 CONFIG REQUIRED)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

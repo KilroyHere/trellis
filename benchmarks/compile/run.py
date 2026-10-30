@@ -3,7 +3,7 @@
 time, and record what each compile costs.
 
   run.py [--quick] [--n LIST] [--fan-in LIST] [--forms LIST] [--compilers LIST]
-         [--variants LIST] [--runs 3] [--timeout SECONDS] [--memory-mb 6000] [--no-scenario]
+         [--variants LIST] [--runs N] [--timeout SECONDS] [--memory-mb 6000] [--no-scenario]
          [--no-graphs] [--out DIR]
 
 --quick means --n 10,50,100 --fan-in 1-3 --compilers gcc-13,clang-18. Without it the defaults are
@@ -18,10 +18,12 @@ The programs, for each compiler:
   graph     a program from gen_graph.py for each N, fan-in profile and request-form set,
             compiled as the research's scaling phase was (-std=c++20 -O2): the baseline of
             NFR-04 and NFR-05. It must print the identity line gen_graph.py predicts.
-Each program is compiled --runs times (the first compile also checks that it builds; after a
-compile longer than 60 s one sample is enough), then linked, stripped and run. Before the first
-measured compile of each compiler, one untimed compile loads the compiler and the standard
-headers into the page cache.
+Each program is compiled --runs times (default: the "runs" of budgets.json, 3, as plan §8.4 asks),
+then linked, stripped and run. The first compile also checks that the program builds. A program
+that no budget covers stops after one compile longer than 60 s; the programs a budget covers (the
+scenario, and the graphs at a budget's checkpoint sizes) always get every compile, and a budget is
+never checked against fewer than its "runs". Before the first measured compile of each compiler,
+one untimed compile loads the compiler and the standard headers into the page cache.
 
 Measured: the median wall time of the compiles (with min and max, and the median CPU time, user
 plus system, which a busy machine disturbs less), the compiler's peak RSS (from wait4, which
@@ -338,8 +340,9 @@ def text_size(binary):
         return None
 
 
-def measure(record, compiler, source, flags, include_dirs, expected, work, args):
-    """Compile, link, strip and run one program, filling in RECORD. Returns RECORD."""
+def measure(record, compiler, source, flags, include_dirs, expected, work, args, every_run):
+    """Compile, link, strip and run one program, filling in RECORD. Returns RECORD. EVERY_RUN:
+    make all --runs compiles even when they are long, because a budget covers the program."""
     stem = source.stem
     obj, exe, stripped = work / f"{stem}.o", work / stem, work / f"{stem}.stripped"
     command = [compiler, *flags, *(f"-I{ROOT / d}" for d in include_dirs), "-c", source, "-o", obj]
@@ -360,7 +363,7 @@ def measure(record, compiler, source, flags, include_dirs, expected, work, args)
         times.append(out.seconds)
         cpu_times.append(out.cpu_seconds)
         peaks.append(out.peak_rss_kb)
-        if out.seconds > LONG_COMPILE_S:
+        if out.seconds > LONG_COMPILE_S and not every_run:
             break
     record["compile_s"] = {"median": round(statistics.median(times), 3),
                            "min": round(min(times), 3), "max": round(max(times), 3),
@@ -393,15 +396,29 @@ def measured(record):
 # Budgets.
 
 def load_budgets(path=BUDGETS_FILE):
-    """budgets.json, checked for the fields the checker reads. Raises ValueError if malformed."""
+    """budgets.json, checked by parse_budgets(). Raises ValueError if unreadable or malformed."""
     try:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
     except (OSError, ValueError) as error:
         raise ValueError(f"cannot read {relative(path)}: {error}") from error
-    if not isinstance(data.get("baseline"), str) or not isinstance(data.get("budgets"), list):
-        raise ValueError(f"{relative(path)}: needs a 'baseline' variant and a 'budgets' list")
+    return parse_budgets(data, relative(path))
+
+
+def parse_budgets(data, name="budgets.json"):
+    """DATA, checked for the fields the checker reads. Raises ValueError if malformed."""
+    if not isinstance(data, dict) or not isinstance(data.get("baseline"), str) \
+            or not isinstance(data.get("budgets"), list):
+        raise ValueError(f"{name}: needs a 'baseline' variant and a 'budgets' list")
+    runs = data.get("runs")
+    if not isinstance(runs, int) or isinstance(runs, bool) or runs < 1:
+        raise ValueError(f"{name}: 'runs' must be a positive integer: the number of compiles "
+                         f"whose median compile_s is")
     for budget in data["budgets"]:
-        where = f"{relative(path)}: budget {budget.get('id', '?')}"
+        if not isinstance(budget, dict):
+            raise ValueError(f"{name}: every budget must be an object")
+        where = f"{name}: budget {budget.get('id', '?')}"
+        if not isinstance(budget.get("id"), str):
+            raise ValueError(f"{where}: needs an 'id' such as NFR-04")
         if budget.get("program") not in ("scenario", "graph"):
             raise ValueError(f"{where}: 'program' must be 'scenario' or 'graph'")
         if budget.get("measure") not in ("compile_s", "peak_rss_mb"):
@@ -411,8 +428,11 @@ def load_budgets(path=BUDGETS_FILE):
                 raise ValueError(f"{where}: 'max_extra' must be a non-negative number")
         elif isinstance(budget.get("checkpoints"), list) and budget["checkpoints"]:
             for point in budget["checkpoints"]:
-                if not isinstance(point.get("n"), int) or not isinstance(point.get("max_ratio"), (int, float)):
-                    raise ValueError(f"{where}: each checkpoint needs an integer 'n' and a 'max_ratio'")
+                if (not isinstance(point, dict) or not isinstance(point.get("n"), int)
+                        or not isinstance(point.get("max_ratio"), (int, float))
+                        or point["max_ratio"] <= 0):
+                    raise ValueError(f"{where}: each checkpoint needs an integer 'n' and a "
+                                     f"positive 'max_ratio'")
         else:
             raise ValueError(f"{where}: needs 'max_extra' or a non-empty 'checkpoints' list")
     return data
@@ -422,8 +442,22 @@ def _value(record, measure_name):
     return record["compile_s"]["median"] if measure_name == "compile_s" else record["peak_rss_mb"]
 
 
+def covers(budgets, fields):
+    """True if a budget applies to the program FIELDS describes: the scenario, or a graph of a
+    checkpoint size. Such programs always get every compile."""
+    for budget in budgets["budgets"]:
+        if budget["program"] != fields["program"]:
+            continue
+        if "max_extra" in budget or any(p["n"] == fields.get("n") for p in budget["checkpoints"]):
+            return True
+    return False
+
+
 def check_budgets(records, budgets):
-    """One entry per (budget, variant record) that a budget covers, with the measured value."""
+    """One entry per (budget, variant record) that a budget covers, with the measured value.
+    Values are compared as they are printed, rounded to 2 decimals, so that a line never says
+    "MISS ... 1.30x (max 1.3x)". A median of fewer compiles than the budgets' "runs" isn't the
+    measure they define, so such a check fails."""
     baseline = budgets["baseline"]
 
     def key(r):
@@ -448,12 +482,16 @@ def check_budgets(records, budgets):
                      "fan_in": r.get("fan_in"), "forms": r.get("forms"),
                      "measure": budget["measure"], "limit": limit, "kind": kind}
             base = bases.get(key(r))
+            fewest = min(rec["compile_s"]["runs"] for rec in (r, base)) if base and measured(r) else 0
             if base is None or not measured(r):
                 check.update(ok=False, note="not measured (the program or its baseline failed)")
+            elif budget["measure"] == "compile_s" and fewest < budgets["runs"]:
+                check.update(ok=False, note=f"measured with {fewest} compile(s); the budget is "
+                                            f"the median of {budgets['runs']}")
             else:
                 value, reference = _value(r, budget["measure"]), _value(base, budget["measure"])
-                result = value - reference if kind == "extra" else value / reference
-                check.update(value=round(result, 3), ok=result <= limit)
+                result = round(value - reference if kind == "extra" else value / reference, 2)
+                check.update(value=result, ok=result <= limit)
             checks.append(check)
     return checks
 
@@ -514,7 +552,8 @@ def main(argv=None):
     parser.add_argument("--compilers", help=f"default {FULL['compilers']}")
     parser.add_argument("--variants", default="manual",
                         help=f"wirings to measure: {', '.join(gen_graph.VARIANTS)} (default manual)")
-    parser.add_argument("--runs", type=int, default=3, help="compiles per program (default 3)")
+    parser.add_argument("--runs", type=int,
+                        help="compiles per program (default: the runs of budgets.json, 3)")
     parser.add_argument("--timeout", type=int,
                         help=f"seconds per compile (default {QUICK['timeout']} with --quick, "
                              f"else {FULL['timeout']})")
@@ -545,9 +584,11 @@ def main(argv=None):
             gen_graph.variant_of(variant)
             if not args.no_scenario and not (SCENARIO_DIR / f"{variant}.cpp").is_file():
                 raise ValueError(f"no scenario program {relative(SCENARIO_DIR / f'{variant}.cpp')}")
+        budgets = load_budgets()
+        if args.runs is None:
+            args.runs = budgets["runs"]
         if min(sizes, default=1) < 1 or args.runs < 1:
             raise ValueError("sizes and --runs must be at least 1")
-        budgets = load_budgets()
     except ValueError as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
@@ -597,7 +638,8 @@ def main(argv=None):
         for fields, source, flags, expected in programs:
             record = {**fields, "compiler": name}
             include_dirs = gen_graph.variant_of(fields["variant"]).include_dirs
-            measure(record, path, source, flags, include_dirs, expected, compiler_work, args)
+            measure(record, path, source, flags, include_dirs, expected, compiler_work, args,
+                    every_run=covers(budgets, fields))
             data["records"].append(record)
             save()
             label = fields["program"] if fields["program"] == "scenario" else (

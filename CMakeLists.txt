@@ -22,8 +22,9 @@ project(trellis
   LANGUAGES CXX)
 
 option(TRELLIS_BUILD_TESTS "Build the Trellis tests" ${PROJECT_IS_TOP_LEVEL})
-# The runtime benchmarks need Google Benchmark; scripts/bench-runtime.sh turns this on for the
-# release presets. The compile-time benchmarks (benchmarks/compile/run.py) don't use CMake.
+# The runtime benchmarks need Google Benchmark 1.8 or later; scripts/bench-runtime.sh turns this on
+# in build directories of its own (build/bench/runtime/<preset>). The compile-time benchmarks
+# (benchmarks/compile/run.py) don't use CMake.
 option(TRELLIS_BUILD_BENCHMARKS "Build the runtime benchmarks (needs Google Benchmark)" OFF)
 # The presets turn this on, except for timing builds (timetrace), which must not measure cache hits.
 option(TRELLIS_USE_CCACHE "Use ccache as the compiler launcher if it is installed" OFF)

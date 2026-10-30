@@ -6,12 +6,14 @@
   check_sharing.py --config build/<preset>/trellis_compiler.json --self-test
 
 benchmarks/compile/gen_graph.py makes one random graph per seed (1 to 40 components, fan-in 1-3 or
-10, singleton and unique lifetimes, every request form that plan §6.3 allows) and a program that
-wires the graphs with a variant (manual: written by hand), resolves each graph's root twice from
-one injector and once from a second, and prints an identity checksum of the objects it reached.
-The checksum shows which requests share an object, so it must equal the one gen_graph.py computes
-from its own model of the graph. This is the equivalence oracle of plan §9.1; T1.9 adds the
-Trellis variant.
+10, singleton and unique lifetimes, and the request forms T, T&, const T&, T*, const T*,
+unique_ptr and shared_ptr wherever plan §6.3 allows them; weak_ptr, lazy and provider are not
+generated) and a program that wires the graphs with a variant (manual: written by hand), resolves
+each graph's root twice from one injector and once from a second, and prints an identity checksum
+of the objects it reached, with the number of objects it built. The checksum shows which requests
+share an object, and every object built must be reached, so the line must equal the one
+gen_graph.py computes from its own model of the graph. This is the equivalence oracle of plan
+§9.1; T1.9 adds the Trellis variant.
 
 Seeds: --seeds, else the TRELLIS_PROPERTY_SEEDS environment variable, else DEFAULT_SEEDS (1-32). A
 list is "1-32", "7,9" or "1000000+64" (64 seeds from 1000000). CI sets TRELLIS_PROPERTY_SEEDS from
@@ -24,9 +26,10 @@ flags, sanitizers included, -std=c++20, the include directory and the project wa
 trellis_compiler.json) plus -Werror, then run. Sources, binaries and compiler output go to
 <build>/property/. A failure names the seed and the commands that reproduce it.
 
---self-test checks the oracle itself. Each of three deliberate sharing bugs (singletons shared
+--self-test checks the oracle itself. Each of four deliberate sharing bugs (singletons shared
 between injectors, a singleton made anew for each request, a unique object shared by its
-requests) is planted in the smallest graphs of seeds SELF_TEST_SEEDS in which it is observable,
+requests, and every singleton built twice with the first object dropped, which nothing reaches)
+is planted in the smallest graphs of seeds SELF_TEST_SEEDS in which it is observable,
 GRAPHS_PER_BUG each, all in one program, and every one of those graphs must print a line other
 than the expected one. The default fan-in 1-3 graph must also be the research harness's graph,
 and generating graphs twice must give the same program and the same expected lines.
@@ -248,7 +251,20 @@ class UniqueSharedByRequests(gen_graph.ManualVariant):
                 f"if (!cache{k}) cache{k} = std::make_shared<C{k}>({args}); return cache{k}; }}"]
 
 
-BUGS = (SingletonsSharedAcrossInjectors(), SingletonMadePerRequest(), UniqueSharedByRequests())
+class SingletonBuiltTwice(gen_graph.ManualVariant):
+    """Every singleton is built twice and the first object dropped. Nothing reaches the extra
+    objects, so only the construction count shows them."""
+    name = "bug-singleton-built-twice"
+
+    def applies(self, graph):
+        return any(c.lifetime == gen_graph.SINGLETON for c in graph.components)
+
+    def singleton(self, graph, comp):
+        return super().singleton(graph, comp) * 2
+
+
+BUGS = (SingletonsSharedAcrossInjectors(), SingletonMadePerRequest(), UniqueSharedByRequests(),
+        SingletonBuiltTwice())
 GRAPHS_PER_BUG = 4  # the smallest graphs where the bug is observable, to keep the compile short
 
 

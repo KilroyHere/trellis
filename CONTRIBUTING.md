@@ -8,7 +8,7 @@ Trellis is pre-alpha. The design is in [`docs/plan.md`](docs/plan.md), and the w
 - For the full local matrix: GCC 13 and 14, Clang 18 and 20, and libc++ 18.
 - clang-format-18 and clang-tidy-18. Other versions format and lint differently.
 - GoogleTest and gMock 1.11 or later as an installed package (on Ubuntu, `libgtest-dev` and `libgmock-dev`). Without one, the build fetches v1.18.0 with git. If your package was built against a different standard library, configure with `-DCMAKE_DISABLE_FIND_PACKAGE_GTest=ON`, as the libc++ preset does.
-- For the runtime benchmarks: Google Benchmark 1.6 or later (on Ubuntu, `libbenchmark-dev`).
+- For the runtime benchmarks: Google Benchmark 1.8 or later (on Ubuntu, `libbenchmark-dev`).
 
 ## Build and test
 
@@ -60,7 +60,7 @@ CI gives the property tests seeds that local runs never use, through `TRELLIS_PR
 - **Golden diagnostics** in `tests/diagnostics_golden/<compiler>-<major>/<name>.txt` hold the normalized output for the compile-fail test `<name>`. `tools/golden.py` compares them. Normalization makes paths repository-relative and drops line and column numbers, colors and version banners.
 
   [`tests/golden_manifest.txt`](tests/golden_manifest.txt) lists which tests have goldens, and for which compilers. CTest registers the golden tests from it, so a missing golden fails. To add one, add a line there, then run `tools/golden.py --preset <preset> --update --reason "<why>" <name>` with a preset of that compiler (such as `clang-18-debug` for clang-18). It records the reason in [`docs/golden-changes.md`](docs/golden-changes.md). Goldens change only at the owner's request. The libc++ preset runs no golden tests, because libc++ spells standard-library names differently from the libstdc++ that the goldens were made with.
-- **Property tests** (`tests/property/check_sharing.py`) wire random dependency graphs from `benchmarks/compile/gen_graph.py` by hand, compile them with the preset's compiler and flags, and check through an identity checksum that each one shares objects exactly as its lifetimes say. Local runs use the fixed seeds 1-32; set `TRELLIS_PROPERTY_SEEDS` (such as `1000000+64`) to try others, as CI does. A failure prints the command that reproduces it.
+- **Property tests** (`tests/property/check_sharing.py`) wire random dependency graphs from `benchmarks/compile/gen_graph.py` by hand, compile them with the preset's compiler and flags, and check through an identity checksum, and a count of the objects built, that each one shares objects exactly as its lifetimes say. Local runs use the fixed seeds 1-32; set `TRELLIS_PROPERTY_SEEDS` (such as `1000000+64`) to try others, as CI does. A failure prints the command that reproduces it.
 - Never weaken, delete or rewrite an existing test, golden or budget to make a change pass. If one looks wrong, say why in the pull request.
 
 ## Style and commits
