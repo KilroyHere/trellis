@@ -55,7 +55,7 @@
       "depends_on": [
         "T0.1"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "T0.3",
@@ -637,6 +637,31 @@
         "T7.0"
       ],
       "review": "owner",
+      "passes": false
+    },
+    {
+      "id": "T0.9",
+      "phase": 0,
+      "title": "CI polish from the T0.2 review",
+      "description": "Small CI improvements suggested by the independent review of T0.2.",
+      "plan_refs": [
+        "§9.2"
+      ],
+      "acceptance": [
+        "ci.yml keeps a verdict for every commit on main: cancel-in-progress applies only to other refs.",
+        "ci.yml's comment and its package list agree on which tools come from the runner image (ninja, g++-13, g++-14, clang-18).",
+        "scripts/ci-status.sh prints annotations in source order and drops the generic 'Process completed with exit code' line.",
+        "scripts/check-full.sh and CONTRIBUTING.md describe host-specific presets accurately (the Linux presets have no host condition).",
+        "nightly.yml's benchmark step fails instead of skipping silently if scripts/bench-compile.sh is missing (it exists once T0.3 lands)."
+      ],
+      "verify": [
+        "actionlint .github/workflows/*.yml",
+        "scripts/ci-status.sh"
+      ],
+      "depends_on": [
+        "T0.2",
+        "T0.3"
+      ],
       "passes": false
     }
   ]

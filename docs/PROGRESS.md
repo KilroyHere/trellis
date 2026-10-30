@@ -23,8 +23,31 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Make `scripts/hooks/protect_files.py` protect only committed files, so a task can fix tests it created itself.
   - Add `tests/golden_manifest.txt` to the protected paths.
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
-- **Golden normalization:** aligning `tools/golden.py` with S3's rules means regenerating the sample golden, which needs approval.
+- **Golden normalization:** aligning `tools/golden.py` with S3's rules means regenerating the sample golden, which needs approval. The same decision covers Windows paths:
+  - `golden.py` keeps MSVC's backslashes, so `tools.golden_selftest` fails on Windows. Its two cases expect different separators.
+  - Recommended fix: normalize every path to `/` and update the MSVC case.
+  - Until then the weekly `platforms.yml` run is red, and opens one tracking issue.
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev` so new containers start with the full toolchain. `libclang-rt-18-dev` is the TSan runtime.
+
+## 2026-10-30: T0.2 CI workflows (passed)
+
+- **What changed:**
+  - **ci.yml** runs on every push and on fork pull requests, across six Linux presets: gcc-13, gcc-14, clang-18, clang-20, clang-18 + libc++, and ASan+UBSan.
+  - **nightly.yml** runs TSan and the quick compile-time benchmark daily.
+  - **platforms.yml** builds and tests on macOS (Apple Clang) and Windows (MSVC with Ninja), weekly or on demand.
+  - The scheduled workflows open or update a single issue when they fail.
+  - Actions are pinned to full SHAs, and permissions are read-only except for the issue jobs.
+  - New: `scripts/ci-status.sh`, problem matchers, the `appleclang-debug` and `msvc-debug` presets, and host-aware `check-full.sh`.
+- **Review:** the independent review passed. Its non-blocking suggestions are now task T0.9.
+- **Evidence:**
+  - `scripts/tasks.py verify T0.2`: actionlint 1.7.12 reports 0 errors in 3 workflows.
+  - `ci-status.sh`: "ci: passed for 4336cad" (https://github.com/KilroyHere/trellis/actions/runs/41118199428).
+  - macOS passed (run 41114666449).
+  - Windows MSVC builds warning-free with `/W4 /permissive- /WX`; only `tools.golden_selftest` fails (above).
+- **Notes:**
+  - The proxy blocks job-log downloads and GraphQL here, so `ci-status.sh` falls back to annotations, and the issue-opening jobs can't be tested from this environment.
+  - actionlint and shellcheck were installed with `uv tool install actionlint-py` and `uv tool install shellcheck-py`. Add them to the environment setup script.
+  - The `t0.2-ci` branch can be deleted on GitHub; its squashed content is in `4336cad`.
 
 ## 2026-10-30: T0.1 build, test and check scaffold (passed)
 
