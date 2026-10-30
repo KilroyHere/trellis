@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # CI status from GitHub Actions, through gh: the latest run of each workflow on a branch, and the
-# first errors of every failed job (from gh run view --log-failed, trimmed).
+# first errors of every failed job (from gh run view --log-failed, trimmed, or from the job's
+# annotations where the logs can't be downloaded).
 #   scripts/ci-status.sh [--wait] [BRANCH]
 # BRANCH defaults to the branch the current one pushes to (its upstream), else the current one.
 # The verdict comes from the ci workflow (ci.yml) run on push: for the current branch, the latest
@@ -17,6 +18,9 @@ ERROR_LINES=10  # error lines shown per failed job
 # tools/*.py errors ("FAIL name: reason"). Compile commands also match (-Werror) and are dropped.
 ERROR_PATTERN='error[: ]|Error[: ]|ERROR|FAILED|(^|[^[:alnum:]_])FAIL([^[:alnum:]_]|$)|\((Failed|Timeout|Exception|SEGFAULT|Subprocess aborted)\)|\*\*\*(Failed|Timeout|Exception)|Sanitizer|runtime error|Errors while running'
 COMPILE_COMMAND=' -c .* -o | /Fo'
+# The line GitHub adds to every failed step, in its log and as an annotation, which says nothing
+# that the step's failure doesn't. Used by grep -E and by gh's jq, so it has no backslash.
+EXIT_CODE_LINE='^Process completed with exit code -?[0-9]+[.]?$'
 # gh's JSON as tab-separated fields. Empty fields become "-": bash's read merges adjacent tabs.
 JQ_FIELDS='def field: if . == null or . == "" then "-" else tostring end;'
 
@@ -127,19 +131,21 @@ log_errors() {
   local lines errors
   lines=$(awk -F '\t' -v job="$1" '$1 == job { sub(/^[^\t]*\t[^\t]*\t/, ""); print }' <<<"$log" |
     sed -E 's/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.]+Z ?//; s/^##\[error\]//' |
-    grep -v -E '^##\[(group|endgroup)\]')
+    grep -v -E -e '^##\[(group|endgroup)\]' -e "$EXIT_CODE_LINE")
   errors=$(grep -E -- "$ERROR_PATTERN" <<<"$lines" | grep -v -E -- "$COMPILE_COMMAND")
   # Nothing recognizable: the end of the log is the next best thing.
   [[ -n $errors ]] || errors=$(grep -v '^[[:space:]]*$' <<<"$lines" | tail -n 5)
   printf '%s\n' "$errors"
 }
 
-# annotation_errors JOB_ID: the job's error annotations, as "file:line: message". The workflows'
-# problem matchers (.github/problem-matchers.json) turn error lines into annotations, and the checks
-# API serves them even where the logs can't be downloaded (some proxies block the log storage).
+# annotation_errors JOB_ID: the job's error annotations, as "file:line: message", in the order the
+# job printed them, without the exit-code line. The API lists the newest first, in pages of at most
+# 100. The workflows' problem matchers (.github/problem-matchers.json) turn error lines into
+# annotations, and the checks API serves them even where the logs can't be downloaded (some proxies
+# block the log storage).
 annotation_errors() {
-  gh api "repos/{owner}/{repo}/check-runs/$1/annotations?per_page=50" --jq '.[] |
-    select(.annotation_level == "failure") |
+  gh api "repos/{owner}/{repo}/check-runs/$1/annotations?per_page=100" --jq 'reverse | .[] |
+    select(.annotation_level == "failure" and (.message | test("'"$EXIT_CODE_LINE"'") | not)) |
     (if .path == ".github" or .path == "" then "" else "\(.path):\(.start_line): " end) +
     (.message | gsub("[\r\n]+"; " "))'
 }
@@ -168,6 +174,7 @@ print_failures() {
     else
       errors=$(annotation_errors "$job_id") || errors="(could not fetch the annotations)"
     fi
+    [[ -n $errors ]] || errors="(no error lines to show; open the job's log)"
     head -n "$ERROR_LINES" <<<"$errors" | cut -c1-200 | sed 's/^/    /'
   done <<<"$jobs"
 }

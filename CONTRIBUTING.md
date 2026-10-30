@@ -16,7 +16,7 @@ Trellis is pre-alpha. The design is in [`docs/plan.md`](docs/plan.md), and the w
 |---|---|
 | `scripts/init.sh` | Checks the tools, then configures, builds and tests `clang-18-debug` |
 | `scripts/check-fast.sh` | Checks the format of changed files, then builds and tests `clang-18-debug`. Run it before every commit. |
-| `scripts/check-full.sh [preset...]` | Every preset in `CMakePresets.json` that this host can run, one at a time, including the sanitizers |
+| `scripts/check-full.sh [preset...]` | Every preset in `CMakePresets.json` that CMake enables on this host, one at a time, including the sanitizers |
 | `scripts/tidy.sh [file...]` | clang-tidy on the given files, or on the lines you changed |
 | `scripts/ci-status.sh [--wait] [branch]` | The latest GitHub Actions runs of a branch (default: the current one) and the first errors of failed jobs. Exits 0 only when the `ci` run for HEAD passed. |
 | `scripts/bench-compile.sh [--quick]` | Compile-time benchmarks: the scenario program and generated graphs, hand-wired, against `benchmarks/compile/budgets.json`. `--quick` is N = 10, 50 and 100 with gcc-13 and clang-18. |
@@ -27,7 +27,7 @@ The scripts print one line per step and keep the full output in `build/logs/`. B
 
 Test labels: `unit`, `headers`, `compile_fail`, `golden`, `property` and `tools`, so `ctest --preset clang-18-debug -L compile_fail` runs one kind. A selection that matches no test is an error rather than a silent pass.
 
-`appleclang-debug` (macOS) and `msvc-debug` (Windows, from a Visual Studio developer prompt, with Ninja) are enabled only on their own host system.
+Only `appleclang-debug` (macOS) and `msvc-debug` (Windows, from a Visual Studio developer prompt, with Ninja) have a host condition, so CMake enables each only on its own system. The other presets, the Linux matrix, have none: CMake enables them on every host, and each needs its compiler (`g++-13`, `g++-14`, `clang++-18` or `clang++-20`). On macOS or Windows, name the preset instead, as in `scripts/check-full.sh appleclang-debug`.
 
 ## Continuous integration
 

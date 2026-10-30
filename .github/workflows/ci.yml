@@ -13,10 +13,13 @@ on:
 permissions:
   contents: read
 
-# A newer push to the same branch, or to the same pull request, cancels the run it supersedes.
+# A newer push to the same branch, or to the same pull request, cancels the run it supersedes,
+# except on main, where every commit keeps its verdict: there nothing is cancelled, and each commit
+# has a group of its own, because within a group a newer run replaces a pending one even without
+# cancel-in-progress.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref == 'refs/heads/main' && github.sha || github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   linux:
@@ -31,8 +34,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # packages: what the runner image lacks for this preset. It has GCC 12 to 14, Clang 16 to
-        # 18, CMake and Ninja; the libc++ preset builds GoogleTest from source.
+        # packages: what the runner image lacks for this preset, besides ccache, which every job
+        # installs. The image has CMake, Ninja, GCC 12 to 14 (g++-13, g++-14) and Clang 16 to 18
+        # (clang++-18); the libc++ preset builds GoogleTest from source.
         include:
           - preset: gcc-13-debug
             packages: libgtest-dev libgmock-dev
@@ -65,7 +69,7 @@ jobs:
       - name: Install packages
         run: |
           sudo apt-get update -q
-          sudo apt-get install -y -q --no-install-recommends ccache ninja-build ${{ matrix.packages }}
+          sudo apt-get install -y -q --no-install-recommends ccache ${{ matrix.packages }}
 
       # The runner's kernel randomizes mmap addresses with 32 bits; the sanitizer runtimes of
       # Clang 18 expect at most 28 and can fail at startup otherwise.

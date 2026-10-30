@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 # The full local matrix: configure, build and test every configure preset in CMakePresets.json
-# that this host can run (on Linux: GCC 13 and 14, Clang 18 and 20, Clang 18 with libc++, release
-# builds, ASan and UBSan, TSan and the timetrace build), one preset at a time, each with at most
-# TRELLIS_JOBS (default 2) parallel jobs. appleclang-debug and msvc-debug have a condition on the
-# host system, so CMake disables them elsewhere and they are skipped; they run in CI
-# (.github/workflows/platforms.yml).
+# that CMake enables on this host, one preset at a time, each with at most TRELLIS_JOBS (default 2)
+# parallel jobs. Only appleclang-debug (macOS) and msvc-debug (Windows) have a host condition, so
+# CMake disables them elsewhere and they are skipped; they run in CI
+# (.github/workflows/platforms.yml). The other presets, the Linux matrix (GCC 13 and 14, Clang 18
+# and 20, Clang 18 with libc++, release builds, ASan and UBSan, TSan and the timetrace build), have
+# no condition: CMake enables them on every host, and each needs its compiler (g++-13, g++-14,
+# clang++-18 or clang++-20). On macOS or Windows, name the presets to run instead, such as
+# scripts/check-full.sh appleclang-debug.
 #   scripts/check-full.sh [PRESET...]   only these presets
 # Full output goes to build/logs/check-full/<preset>-{configure,build,test}.log.
 set -uo pipefail

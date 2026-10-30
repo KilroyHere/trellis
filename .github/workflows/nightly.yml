@@ -29,11 +29,12 @@ jobs:
       - name: Register the problem matchers
         run: echo "::add-matcher::.github/problem-matchers.json"
 
-      # libclang-rt-18-dev holds the ThreadSanitizer runtime.
+      # The runner image has CMake, Ninja and clang++-18 (see ci.yml); libclang-rt-18-dev holds the
+      # ThreadSanitizer runtime.
       - name: Install packages
         run: |
           sudo apt-get update -q
-          sudo apt-get install -y -q --no-install-recommends ccache ninja-build \
+          sudo apt-get install -y -q --no-install-recommends ccache \
             libgtest-dev libgmock-dev libclang-rt-18-dev
 
       # The runner's kernel randomizes mmap addresses with 32 bits; Clang 18's ThreadSanitizer
