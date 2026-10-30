@@ -454,6 +454,10 @@ include(FetchContent)
 FetchContent_Declare(googletest
   URL https://github.com/google/googletest/archive/refs/tags/v1.18.0.tar.gz
   URL_HASH SHA256=b3e03aaaff81d68730d67392a135ac3fdfdf022880c66632ab188d2fe084cda3)
+# CORRECTION (2026-10-30, found during T0.1): this hash is the SHA-256 of the network proxy's
+# 403 error page, not of the GoogleTest tarball, so the snippet above can never succeed.
+# Trellis instead fetches GoogleTest with git, pinned to the commit of tag v1.18.0
+# (see tests/CMakeLists.txt).
 FetchContent_MakeAvailable(googletest)
 target_link_libraries(unit PRIVATE GTest::gtest_main GTest::gmock)
 include(GoogleTest)
