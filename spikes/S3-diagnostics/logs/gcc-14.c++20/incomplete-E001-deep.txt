@@ -1,0 +1,8 @@
+In file included from spikes/S3-diagnostics/src/cases.cpp:14:
+spikes/S3-diagnostics/src/mock.hpp: In instantiation of 'R trellis::v1::injector<Module>::create() [with R = App; Module = app_module]':
+spikes/S3-diagnostics/src/cases.cpp:103:33:   required from here
+  103 |   App app = injector.create<App>();
+      |             ~~~~~~~~~~~~~~~~~~~~^~
+spikes/S3-diagnostics/src/mock.hpp:462:58: error: incomplete type 'trellis::error::incomplete<trellis::error::E001<IRepository, trellis::error::request<std::shared_ptr<IRepository> >, trellis::error::path<App, Service, Store> > >' used in nested name specifier
+  462 |       static_assert(error::incomplete<typename X::type>::reported);
+      |                                                          ^~~~~~~~

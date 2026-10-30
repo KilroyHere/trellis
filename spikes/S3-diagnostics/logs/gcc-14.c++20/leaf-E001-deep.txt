@@ -1,0 +1,30 @@
+In file included from spikes/S3-diagnostics/src/cases.cpp:14:
+spikes/S3-diagnostics/src/mock.hpp: In instantiation of 'R trellis::v1::injector<Module>::make() [with R = std::shared_ptr<IRepository>; bool Checked = true; Module = app_module]':
+spikes/S3-diagnostics/src/mock.hpp:511:28:   required from 'Impl trellis::v1::injector<Module>::build_value(trellis::v1::ctor<Ps ...>) [with Impl = Store; bool C = true; Ps = {ILogger&, std::shared_ptr<IRepository>}; Module = app_module]'
+  511 |     return Impl(make<Ps, C>()...);
+      |                 ~~~~~~~~~~~^~
+spikes/S3-diagnostics/src/mock.hpp:495:52:   required from 'R trellis::v1::injector<Module>::make() [with R = Store; bool Checked = true; Module = app_module]'
+  495 |       return build_value<typename N::impl, Checked>(typename N::deps{});
+      |              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~
+spikes/S3-diagnostics/src/mock.hpp:511:28:   required from 'Impl trellis::v1::injector<Module>::build_value(trellis::v1::ctor<Ps ...>) [with Impl = Service; bool C = true; Ps = {std::unique_ptr<Clock, std::default_delete<Clock> >, Store}; Module = app_module]'
+  511 |     return Impl(make<Ps, C>()...);
+      |                 ~~~~~~~~~~~^~
+spikes/S3-diagnostics/src/mock.hpp:495:52:   required from 'R trellis::v1::injector<Module>::make() [with R = Service; bool Checked = true; Module = app_module]'
+  495 |       return build_value<typename N::impl, Checked>(typename N::deps{});
+      |              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~
+spikes/S3-diagnostics/src/mock.hpp:511:28:   required from 'Impl trellis::v1::injector<Module>::build_value(trellis::v1::ctor<Ps ...>) [with Impl = App; bool C = true; Ps = {ILogger&, Service}; Module = app_module]'
+  511 |     return Impl(make<Ps, C>()...);
+      |                 ~~~~~~~~~~~^~
+spikes/S3-diagnostics/src/mock.hpp:495:52:   required from 'R trellis::v1::injector<Module>::make() [with R = App; bool Checked = true; Module = app_module]'
+  495 |       return build_value<typename N::impl, Checked>(typename N::deps{});
+      |              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~
+spikes/S3-diagnostics/src/mock.hpp:440:25:   required from 'R trellis::v1::injector<Module>::create() [with R = App; Module = app_module]'
+  440 |     return make<R, true>();
+      |            ~~~~~~~~~~~~~^~
+spikes/S3-diagnostics/src/cases.cpp:103:33:   required from here
+  103 |   App app = injector.create<App>();
+      |             ~~~~~~~~~~~~~~~~~~~~^~
+spikes/S3-diagnostics/src/mock.hpp:488:28: error: static assertion failed: TRL-E001: no binding for an abstract type
+  488 |         static_assert(err::reported, "TRL-E001: no binding for an abstract type");
+      |                            ^~~~~~~~
+spikes/S3-diagnostics/src/mock.hpp:488:28: note: 'trellis::error::E001<IRepository, trellis::error::request<std::shared_ptr<IRepository> >, trellis::error::see_backtrace>::reported' evaluates to false

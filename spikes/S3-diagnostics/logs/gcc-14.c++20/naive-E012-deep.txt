@@ -1,0 +1,13 @@
+In file included from spikes/S3-diagnostics/src/cases.cpp:14:
+spikes/S3-diagnostics/src/mock.hpp: In instantiation of 'R trellis::v1::injector<Module>::create() [with R = App; Module = app_module]':
+spikes/S3-diagnostics/src/cases.cpp:103:33:   required from here
+  103 |   App app = injector.create<App>();
+      |             ~~~~~~~~~~~~~~~~~~~~^~
+spikes/S3-diagnostics/src/mock.hpp:437:19: error: static assertion failed: trellis: the object graph cannot be created
+  437 |     static_assert(resolvable<map, R>, "trellis: the object graph cannot be created");
+      |                   ^~~~~~~~~~~~~~~~~~
+spikes/S3-diagnostics/src/mock.hpp:437:19: note: constraints not satisfied
+spikes/S3-diagnostics/src/mock.hpp:208:9:   required by the constraints of 'template<class Map, class R, class Consumer> concept trellis::v1::resolvable'
+spikes/S3-diagnostics/src/mock.hpp:208:46: note: the expression 'trellis::v1::node<Map, R, Consumer>::ok [with Map = trellis::v1::bindings<trellis::v1::binding<ILogger, ConsoleLogger, trellis::v1::singleton> >; R = App; Consumer = trellis::v1::unique]' evaluated to 'false'
+  208 | concept resolvable = node<Map, R, Consumer>::ok;
+      |                                              ^~

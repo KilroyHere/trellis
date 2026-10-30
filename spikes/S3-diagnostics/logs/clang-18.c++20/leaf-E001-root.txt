@@ -1,0 +1,11 @@
+In file included from spikes/S3-diagnostics/src/cases.cpp:14:
+spikes/S3-diagnostics/src/mock.hpp:488:23: error: static assertion failed due to requirement 'E001<IRepository, trellis::error::request<std::shared_ptr<IRepository>>, trellis::error::see_backtrace>::reported': TRL-E001: no binding for an abstract type
+  488 |         static_assert(err::reported, "TRL-E001: no binding for an abstract type");
+      |                       ^~~~~~~~~~~~~
+spikes/S3-diagnostics/src/mock.hpp:440:12: note: in instantiation of function template specialization 'trellis::injector<app_module>::make<std::shared_ptr<IRepository>, true>' requested here
+  440 |     return make<R, true>();
+      |            ^
+spikes/S3-diagnostics/src/cases.cpp:100:38: note: in instantiation of function template specialization 'trellis::injector<app_module>::create<std::shared_ptr<IRepository>>' requested here
+  100 |   [[maybe_unused]] edge e = injector.create<edge>();
+      |                                      ^
+1 error generated.

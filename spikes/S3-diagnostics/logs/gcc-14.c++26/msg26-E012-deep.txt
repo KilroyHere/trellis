@@ -1,0 +1,12 @@
+In file included from spikes/S3-diagnostics/src/cases.cpp:14:
+spikes/S3-diagnostics/src/mock.hpp: In instantiation of 'R trellis::v1::injector<Module>::create() [with R = App; Module = app_module]':
+spikes/S3-diagnostics/src/cases.cpp:103:33:   required from here
+  103 |   App app = injector.create<App>();
+      |             ~~~~~~~~~~~~~~~~~~~~^~
+spikes/S3-diagnostics/src/mock.hpp:469:21: error: static assertion failed: trellis [TRL-E012]: unbound concrete type 'Clock' requested by reference, pointer or shared_ptr: nobody would own it
+  requested as 'Clock&' by 'Store' (parameter 2)
+  path: App -> Service -> Store -> Clock
+  fix: bind 'Clock' with an owning lifetime such as singleton, or request it by value (docs: errors/E012)
+  469 |       static_assert(false, message<X>);
+      |                     ^~~~~
+spikes/S3-diagnostics/src/mock.hpp:469:21: note: 'false' evaluates to false

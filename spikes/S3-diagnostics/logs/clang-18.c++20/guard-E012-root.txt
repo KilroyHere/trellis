@@ -1,0 +1,14 @@
+In file included from spikes/S3-diagnostics/src/cases.cpp:14:
+spikes/S3-diagnostics/src/mock.hpp:445:21: error: static assertion failed: trellis: the object graph cannot be created
+  445 |       static_assert(resolvable<map, R>, "trellis: the object graph cannot be created");
+      |                     ^~~~~~~~~~~~~~~~~~
+spikes/S3-diagnostics/src/cases.cpp:100:38: note: in instantiation of function template specialization 'trellis::injector<app_module>::create<Clock &>' requested here
+  100 |   [[maybe_unused]] edge e = injector.create<edge>();
+      |                                      ^
+spikes/S3-diagnostics/src/mock.hpp:445:21: note: because 'resolvable<map, Clock &>' evaluated to false
+  445 |       static_assert(resolvable<map, R>, "trellis: the object graph cannot be created");
+      |                     ^
+spikes/S3-diagnostics/src/mock.hpp:208:22: note: because 'node<bindings<binding<ILogger, ConsoleLogger, singleton> >, Clock &, unique>::ok' evaluated to false
+  208 | concept resolvable = node<Map, R, Consumer>::ok;
+      |                      ^
+1 error generated.

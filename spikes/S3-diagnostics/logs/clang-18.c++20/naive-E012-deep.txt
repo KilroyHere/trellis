@@ -1,0 +1,47 @@
+In file included from spikes/S3-diagnostics/src/cases.cpp:14:
+spikes/S3-diagnostics/src/mock.hpp:437:19: error: static assertion failed: trellis: the object graph cannot be created
+  437 |     static_assert(resolvable<map, R>, "trellis: the object graph cannot be created");
+      |                   ^~~~~~~~~~~~~~~~~~
+spikes/S3-diagnostics/src/cases.cpp:103:22: note: in instantiation of function template specialization 'trellis::injector<app_module>::create<App>' requested here
+  103 |   App app = injector.create<App>();
+      |                      ^
+spikes/S3-diagnostics/src/mock.hpp:437:19: note: because 'resolvable<map, App>' evaluated to false
+  437 |     static_assert(resolvable<map, R>, "trellis: the object graph cannot be created");
+      |                   ^
+spikes/S3-diagnostics/src/mock.hpp:208:22: note: because 'node<bindings<binding<ILogger, ConsoleLogger, singleton> >, App, unique>::ok' evaluated to false
+  208 | concept resolvable = node<Map, R, Consumer>::ok;
+      |                      ^
+spikes/S3-diagnostics/src/mock.hpp:504:15: error: no matching member function for call to 'slot'
+  504 |       return *slot<typename N::bind, Checked>();
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+spikes/S3-diagnostics/src/mock.hpp:511:17: note: in instantiation of function template specialization 'trellis::injector<app_module>::make<Clock &, false>' requested here
+  511 |     return Impl(make<Ps, C>()...);
+      |                 ^
+spikes/S3-diagnostics/src/mock.hpp:495:14: note: in instantiation of function template specialization 'trellis::injector<app_module>::build_value<Store, false, ILogger &, Clock &>' requested here
+  495 |       return build_value<typename N::impl, Checked>(typename N::deps{});
+      |              ^
+spikes/S3-diagnostics/src/mock.hpp:511:17: note: in instantiation of function template specialization 'trellis::injector<app_module>::make<Store, false>' requested here
+  511 |     return Impl(make<Ps, C>()...);
+      |                 ^
+spikes/S3-diagnostics/src/mock.hpp:495:14: note: in instantiation of function template specialization 'trellis::injector<app_module>::build_value<Service, false, std::unique_ptr<Clock>, Store>' requested here
+  495 |       return build_value<typename N::impl, Checked>(typename N::deps{});
+      |              ^
+spikes/S3-diagnostics/src/mock.hpp:511:17: note: in instantiation of function template specialization 'trellis::injector<app_module>::make<Service, false>' requested here
+  511 |     return Impl(make<Ps, C>()...);
+      |                 ^
+spikes/S3-diagnostics/src/mock.hpp:495:14: note: in instantiation of function template specialization 'trellis::injector<app_module>::build_value<App, false, ILogger &, Service>' requested here
+  495 |       return build_value<typename N::impl, Checked>(typename N::deps{});
+      |              ^
+spikes/S3-diagnostics/src/mock.hpp:438:12: note: in instantiation of function template specialization 'trellis::injector<app_module>::make<App, false>' requested here
+  438 |     return make<R, false>();
+      |            ^
+spikes/S3-diagnostics/src/cases.cpp:103:22: note: in instantiation of function template specialization 'trellis::injector<app_module>::create<App>' requested here
+  103 |   App app = injector.create<App>();
+      |                      ^
+spikes/S3-diagnostics/src/mock.hpp:524:38: note: candidate template ignored: constraints not satisfied [with B = typename N::bind, C = false]
+  524 |   std::shared_ptr<typename B::impl>& slot() {
+      |                                      ^
+spikes/S3-diagnostics/src/mock.hpp:523:14: note: because 'std::is_same_v<typename binding<Clock, Clock, unique>::lifetime, singleton>' evaluated to false
+  523 |     requires std::is_same_v<typename B::lifetime, singleton>
+      |              ^
+2 errors generated.

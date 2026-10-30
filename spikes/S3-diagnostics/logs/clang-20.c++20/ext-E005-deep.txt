@@ -1,0 +1,11 @@
+In file included from spikes/S3-diagnostics/src/cases.cpp:14:
+spikes/S3-diagnostics/src/mock.hpp:466:21: error: static assertion failed: trellis [TRL-E005]: 'IRepository &' cannot be served by a unique binding: nothing would keep the object alive
+  requested as 'IRepository &' by 'Store' (parameter 2)
+  path: App -> Service -> Store -> IRepository
+  fix: bind 'IRepository' in singleton, or request it by value or std::unique_ptr (docs: errors/E005)
+  466 |       static_assert(false, message<X>);
+      |                     ^~~~~
+spikes/S3-diagnostics/src/cases.cpp:103:22: note: in instantiation of function template specialization 'trellis::injector<app_module>::create<App>' requested here
+  103 |   App app = injector.create<App>();
+      |                      ^
+1 error generated.

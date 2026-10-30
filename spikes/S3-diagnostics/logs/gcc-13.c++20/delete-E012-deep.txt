@@ -1,0 +1,8 @@
+spikes/S3-diagnostics/src/cases.cpp: In function 'int main()':
+spikes/S3-diagnostics/src/cases.cpp:103:33: error: use of deleted function 'R trellis::v1::injector<Module>::create() [with R = App; Error = trellis::error::E012<Clock, trellis::error::request<Clock&>, trellis::error::path<App, Service, Store> >; Module = app_module]'
+  103 |   App app = injector.create<App>();
+      |             ~~~~~~~~~~~~~~~~~~~~^~
+In file included from spikes/S3-diagnostics/src/cases.cpp:14:
+spikes/S3-diagnostics/src/mock.hpp:427:5: note: declared here
+  427 |   R create()
+      |     ^~~~~~

@@ -1,0 +1,9 @@
+In file included from spikes/S3-diagnostics/src/cases.cpp:14:
+spikes/S3-diagnostics/src/mock.hpp: In member function 'R trellis::v1::injector<Module>::create()':
+spikes/S3-diagnostics/src/mock.hpp:469:28: error: expected string-literal before 'message'
+  469 |       static_assert(false, message<X>);
+      |                            ^~~~~~~
+spikes/S3-diagnostics/src/mock.hpp:469:28: error: expected ')' before 'message'
+spikes/S3-diagnostics/src/mock.hpp:469:20: note: to match this '('
+  469 |       static_assert(false, message<X>);
+      |                    ^

@@ -1,0 +1,11 @@
+In file included from spikes/S3-diagnostics/src/cases.cpp:14:
+spikes/S3-diagnostics/src/mock.hpp:466:21: error: static assertion failed: trellis [TRL-E001]: no binding for abstract type 'IRepository'
+  requested as 'std::shared_ptr<IRepository>' by 'Store' (parameter 2)
+  path: App -> Service -> Store -> IRepository
+  fix: add bind<IRepository>.to<YourImplementation>() (docs: errors/E001)
+  466 |       static_assert(false, message<X>);
+      |                     ^~~~~
+spikes/S3-diagnostics/src/cases.cpp:103:22: note: in instantiation of function template specialization 'trellis::injector<app_module>::create<App>' requested here
+  103 |   App app = injector.create<App>();
+      |                      ^
+1 error generated.

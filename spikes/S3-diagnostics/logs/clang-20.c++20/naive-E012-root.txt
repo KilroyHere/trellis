@@ -1,0 +1,29 @@
+In file included from spikes/S3-diagnostics/src/cases.cpp:14:
+spikes/S3-diagnostics/src/mock.hpp:437:19: error: static assertion failed: trellis: the object graph cannot be created
+  437 |     static_assert(resolvable<map, R>, "trellis: the object graph cannot be created");
+      |                   ^~~~~~~~~~~~~~~~~~
+spikes/S3-diagnostics/src/cases.cpp:100:38: note: in instantiation of function template specialization 'trellis::injector<app_module>::create<Clock &>' requested here
+  100 |   [[maybe_unused]] edge e = injector.create<edge>();
+      |                                      ^
+spikes/S3-diagnostics/src/mock.hpp:437:19: note: because 'resolvable<map, Clock &>' evaluated to false
+  437 |     static_assert(resolvable<map, R>, "trellis: the object graph cannot be created");
+      |                   ^
+spikes/S3-diagnostics/src/mock.hpp:208:22: note: because 'node<bindings<binding<ILogger, ConsoleLogger, singleton> >, Clock &, unique>::ok' evaluated to false
+  208 | concept resolvable = node<Map, R, Consumer>::ok;
+      |                      ^
+spikes/S3-diagnostics/src/mock.hpp:504:15: error: no matching member function for call to 'slot'
+  504 |       return *slot<typename N::bind, Checked>();
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+spikes/S3-diagnostics/src/mock.hpp:438:12: note: in instantiation of function template specialization 'trellis::injector<app_module>::make<Clock &, false>' requested here
+  438 |     return make<R, false>();
+      |            ^
+spikes/S3-diagnostics/src/cases.cpp:100:38: note: in instantiation of function template specialization 'trellis::injector<app_module>::create<Clock &>' requested here
+  100 |   [[maybe_unused]] edge e = injector.create<edge>();
+      |                                      ^
+spikes/S3-diagnostics/src/mock.hpp:524:38: note: candidate template ignored: constraints not satisfied [with B = typename N::bind, C = false]
+  524 |   std::shared_ptr<typename B::impl>& slot() {
+      |                                      ^
+spikes/S3-diagnostics/src/mock.hpp:523:14: note: because 'std::is_same_v<typename binding<Clock, Clock, unique>::lifetime, singleton>' evaluated to false
+  523 |     requires std::is_same_v<typename B::lifetime, singleton>
+      |              ^
+2 errors generated.

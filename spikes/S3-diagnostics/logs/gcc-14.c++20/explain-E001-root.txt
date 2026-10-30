@@ -1,0 +1,9 @@
+In file included from spikes/S3-diagnostics/src/cases.cpp:14:
+spikes/S3-diagnostics/src/mock.hpp: In instantiation of 'R trellis::v1::injector<Module>::create() [with R = std::shared_ptr<IRepository>; Module = app_module]':
+spikes/S3-diagnostics/src/cases.cpp:100:50:   required from here
+  100 |   [[maybe_unused]] edge e = injector.create<edge>();
+      |                             ~~~~~~~~~~~~~~~~~~~~~^~
+spikes/S3-diagnostics/src/mock.hpp:456:28: error: static assertion failed: TRL-E001: no binding for an abstract type
+  456 |         static_assert(err::reported, "TRL-E001: no binding for an abstract type");
+      |                            ^~~~~~~~
+spikes/S3-diagnostics/src/mock.hpp:456:28: note: 'trellis::error::E001<IRepository, trellis::error::request<std::shared_ptr<IRepository> >, trellis::error::path<> >::reported' evaluates to false

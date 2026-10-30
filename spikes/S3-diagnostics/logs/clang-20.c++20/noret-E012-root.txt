@@ -1,0 +1,8 @@
+In file included from spikes/S3-diagnostics/src/cases.cpp:14:
+spikes/S3-diagnostics/src/mock.hpp:460:23: error: static assertion failed due to requirement 'E012<Clock, trellis::error::request<Clock &>, trellis::error::path<>>::reported': TRL-E012: unbound concrete type requested by reference
+  460 |         static_assert(err::reported, "TRL-E012: unbound concrete type requested by reference");
+      |                       ^~~~~~~~~~~~~
+spikes/S3-diagnostics/src/cases.cpp:100:38: note: in instantiation of function template specialization 'trellis::injector<app_module>::create<Clock &>' requested here
+  100 |   [[maybe_unused]] edge e = injector.create<edge>();
+      |                                      ^
+1 error generated.

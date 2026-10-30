@@ -1,0 +1,62 @@
+In file included from spikes/S3-diagnostics/src/cases.cpp:14:
+spikes/S3-diagnostics/src/mock.hpp:437:19: error: static assertion failed: trellis: the object graph cannot be created
+  437 |     static_assert(resolvable<map, R>, "trellis: the object graph cannot be created");
+      |                   ^~~~~~~~~~~~~~~~~~
+spikes/S3-diagnostics/src/cases.cpp:100:38: note: in instantiation of function template specialization 'trellis::injector<app_module>::create<std::shared_ptr<IRepository>>' requested here
+  100 |   [[maybe_unused]] edge e = injector.create<edge>();
+      |                                      ^
+spikes/S3-diagnostics/src/mock.hpp:437:19: note: because 'resolvable<map, std::shared_ptr<IRepository> >' evaluated to false
+  437 |     static_assert(resolvable<map, R>, "trellis: the object graph cannot be created");
+      |                   ^
+spikes/S3-diagnostics/src/mock.hpp:208:22: note: because 'node<bindings<binding<ILogger, ConsoleLogger, singleton> >, shared_ptr<IRepository>, unique>::ok' evaluated to false
+  208 | concept resolvable = node<Map, R, Consumer>::ok;
+      |                      ^
+In file included from spikes/S3-diagnostics/src/cases.cpp:12:
+In file included from /usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/memory:66:
+In file included from /usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/bits/stl_tempbuf.h:61:
+/usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/bits/stl_construct.h:115:4: error: no matching function for call to 'construct_at'
+  115 |           std::construct_at(__p, std::forward<_Args>(__args)...);
+      |           ^~~~~~~~~~~~~~~~~
+/usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/bits/alloc_traits.h:657:9: note: in instantiation of function template specialization 'std::_Construct<IRepository>' requested here
+  657 |         { std::_Construct(__p, std::forward<_Args>(__args)...); }
+      |                ^
+/usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/bits/shared_ptr_base.h:607:30: note: in instantiation of function template specialization 'std::allocator_traits<std::allocator<void>>::construct<IRepository>' requested here
+  607 |           allocator_traits<_Alloc>::construct(__a, _M_ptr(),
+      |                                     ^
+/usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/bits/shared_ptr_base.h:970:6: note: in instantiation of function template specialization 'std::_Sp_counted_ptr_inplace<IRepository, std::allocator<void>, __gnu_cxx::_S_atomic>::_Sp_counted_ptr_inplace<>' requested here
+  970 |             _Sp_cp_type(__a._M_a, std::forward<_Args>(__args)...);
+      |             ^
+/usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/bits/shared_ptr_base.h:1713:14: note: in instantiation of function template specialization 'std::__shared_count<>::__shared_count<IRepository, std::allocator<void>>' requested here
+ 1713 |         : _M_ptr(), _M_refcount(_M_ptr, __tag, std::forward<_Args>(__args)...)
+      |                     ^
+/usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/bits/shared_ptr.h:463:4: note: in instantiation of function template specialization 'std::__shared_ptr<IRepository>::__shared_ptr<std::allocator<void>>' requested here
+  463 |         : __shared_ptr<_Tp>(__tag, std::forward<_Args>(__args)...)
+      |           ^
+/usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/bits/shared_ptr.h:1007:14: note: in instantiation of function template specialization 'std::shared_ptr<IRepository>::shared_ptr<std::allocator<void>>' requested here
+ 1007 |       return shared_ptr<_Tp>(_Sp_alloc_shared_tag<_Alloc>{__a},
+      |              ^
+spikes/S3-diagnostics/src/mock.hpp:519:17: note: in instantiation of function template specialization 'std::make_shared<IRepository>' requested here
+  519 |     return std::make_shared<Impl>(make<Ps, C>()...);
+      |                 ^
+spikes/S3-diagnostics/src/mock.hpp:502:16: note: in instantiation of function template specialization 'trellis::injector<app_module>::build_shared<IRepository, false>' requested here
+  502 |         return build_shared<typename N::impl, Checked>(typename N::deps{});
+      |                ^
+spikes/S3-diagnostics/src/mock.hpp:438:12: note: in instantiation of function template specialization 'trellis::injector<app_module>::make<std::shared_ptr<IRepository>, false>' requested here
+  438 |     return make<R, false>();
+      |            ^
+spikes/S3-diagnostics/src/cases.cpp:100:38: note: in instantiation of function template specialization 'trellis::injector<app_module>::create<std::shared_ptr<IRepository>>' requested here
+  100 |   [[maybe_unused]] edge e = injector.create<edge>();
+      |                                      ^
+/usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/bits/stl_construct.h:94:5: note: candidate template ignored: substitution failure [with _Tp = IRepository, _Args = <>]: allocating an object of abstract class type 'IRepository'
+   94 |     construct_at(_Tp* __location, _Args&&... __args)
+      |     ^
+   95 |     noexcept(noexcept(::new((void*)0) _Tp(std::declval<_Args>()...)))
+   96 |     -> decltype(::new((void*)0) _Tp(std::declval<_Args>()...))
+      |                                 ~~~
+/usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/bits/stl_construct.h:119:25: error: allocating an object of abstract class type 'IRepository'
+  119 |       ::new((void*)__p) _Tp(std::forward<_Args>(__args)...);
+      |                         ^
+spikes/S3-diagnostics/src/cases.cpp:18:15: note: unimplemented pure virtual method 'get' in 'IRepository'
+   18 |   virtual int get() const = 0;
+      |               ^
+3 errors generated.

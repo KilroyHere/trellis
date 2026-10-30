@@ -1,0 +1,8 @@
+In file included from spikes/S3-diagnostics/src/cases.cpp:14:
+spikes/S3-diagnostics/src/mock.hpp: In instantiation of 'R trellis::v1::injector<Module>::make() [with R = Clock&; bool Checked = true; Module = app_module]':
+spikes/S3-diagnostics/src/mock.hpp:440:25:   required from 'R trellis::v1::injector<Module>::create() [with R = Clock&; Module = app_module]'
+spikes/S3-diagnostics/src/cases.cpp:100:50:   required from here
+spikes/S3-diagnostics/src/mock.hpp:492:28: error: static assertion failed: TRL-E012: unbound concrete type requested by reference
+  492 |         static_assert(err::reported, "TRL-E012: unbound concrete type requested by reference");
+      |                            ^~~~~~~~
+spikes/S3-diagnostics/src/mock.hpp:492:28: note: 'trellis::error::E012<Clock, trellis::error::request<Clock&>, trellis::error::see_backtrace>::reported' evaluates to false

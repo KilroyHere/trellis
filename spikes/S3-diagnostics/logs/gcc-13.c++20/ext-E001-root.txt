@@ -1,0 +1,13 @@
+In file included from spikes/S3-diagnostics/src/cases.cpp:14:
+spikes/S3-diagnostics/src/mock.hpp: In member function 'R trellis::v1::injector<Module>::create()':
+spikes/S3-diagnostics/src/mock.hpp:465:32: warning: unknown option after '#pragma GCC diagnostic' kind [-Wpragmas]
+  465 | #pragma GCC diagnostic ignored "-Wc++26-extensions"
+      |                                ^~~~~~~~~~~~~~~~~~~~
+spikes/S3-diagnostics/src/mock.hpp:465:32: note: did you mean '-Wc++20-extensions'?
+spikes/S3-diagnostics/src/mock.hpp:466:28: error: expected string-literal before 'message'
+  466 |       static_assert(false, message<X>);
+      |                            ^~~~~~~
+spikes/S3-diagnostics/src/mock.hpp:466:28: error: expected ')' before 'message'
+spikes/S3-diagnostics/src/mock.hpp:466:20: note: to match this '('
+  466 |       static_assert(false, message<X>);
+      |                    ^

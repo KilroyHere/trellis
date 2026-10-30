@@ -1,0 +1,16 @@
+spikes/S3-diagnostics/src/cases.cpp:100:38: error: call to deleted member function 'create'
+  100 |   [[maybe_unused]] edge e = injector.create<edge>();
+      |                             ~~~~~~~~~^~~~~~~~~~~~
+spikes/S3-diagnostics/src/mock.hpp:427:5: note: candidate function [with R = Clock &, Error = trellis::error::E012<Clock, trellis::error::request<Clock &>, trellis::error::path<>>] has been explicitly deleted
+  427 |   R create()
+      |     ^
+spikes/S3-diagnostics/src/mock.hpp:420:5: note: candidate template ignored: constraints not satisfied [with R = edge]
+  420 |   R create() {
+      |     ^
+spikes/S3-diagnostics/src/mock.hpp:419:14: note: because 'resolvable<map, Clock &>' evaluated to false
+  419 |     requires resolvable<map, R>
+      |              ^
+spikes/S3-diagnostics/src/mock.hpp:208:22: note: because 'node<bindings<binding<ILogger, ConsoleLogger, singleton> >, Clock &, unique>::ok' evaluated to false
+  208 | concept resolvable = node<Map, R, Consumer>::ok;
+      |                      ^
+1 error generated.

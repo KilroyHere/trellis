@@ -1,0 +1,16 @@
+spikes/S3-diagnostics/src/cases.cpp:103:22: error: call to deleted member function 'create': trellis: wiring error; the error ID, type, request and path are in 'Error' below
+  103 |   App app = injector.create<App>();
+      |             ~~~~~~~~~^~~~~~~~~~~
+spikes/S3-diagnostics/src/mock.hpp:427:5: note: candidate function [with R = App, Error = trellis::error::E005<IRepository, trellis::error::request<IRepository &>, trellis::unique, trellis::error::path<App, Service, Store>>] has been explicitly deleted
+  427 |   R create()
+      |     ^
+spikes/S3-diagnostics/src/mock.hpp:420:5: note: candidate template ignored: constraints not satisfied [with R = App]
+  420 |   R create() {
+      |     ^
+spikes/S3-diagnostics/src/mock.hpp:419:14: note: because 'resolvable<map, App>' evaluated to false
+  419 |     requires resolvable<map, R>
+      |              ^
+spikes/S3-diagnostics/src/mock.hpp:208:22: note: because 'node<bindings<binding<ILogger, ConsoleLogger, singleton>, binding<IRepository, SqlRepository, unique> >, App, unique>::ok' evaluated to false
+  208 | concept resolvable = node<Map, R, Consumer>::ok;
+      |                      ^
+1 error generated.

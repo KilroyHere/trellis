@@ -1,0 +1,11 @@
+spikes/S3-diagnostics/src/cases.cpp: In function 'int main()':
+spikes/S3-diagnostics/src/cases.cpp:100:50: error: use of deleted function 'R trellis::v1::injector<Module>::create() [with R = IRepository&; Error = trellis::error::E005<IRepository, trellis::error::request<IRepository&>, trellis::v1::unique, trellis::error::path<> >; Module = app_module]'
+  100 |   [[maybe_unused]] edge e = injector.create<edge>();
+      |                             ~~~~~~~~~~~~~~~~~~~~~^~
+In file included from spikes/S3-diagnostics/src/cases.cpp:14:
+spikes/S3-diagnostics/src/mock.hpp:427:5: note: declared here
+  427 |   R create()
+      |     ^~~~~~
+spikes/S3-diagnostics/src/cases.cpp:100:50: note: use '-fdiagnostics-all-candidates' to display considered candidates
+  100 |   [[maybe_unused]] edge e = injector.create<edge>();
+      |                             ~~~~~~~~~~~~~~~~~~~~~^~

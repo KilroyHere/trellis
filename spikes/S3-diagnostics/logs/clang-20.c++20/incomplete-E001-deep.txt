@@ -1,0 +1,11 @@
+In file included from spikes/S3-diagnostics/src/cases.cpp:14:
+spikes/S3-diagnostics/src/mock.hpp:462:28: error: implicit instantiation of undefined template 'trellis::error::incomplete<trellis::error::E001<IRepository, trellis::error::request<std::shared_ptr<IRepository>>, trellis::error::path<App, Service, Store>>>'
+  462 |       static_assert(error::incomplete<typename X::type>::reported);
+      |                            ^
+spikes/S3-diagnostics/src/cases.cpp:103:22: note: in instantiation of function template specialization 'trellis::injector<app_module>::create<App>' requested here
+  103 |   App app = injector.create<App>();
+      |                      ^
+spikes/S3-diagnostics/src/mock.hpp:71:8: note: template is declared here
+   71 | struct incomplete;  // variant 5: declared, never defined
+      |        ^
+1 error generated.

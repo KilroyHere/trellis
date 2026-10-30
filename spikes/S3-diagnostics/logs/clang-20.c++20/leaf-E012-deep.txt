@@ -1,0 +1,29 @@
+In file included from spikes/S3-diagnostics/src/cases.cpp:14:
+spikes/S3-diagnostics/src/mock.hpp:492:23: error: static assertion failed due to requirement 'E012<Clock, trellis::error::request<Clock &>, trellis::error::see_backtrace>::reported': TRL-E012: unbound concrete type requested by reference
+  492 |         static_assert(err::reported, "TRL-E012: unbound concrete type requested by reference");
+      |                       ^~~~~~~~~~~~~
+spikes/S3-diagnostics/src/mock.hpp:511:17: note: in instantiation of function template specialization 'trellis::injector<app_module>::make<Clock &, true>' requested here
+  511 |     return Impl(make<Ps, C>()...);
+      |                 ^
+spikes/S3-diagnostics/src/mock.hpp:495:14: note: in instantiation of function template specialization 'trellis::injector<app_module>::build_value<Store, true, ILogger &, Clock &>' requested here
+  495 |       return build_value<typename N::impl, Checked>(typename N::deps{});
+      |              ^
+spikes/S3-diagnostics/src/mock.hpp:511:17: note: in instantiation of function template specialization 'trellis::injector<app_module>::make<Store, true>' requested here
+  511 |     return Impl(make<Ps, C>()...);
+      |                 ^
+spikes/S3-diagnostics/src/mock.hpp:495:14: note: in instantiation of function template specialization 'trellis::injector<app_module>::build_value<Service, true, std::unique_ptr<Clock>, Store>' requested here
+  495 |       return build_value<typename N::impl, Checked>(typename N::deps{});
+      |              ^
+spikes/S3-diagnostics/src/mock.hpp:511:17: note: in instantiation of function template specialization 'trellis::injector<app_module>::make<Service, true>' requested here
+  511 |     return Impl(make<Ps, C>()...);
+      |                 ^
+spikes/S3-diagnostics/src/mock.hpp:495:14: note: in instantiation of function template specialization 'trellis::injector<app_module>::build_value<App, true, ILogger &, Service>' requested here
+  495 |       return build_value<typename N::impl, Checked>(typename N::deps{});
+      |              ^
+spikes/S3-diagnostics/src/mock.hpp:440:12: note: in instantiation of function template specialization 'trellis::injector<app_module>::make<App, true>' requested here
+  440 |     return make<R, true>();
+      |            ^
+spikes/S3-diagnostics/src/cases.cpp:103:22: note: in instantiation of function template specialization 'trellis::injector<app_module>::create<App>' requested here
+  103 |   App app = injector.create<App>();
+      |                      ^
+1 error generated.

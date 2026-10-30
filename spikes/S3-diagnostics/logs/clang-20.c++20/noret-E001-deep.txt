@@ -1,0 +1,8 @@
+In file included from spikes/S3-diagnostics/src/cases.cpp:14:
+spikes/S3-diagnostics/src/mock.hpp:456:23: error: static assertion failed due to requirement 'E001<IRepository, trellis::error::request<std::shared_ptr<IRepository>>, trellis::error::path<App, Service, Store>>::reported': TRL-E001: no binding for an abstract type
+  456 |         static_assert(err::reported, "TRL-E001: no binding for an abstract type");
+      |                       ^~~~~~~~~~~~~
+spikes/S3-diagnostics/src/cases.cpp:103:22: note: in instantiation of function template specialization 'trellis::injector<app_module>::create<App>' requested here
+  103 |   App app = injector.create<App>();
+      |                      ^
+1 error generated.

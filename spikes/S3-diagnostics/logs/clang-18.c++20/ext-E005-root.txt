@@ -1,0 +1,5 @@
+In file included from spikes/S3-diagnostics/src/cases.cpp:14:
+spikes/S3-diagnostics/src/mock.hpp:466:28: error: expected string literal for diagnostic message in static_assert
+  466 |       static_assert(false, message<X>);
+      |                            ^
+1 error generated.
