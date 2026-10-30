@@ -67,7 +67,7 @@
       "severity": "error",
       "pattern": [
         {
-          "regexp": "^\\s*\\d+ - (.+ \\((?:Failed|Timeout|Not Run|SEGFAULT|Subprocess aborted|Exception|ILLEGAL|INTERRUPT|NUMERICAL|OTHER_FAULT|BUS)\\))$",
+          "regexp": "^\\s*\\d+ - (.+? \\((?:Failed|Timeout|Not Run|SEGFAULT|Subprocess aborted|Exception|ILLEGAL|INTERRUPT|NUMERICAL|OTHER_FAULT|BUS)\\))(?:\\s.*)?$",
           "message": 1
         }
       ]

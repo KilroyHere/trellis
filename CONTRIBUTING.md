@@ -36,7 +36,7 @@ The repository is private and GitHub Actions minutes are limited, so only Linux 
 | `.github/workflows/nightly.yml` | Daily on `main`; `gh workflow run nightly.yml --ref <branch>` | `tsan`, and `scripts/bench-compile.sh --quick` once it exists |
 | `.github/workflows/platforms.yml` | Weekly on `main`; `gh workflow run platforms.yml --ref <branch> [-f os=macos\|windows]` | `appleclang-debug` on macOS and `msvc-debug` on Windows |
 
-A failed scheduled run of `nightly.yml` or `platforms.yml` opens an issue. Actions are pinned to full commit SHAs, with the release tag in a comment.
+A failed scheduled run of `nightly.yml` or `platforms.yml` opens an issue. Actions are pinned to full commit SHAs, with the release tag in a comment. The problem matchers in `.github/problem-matchers.json` turn error lines into annotations, which `scripts/ci-status.sh` shows when the job logs can't be downloaded.
 
 ## Tests
 
