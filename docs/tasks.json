@@ -662,7 +662,7 @@
         "T0.2",
         "T0.3"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "T0.10",
@@ -709,7 +709,7 @@
       "depends_on": [
         "T0.10"
       ],
-      "passes": false
+      "passes": true
     }
   ]
 }

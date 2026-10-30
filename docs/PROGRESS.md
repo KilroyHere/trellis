@@ -31,6 +31,27 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev` so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
 
+## 2026-10-30: T0.9 CI polish and T0.11 copyright notices (passed)
+
+- **T0.9:**
+  - **Concurrency:** every commit on `main` keeps its own CI verdict, through a per-SHA concurrency group with no cancel on main. Other branches and fork PRs still cancel superseded runs.
+  - **Runner image:** the tools it already provides are documented, and `ninja-build` is no longer installed.
+  - **`ci-status.sh`:** prints annotations in log order and drops the generic "Process completed with exit code N." line.
+  - **Host conditions:** `check-full.sh` and CONTRIBUTING.md describe them accurately.
+  - The nightly benchmark step already failed when its script was missing (done in T0.3).
+- **T0.11:**
+  - `Copyright (c) 2026 Aryan Patel` now sits above the SPDX line in `include/trellis/config.hpp` and `include/trellis/trellis.hpp`, the only files with SPDX lines.
+  - None of the protected test files under `tests/compile_fail/` or `tests/diagnostics_golden/` has an SPDX line, so none was skipped.
+  - CONTRIBUTING.md asks new files for the same header.
+- **Review:** the independent review passed both. Before merging, nightly was dispatched on the branch: TSan and the quick benchmark were green (run 41143747897).
+- **Evidence:**
+  - `verify T0.9`: actionlint reports 0 errors; `ci-status.sh` reports a pass for b54f4af (run 41144091511).
+  - `verify T0.11`: check-full 10 of 10 presets passed, and the header check passed.
+- **Non-blocking suggestions:**
+  - Derive the main-branch concurrency condition from the default branch name.
+  - Pass the exit-code pattern to jq through `env`.
+  - CONTRIBUTING should say "after any shebang line".
+
 ## 2026-10-30: T0.10 golden normalization (passed, owner-approved)
 
 - **What changed:**
