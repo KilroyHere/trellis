@@ -1,0 +1,244 @@
+clang18_boost_any: error: conversion from 'diag_arg' (aka 'set_boost<forms::consumer<std::any>, forms::trace<std::any>>') to 'std::any' is ambiguous
+clang18_boost_optional_X_: error: conversion from 'diag_arg' (aka 'set_boost<forms::consumer<std::optional<forms::X>>, forms::trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang18_boost_tuple_X_: error: conversion from 'diag_arg' (aka 'set_boost<forms::consumer<std::tuple<forms::X>>, forms::trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang18_libcxx_boost_any: error: conversion from 'diag_arg' (aka 'set_boost<forms::consumer<std::any>, forms::trace<std::any>>') to 'std::any' is ambiguous
+clang18_libcxx_boost_optional_X_: error: conversion from 'diag_arg' (aka 'set_boost<forms::consumer<std::optional<forms::X>>, forms::trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang18_libcxx_boost_tuple_X_: error: conversion from 'diag_arg' (aka 'set_boost<forms::consumer<std::tuple<forms::X>>, forms::trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang18_libcxx_min3_any: error: conversion from 'diag_arg' (aka 'set_min3<forms::consumer<std::any>, forms::trace<std::any>>') to 'std::any' is ambiguous
+clang18_libcxx_min3_optional_X_: error: conversion from 'diag_arg' (aka 'set_min3<forms::consumer<std::optional<forms::X>>, forms::trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang18_libcxx_min3_tuple_X_: error: conversion from 'diag_arg' (aka 'set_min3<forms::consumer<std::tuple<forms::X>>, forms::trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang18_libcxx_min_any: error: conversion from 'diag_arg' (aka 'set_min<forms::consumer<std::any>, forms::trace<std::any>>') to 'std::any' is ambiguous
+clang18_libcxx_min_optional_X_: error: conversion from 'diag_arg' (aka 'set_min<forms::consumer<std::optional<forms::X>>, forms::trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang18_libcxx_min_rr_any: error: conversion from 'diag_arg' (aka 'set_min_rr<forms::consumer<std::any>, forms::trace<std::any>>') to 'std::any' is ambiguous
+clang18_libcxx_min_rr_optional_X_: error: conversion from 'diag_arg' (aka 'set_min_rr<forms::consumer<std::optional<forms::X>>, forms::trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang18_libcxx_min_rr_tuple_X_: error: conversion from 'diag_arg' (aka 'set_min_rr<forms::consumer<std::tuple<forms::X>>, forms::trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang18_libcxx_min_tuple_X_: error: conversion from 'diag_arg' (aka 'set_min<forms::consumer<std::tuple<forms::X>>, forms::trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang18_libcxx_plan_I_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<forms::I *>, forms::trace<forms::I *>>') to 'forms::I *' is ambiguous
+clang18_libcxx_plan_X: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<forms::X>, forms::trace<forms::X>>') to 'forms::X' is ambiguous
+clang18_libcxx_plan_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<forms::X *>, forms::trace<forms::X *>>') to 'forms::X *' is ambiguous
+clang18_libcxx_plan_X_const: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<forms::X *const>, forms::trace<forms::X *const>>') to 'forms::X *' is ambiguous
+clang18_libcxx_plan_const_X: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<const forms::X>, forms::trace<const forms::X>>') to 'forms::X' is ambiguous
+clang18_libcxx_plan_const_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<const forms::X *>, forms::trace<const forms::X *>>') to 'const forms::X *' is ambiguous
+clang18_libcxx_plan_function_int_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::function<int ()>>, forms::trace<std::function<int ()>>>') to 'std::function<int ()>' is ambiguous
+clang18_libcxx_plan_function_unique_ptr_I_int_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::function<std::unique_ptr<forms::I, std::default_delete<forms::I>> (int)>>, forms::trace<std::function<std::unique_ptr<forms::I, std::default_delete<forms::I>> (int)>>>') to 'std::function<std::unique_ptr<forms::I> (int)>' is ambiguous
+clang18_libcxx_plan_int: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<int>, forms::trace<int>>') to 'int' is ambiguous
+clang18_libcxx_plan_lazy_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<forms::lazy<forms::X &>>, forms::trace<forms::lazy<forms::X &>>>') to 'forms::lazy<forms::X &>' is ambiguous
+clang18_libcxx_plan_optional_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::optional<forms::X>>, forms::trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang18_libcxx_plan_reference_wrapper_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::reference_wrapper<forms::X>>, forms::trace<std::reference_wrapper<forms::X>>>') to 'std::reference_wrapper<forms::X>' is ambiguous
+clang18_libcxx_plan_shared_ptr_I_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::shared_ptr<forms::I>>, forms::trace<std::shared_ptr<forms::I>>>') to 'std::shared_ptr<forms::I>' is ambiguous
+clang18_libcxx_plan_shared_ptr_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::shared_ptr<forms::X>>, forms::trace<std::shared_ptr<forms::X>>>') to 'std::shared_ptr<forms::X>' is ambiguous
+clang18_libcxx_plan_shared_ptr_const_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::shared_ptr<const forms::X>>, forms::trace<std::shared_ptr<const forms::X>>>') to 'std::shared_ptr<const forms::X>' is ambiguous
+clang18_libcxx_plan_span_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::span<forms::X, 18446744073709551615>>, forms::trace<std::span<forms::X, 18446744073709551615>>>') to 'std::span<forms::X>' is ambiguous
+clang18_libcxx_plan_span_const_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::span<const forms::X, 18446744073709551615>>, forms::trace<std::span<const forms::X, 18446744073709551615>>>') to 'std::span<const forms::X>' is ambiguous
+clang18_libcxx_plan_string: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::string>, forms::trace<std::string>>') to 'std::string' is ambiguous
+clang18_libcxx_plan_string_view: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::string_view>, forms::trace<std::string_view>>') to 'std::string_view' is ambiguous
+clang18_libcxx_plan_tuple_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::tuple<forms::X>>, forms::trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang18_libcxx_plan_unique_ptr_I_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::unique_ptr<forms::I, std::default_delete<forms::I>>>, forms::trace<std::unique_ptr<forms::I, std::default_delete<forms::I>>>>') to 'std::unique_ptr<forms::I>' is ambiguous
+clang18_libcxx_plan_unique_ptr_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::unique_ptr<forms::X, std::default_delete<forms::X>>>, forms::trace<std::unique_ptr<forms::X, std::default_delete<forms::X>>>>') to 'std::unique_ptr<forms::X>' is ambiguous
+clang18_libcxx_plan_variant_X_int_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::variant<forms::X, int>>, forms::trace<std::variant<forms::X, int>>>') to 'std::variant<forms::X, int>' is ambiguous
+clang18_libcxx_plan_vector_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::vector<forms::X, std::allocator<forms::X>>>, forms::trace<std::vector<forms::X, std::allocator<forms::X>>>>') to 'std::vector<forms::X>' is ambiguous
+clang18_libcxx_plan_weak_ptr_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::weak_ptr<forms::X>>, forms::trace<std::weak_ptr<forms::X>>>') to 'std::weak_ptr<forms::X>' is ambiguous
+clang18_libcxx_refq_any: error: conversion from 'diag_arg' (aka 'set_refq<forms::consumer<std::any>, forms::trace<std::any>>') to 'std::any' is ambiguous
+clang18_libcxx_refq_optional_X_: error: conversion from 'diag_arg' (aka 'set_refq<forms::consumer<std::optional<forms::X>>, forms::trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang18_libcxx_refq_tuple_X_: error: conversion from 'diag_arg' (aka 'set_refq<forms::consumer<std::tuple<forms::X>>, forms::trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang18_libcxx_rref_first_any: error: conversion from 'diag_arg' (aka 'set_rref_first<forms::consumer<std::any>, forms::trace<std::any>>') to 'std::any' is ambiguous
+clang18_libcxx_rref_first_optional_X_: error: conversion from 'diag_arg' (aka 'set_rref_first<forms::consumer<std::optional<forms::X>>, forms::trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang18_libcxx_rref_first_tuple_X_: error: conversion from 'diag_arg' (aka 'set_rref_first<forms::consumer<std::tuple<forms::X>>, forms::trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang18_libcxx_value_I_: error: no matching constructor for initialization of 'diag_consumer' (aka 'consumer<forms::I &>')
+clang18_libcxx_value_X_: error: no matching constructor for initialization of 'diag_consumer' (aka 'consumer<forms::X &>')
+clang18_libcxx_value_any: error: conversion from 'diag_arg' (aka 'set_value<forms::consumer<std::any>, forms::trace<std::any>>') to 'std::any' is ambiguous
+clang18_libcxx_value_const_I_: error: allocating an object of abstract class type 'forms::I'
+clang18_libcxx_value_optional_X_: error: conversion from 'diag_arg' (aka 'set_value<forms::consumer<std::optional<forms::X>>, forms::trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang18_libcxx_value_tuple_X_: error: conversion from 'diag_arg' (aka 'set_value<forms::consumer<std::tuple<forms::X>>, forms::trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang18_min3_any: error: conversion from 'diag_arg' (aka 'set_min3<forms::consumer<std::any>, forms::trace<std::any>>') to 'std::any' is ambiguous
+clang18_min3_optional_X_: error: conversion from 'diag_arg' (aka 'set_min3<forms::consumer<std::optional<forms::X>>, forms::trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang18_min3_tuple_X_: error: conversion from 'diag_arg' (aka 'set_min3<forms::consumer<std::tuple<forms::X>>, forms::trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang18_min_any: error: conversion from 'diag_arg' (aka 'set_min<forms::consumer<std::any>, forms::trace<std::any>>') to 'std::any' is ambiguous
+clang18_min_optional_X_: error: conversion from 'diag_arg' (aka 'set_min<forms::consumer<std::optional<forms::X>>, forms::trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang18_min_rr_any: error: conversion from 'diag_arg' (aka 'set_min_rr<forms::consumer<std::any>, forms::trace<std::any>>') to 'std::any' is ambiguous
+clang18_min_rr_optional_X_: error: conversion from 'diag_arg' (aka 'set_min_rr<forms::consumer<std::optional<forms::X>>, forms::trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang18_min_rr_tuple_X_: error: conversion from 'diag_arg' (aka 'set_min_rr<forms::consumer<std::tuple<forms::X>>, forms::trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang18_min_tuple_X_: error: conversion from 'diag_arg' (aka 'set_min<forms::consumer<std::tuple<forms::X>>, forms::trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang18_plan_I_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<forms::I *>, forms::trace<forms::I *>>') to 'forms::I *' is ambiguous
+clang18_plan_X: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<forms::X>, forms::trace<forms::X>>') to 'forms::X' is ambiguous
+clang18_plan_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<forms::X *>, forms::trace<forms::X *>>') to 'forms::X *' is ambiguous
+clang18_plan_X_const: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<forms::X *const>, forms::trace<forms::X *const>>') to 'forms::X *' is ambiguous
+clang18_plan_const_X: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<const forms::X>, forms::trace<const forms::X>>') to 'forms::X' is ambiguous
+clang18_plan_const_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<const forms::X *>, forms::trace<const forms::X *>>') to 'const forms::X *' is ambiguous
+clang18_plan_function_int_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::function<int ()>>, forms::trace<std::function<int ()>>>') to 'std::function<int ()>' is ambiguous
+clang18_plan_function_unique_ptr_I_int_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::function<std::unique_ptr<forms::I, std::default_delete<forms::I>> (int)>>, forms::trace<std::function<std::unique_ptr<forms::I, std::default_delete<forms::I>> (int)>>>') to 'std::function<std::unique_ptr<forms::I> (int)>' is ambiguous
+clang18_plan_int: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<int>, forms::trace<int>>') to 'int' is ambiguous
+clang18_plan_lazy_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<forms::lazy<forms::X &>>, forms::trace<forms::lazy<forms::X &>>>') to 'forms::lazy<forms::X &>' is ambiguous
+clang18_plan_optional_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::optional<forms::X>>, forms::trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang18_plan_reference_wrapper_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::reference_wrapper<forms::X>>, forms::trace<std::reference_wrapper<forms::X>>>') to 'std::reference_wrapper<forms::X>' is ambiguous
+clang18_plan_shared_ptr_I_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::shared_ptr<forms::I>>, forms::trace<std::shared_ptr<forms::I>>>') to 'std::shared_ptr<forms::I>' is ambiguous
+clang18_plan_shared_ptr_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::shared_ptr<forms::X>>, forms::trace<std::shared_ptr<forms::X>>>') to 'std::shared_ptr<forms::X>' is ambiguous
+clang18_plan_shared_ptr_const_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::shared_ptr<const forms::X>>, forms::trace<std::shared_ptr<const forms::X>>>') to 'std::shared_ptr<const forms::X>' is ambiguous
+clang18_plan_span_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::span<forms::X, 18446744073709551615>>, forms::trace<std::span<forms::X, 18446744073709551615>>>') to 'std::span<forms::X>' is ambiguous
+clang18_plan_span_const_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::span<const forms::X, 18446744073709551615>>, forms::trace<std::span<const forms::X, 18446744073709551615>>>') to 'std::span<const forms::X>' is ambiguous
+clang18_plan_string: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::basic_string<char, std::char_traits<char>, std::allocator<char>>>, forms::trace<std::basic_string<char, std::char_traits<char>, std::allocator<char>>>>') to 'std::basic_string<char>' is ambiguous
+clang18_plan_string_view: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::basic_string_view<char, std::char_traits<char>>>, forms::trace<std::basic_string_view<char, std::char_traits<char>>>>') to 'std::basic_string_view<char>' is ambiguous
+clang18_plan_tuple_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::tuple<forms::X>>, forms::trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang18_plan_unique_ptr_I_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::unique_ptr<forms::I, std::default_delete<forms::I>>>, forms::trace<std::unique_ptr<forms::I, std::default_delete<forms::I>>>>') to 'std::unique_ptr<forms::I>' is ambiguous
+clang18_plan_unique_ptr_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::unique_ptr<forms::X, std::default_delete<forms::X>>>, forms::trace<std::unique_ptr<forms::X, std::default_delete<forms::X>>>>') to 'std::unique_ptr<forms::X>' is ambiguous
+clang18_plan_variant_X_int_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::variant<forms::X, int>>, forms::trace<std::variant<forms::X, int>>>') to 'std::variant<forms::X, int>' is ambiguous
+clang18_plan_vector_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::vector<forms::X, std::allocator<forms::X>>>, forms::trace<std::vector<forms::X, std::allocator<forms::X>>>>') to 'std::vector<forms::X>' is ambiguous
+clang18_plan_weak_ptr_X_: error: conversion from 'diag_arg' (aka 'set_plan<forms::consumer<std::weak_ptr<forms::X>>, forms::trace<std::weak_ptr<forms::X>>>') to 'std::weak_ptr<forms::X>' is ambiguous
+clang18_refq_any: error: conversion from 'diag_arg' (aka 'set_refq<forms::consumer<std::any>, forms::trace<std::any>>') to 'std::any' is ambiguous
+clang18_refq_optional_X_: error: conversion from 'diag_arg' (aka 'set_refq<forms::consumer<std::optional<forms::X>>, forms::trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang18_refq_tuple_X_: error: conversion from 'diag_arg' (aka 'set_refq<forms::consumer<std::tuple<forms::X>>, forms::trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang18_rref_first_any: error: conversion from 'diag_arg' (aka 'set_rref_first<forms::consumer<std::any>, forms::trace<std::any>>') to 'std::any' is ambiguous
+clang18_rref_first_optional_X_: error: conversion from 'diag_arg' (aka 'set_rref_first<forms::consumer<std::optional<forms::X>>, forms::trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang18_rref_first_tuple_X_: error: conversion from 'diag_arg' (aka 'set_rref_first<forms::consumer<std::tuple<forms::X>>, forms::trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang18_value_I_: error: no matching constructor for initialization of 'diag_consumer' (aka 'consumer<forms::I &>')
+clang18_value_X_: error: no matching constructor for initialization of 'diag_consumer' (aka 'consumer<forms::X &>')
+clang18_value_any: error: conversion from 'diag_arg' (aka 'set_value<forms::consumer<std::any>, forms::trace<std::any>>') to 'std::any' is ambiguous
+clang18_value_const_I_: error: allocating an object of abstract class type 'forms::I'
+clang18_value_optional_X_: error: conversion from 'diag_arg' (aka 'set_value<forms::consumer<std::optional<forms::X>>, forms::trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang18_value_tuple_X_: error: conversion from 'diag_arg' (aka 'set_value<forms::consumer<std::tuple<forms::X>>, forms::trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang20_boost_any: error: conversion from 'diag_arg' (aka 'set_boost<consumer<std::any>, trace<std::any>>') to 'std::any' is ambiguous
+clang20_boost_optional_X_: error: conversion from 'diag_arg' (aka 'set_boost<consumer<std::optional<forms::X>>, trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang20_boost_tuple_X_: error: conversion from 'diag_arg' (aka 'set_boost<consumer<std::tuple<forms::X>>, trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang20_min3_any: error: conversion from 'diag_arg' (aka 'set_min3<consumer<std::any>, trace<std::any>>') to 'std::any' is ambiguous
+clang20_min3_optional_X_: error: conversion from 'diag_arg' (aka 'set_min3<consumer<std::optional<forms::X>>, trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang20_min3_tuple_X_: error: conversion from 'diag_arg' (aka 'set_min3<consumer<std::tuple<forms::X>>, trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang20_min_any: error: conversion from 'diag_arg' (aka 'set_min<consumer<std::any>, trace<std::any>>') to 'std::any' is ambiguous
+clang20_min_optional_X_: error: conversion from 'diag_arg' (aka 'set_min<consumer<std::optional<forms::X>>, trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang20_min_rr_any: error: conversion from 'diag_arg' (aka 'set_min_rr<consumer<std::any>, trace<std::any>>') to 'std::any' is ambiguous
+clang20_min_rr_optional_X_: error: conversion from 'diag_arg' (aka 'set_min_rr<consumer<std::optional<forms::X>>, trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang20_min_rr_tuple_X_: error: conversion from 'diag_arg' (aka 'set_min_rr<consumer<std::tuple<forms::X>>, trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang20_min_tuple_X_: error: conversion from 'diag_arg' (aka 'set_min<consumer<std::tuple<forms::X>>, trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang20_plan_I_: error: conversion from 'diag_arg' (aka 'set_plan<consumer<forms::I *>, trace<forms::I *>>') to 'forms::I *' is ambiguous
+clang20_plan_X: error: conversion from 'diag_arg' (aka 'set_plan<consumer<forms::X>, trace<forms::X>>') to 'forms::X' is ambiguous
+clang20_plan_X_: error: conversion from 'diag_arg' (aka 'set_plan<consumer<forms::X *>, trace<forms::X *>>') to 'forms::X *' is ambiguous
+clang20_plan_X_const: error: conversion from 'diag_arg' (aka 'set_plan<consumer<forms::X *const>, trace<forms::X *const>>') to 'forms::X *' is ambiguous
+clang20_plan_const_X: error: conversion from 'diag_arg' (aka 'set_plan<consumer<const forms::X>, trace<const forms::X>>') to 'forms::X' is ambiguous
+clang20_plan_const_X_: error: conversion from 'diag_arg' (aka 'set_plan<consumer<const forms::X *>, trace<const forms::X *>>') to 'const forms::X *' is ambiguous
+clang20_plan_function_int_: error: conversion from 'diag_arg' (aka 'set_plan<consumer<std::function<int ()>>, trace<std::function<int ()>>>') to 'std::function<int ()>' is ambiguous
+clang20_plan_function_unique_ptr_I_int_: error: conversion from 'diag_arg' (aka 'set_plan<consumer<std::function<std::unique_ptr<forms::I, std::default_delete<forms::I>> (int)>>, trace<std::function<std::unique_ptr<forms::I, std::default_delete<forms::I>> (int)>>>') to 'std::function<std::unique_ptr<forms::I> (int)>' is ambiguous
+clang20_plan_int: error: conversion from 'diag_arg' (aka 'set_plan<consumer<int>, trace<int>>') to 'int' is ambiguous
+clang20_plan_lazy_X_: error: conversion from 'diag_arg' (aka 'set_plan<consumer<forms::lazy<forms::X &>>, trace<forms::lazy<forms::X &>>>') to 'forms::lazy<forms::X &>' is ambiguous
+clang20_plan_optional_X_: error: conversion from 'diag_arg' (aka 'set_plan<consumer<std::optional<forms::X>>, trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang20_plan_reference_wrapper_X_: error: conversion from 'diag_arg' (aka 'set_plan<consumer<std::reference_wrapper<forms::X>>, trace<std::reference_wrapper<forms::X>>>') to 'std::reference_wrapper<forms::X>' is ambiguous
+clang20_plan_shared_ptr_I_: error: conversion from 'diag_arg' (aka 'set_plan<consumer<std::shared_ptr<forms::I>>, trace<std::shared_ptr<forms::I>>>') to 'std::shared_ptr<forms::I>' is ambiguous
+clang20_plan_shared_ptr_X_: error: conversion from 'diag_arg' (aka 'set_plan<consumer<std::shared_ptr<forms::X>>, trace<std::shared_ptr<forms::X>>>') to 'std::shared_ptr<forms::X>' is ambiguous
+clang20_plan_shared_ptr_const_X_: error: conversion from 'diag_arg' (aka 'set_plan<consumer<std::shared_ptr<const forms::X>>, trace<std::shared_ptr<const forms::X>>>') to 'std::shared_ptr<const forms::X>' is ambiguous
+clang20_plan_span_X_: error: conversion from 'diag_arg' (aka 'set_plan<consumer<std::span<forms::X, 18446744073709551615>>, trace<std::span<forms::X, 18446744073709551615>>>') to 'std::span<forms::X>' is ambiguous
+clang20_plan_span_const_X_: error: conversion from 'diag_arg' (aka 'set_plan<consumer<std::span<const forms::X, 18446744073709551615>>, trace<std::span<const forms::X, 18446744073709551615>>>') to 'std::span<const forms::X>' is ambiguous
+clang20_plan_string: error: conversion from 'diag_arg' (aka 'set_plan<consumer<std::basic_string<char, std::char_traits<char>, std::allocator<char>>>, trace<std::basic_string<char, std::char_traits<char>, std::allocator<char>>>>') to 'std::basic_string<char>' is ambiguous
+clang20_plan_string_view: error: conversion from 'diag_arg' (aka 'set_plan<consumer<std::basic_string_view<char, std::char_traits<char>>>, trace<std::basic_string_view<char, std::char_traits<char>>>>') to 'std::basic_string_view<char>' is ambiguous
+clang20_plan_tuple_X_: error: conversion from 'diag_arg' (aka 'set_plan<consumer<std::tuple<forms::X>>, trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang20_plan_unique_ptr_I_: error: conversion from 'diag_arg' (aka 'set_plan<consumer<std::unique_ptr<forms::I, std::default_delete<forms::I>>>, trace<std::unique_ptr<forms::I, std::default_delete<forms::I>>>>') to 'std::unique_ptr<forms::I>' is ambiguous
+clang20_plan_unique_ptr_X_: error: conversion from 'diag_arg' (aka 'set_plan<consumer<std::unique_ptr<forms::X, std::default_delete<forms::X>>>, trace<std::unique_ptr<forms::X, std::default_delete<forms::X>>>>') to 'std::unique_ptr<forms::X>' is ambiguous
+clang20_plan_variant_X_int_: error: conversion from 'diag_arg' (aka 'set_plan<consumer<std::variant<forms::X, int>>, trace<std::variant<forms::X, int>>>') to 'std::variant<forms::X, int>' is ambiguous
+clang20_plan_vector_X_: error: conversion from 'diag_arg' (aka 'set_plan<consumer<std::vector<forms::X, std::allocator<forms::X>>>, trace<std::vector<forms::X, std::allocator<forms::X>>>>') to 'std::vector<forms::X>' is ambiguous
+clang20_plan_weak_ptr_X_: error: conversion from 'diag_arg' (aka 'set_plan<consumer<std::weak_ptr<forms::X>>, trace<std::weak_ptr<forms::X>>>') to 'std::weak_ptr<forms::X>' is ambiguous
+clang20_refq_any: error: conversion from 'diag_arg' (aka 'set_refq<consumer<std::any>, trace<std::any>>') to 'std::any' is ambiguous
+clang20_refq_optional_X_: error: conversion from 'diag_arg' (aka 'set_refq<consumer<std::optional<forms::X>>, trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang20_refq_tuple_X_: error: conversion from 'diag_arg' (aka 'set_refq<consumer<std::tuple<forms::X>>, trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang20_rref_first_any: error: conversion from 'diag_arg' (aka 'set_rref_first<consumer<std::any>, trace<std::any>>') to 'std::any' is ambiguous
+clang20_rref_first_optional_X_: error: conversion from 'diag_arg' (aka 'set_rref_first<consumer<std::optional<forms::X>>, trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang20_rref_first_tuple_X_: error: conversion from 'diag_arg' (aka 'set_rref_first<consumer<std::tuple<forms::X>>, trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+clang20_value_I_: error: no matching constructor for initialization of 'diag_consumer' (aka 'consumer<forms::I &>')
+clang20_value_X_: error: no matching constructor for initialization of 'diag_consumer' (aka 'consumer<forms::X &>')
+clang20_value_any: error: conversion from 'diag_arg' (aka 'set_value<consumer<std::any>, trace<std::any>>') to 'std::any' is ambiguous
+clang20_value_const_I_: error: allocating an object of abstract class type 'forms::I'
+clang20_value_optional_X_: error: conversion from 'diag_arg' (aka 'set_value<consumer<std::optional<forms::X>>, trace<std::optional<forms::X>>>') to 'std::optional<forms::X>' is ambiguous
+clang20_value_tuple_X_: error: conversion from 'diag_arg' (aka 'set_value<consumer<std::tuple<forms::X>>, trace<std::tuple<forms::X>>>') to 'std::tuple<forms::X>' is ambiguous
+gcc13_boost_any: error: conversion from 'diag_arg' {aka 'forms::set_boost<forms::consumer<std::any>, forms::trace<std::any> >'} to 'std::any' is ambiguous
+gcc13_min3_X_: error: invalid user-defined conversion from 'diag_arg' {aka 'forms::set_min3<forms::consumer<forms::X&&>, forms::trace<forms::X&&> >'} to 'forms::X&&' [-fpermissive]
+gcc13_min3_any: error: conversion from 'diag_arg' {aka 'forms::set_min3<forms::consumer<std::any>, forms::trace<std::any> >'} to 'std::any' is ambiguous
+gcc13_min3_const_X_: error: invalid user-defined conversion from 'diag_arg' {aka 'forms::set_min3<forms::consumer<const forms::X&&>, forms::trace<const forms::X&&> >'} to 'const forms::X&&' [-fpermissive]
+gcc13_min3_optional_X_: error: conversion from 'diag_arg' {aka 'forms::set_min3<forms::consumer<std::optional<forms::X> >, forms::trace<std::optional<forms::X> > >'} to 'std::optional<forms::X>' is ambiguous
+gcc13_min3_reference_wrapper_X_: error: conversion from 'diag_arg' {aka 'forms::set_min3<forms::consumer<std::reference_wrapper<forms::X> >, forms::trace<std::reference_wrapper<forms::X> > >'} to 'std::reference_wrapper<forms::X>' is ambiguous
+gcc13_min3_tuple_X_: error: conversion from 'diag_arg' {aka 'forms::set_min3<forms::consumer<std::tuple<forms::X> >, forms::trace<std::tuple<forms::X> > >'} to 'std::tuple<forms::X>' is ambiguous
+gcc13_min3_unique_ptr_X_: error: invalid user-defined conversion from 'diag_arg' {aka 'forms::set_min3<forms::consumer<std::unique_ptr<forms::X>&&>, forms::trace<std::unique_ptr<forms::X>&&> >'} to 'std::unique_ptr<forms::X>&&' [-fpermissive]
+gcc13_min_X_: error: invalid user-defined conversion from 'diag_arg' {aka 'forms::set_min<forms::consumer<forms::X&&>, forms::trace<forms::X&&> >'} to 'forms::X&&' [-fpermissive]
+gcc13_min_any: error: conversion from 'diag_arg' {aka 'forms::set_min<forms::consumer<std::any>, forms::trace<std::any> >'} to 'std::any' is ambiguous
+gcc13_min_const_X_: error: invalid user-defined conversion from 'diag_arg' {aka 'forms::set_min<forms::consumer<const forms::X&&>, forms::trace<const forms::X&&> >'} to 'const forms::X&&' [-fpermissive]
+gcc13_min_optional_X_: error: conversion from 'diag_arg' {aka 'forms::set_min<forms::consumer<std::optional<forms::X> >, forms::trace<std::optional<forms::X> > >'} to 'std::optional<forms::X>' is ambiguous
+gcc13_min_reference_wrapper_X_: error: conversion from 'diag_arg' {aka 'forms::set_min<forms::consumer<std::reference_wrapper<forms::X> >, forms::trace<std::reference_wrapper<forms::X> > >'} to 'std::reference_wrapper<forms::X>' is ambiguous
+gcc13_min_rr_any: error: conversion from 'diag_arg' {aka 'forms::set_min_rr<forms::consumer<std::any>, forms::trace<std::any> >'} to 'std::any' is ambiguous
+gcc13_min_tuple_X_: error: conversion from 'diag_arg' {aka 'forms::set_min<forms::consumer<std::tuple<forms::X> >, forms::trace<std::tuple<forms::X> > >'} to 'std::tuple<forms::X>' is ambiguous
+gcc13_min_unique_ptr_X_: error: invalid user-defined conversion from 'diag_arg' {aka 'forms::set_min<forms::consumer<std::unique_ptr<forms::X>&&>, forms::trace<std::unique_ptr<forms::X>&&> >'} to 'std::unique_ptr<forms::X>&&' [-fpermissive]
+gcc13_plan_I_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<forms::I*>, forms::trace<forms::I*> >'} to 'forms::I*' is ambiguous
+gcc13_plan_X: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<forms::X>, forms::trace<forms::X> >'} to 'forms::X' is ambiguous
+gcc13_plan_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<forms::X*>, forms::trace<forms::X*> >'} to 'forms::X*' is ambiguous
+gcc13_plan_X_const: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<forms::X* const>, forms::trace<forms::X* const> >'} to 'forms::X*' is ambiguous
+gcc13_plan_const_X: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<const forms::X>, forms::trace<const forms::X> >'} to 'forms::X' is ambiguous
+gcc13_plan_const_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<const forms::X*>, forms::trace<const forms::X*> >'} to 'const forms::X*' is ambiguous
+gcc13_plan_function_int_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::function<int()> >, forms::trace<std::function<int()> > >'} to 'std::function<int()>' is ambiguous
+gcc13_plan_function_unique_ptr_I_int_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::function<std::unique_ptr<forms::I>(int)> >, forms::trace<std::function<std::unique_ptr<forms::I>(int)> > >'} to 'std::function<std::unique_ptr<forms::I>(int)>' is ambiguous
+gcc13_plan_int: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<int>, forms::trace<int> >'} to 'int' is ambiguous
+gcc13_plan_lazy_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<forms::lazy<forms::X&> >, forms::trace<forms::lazy<forms::X&> > >'} to 'forms::lazy<forms::X&>' is ambiguous
+gcc13_plan_optional_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::optional<forms::X> >, forms::trace<std::optional<forms::X> > >'} to 'std::optional<forms::X>' is ambiguous
+gcc13_plan_shared_ptr_I_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::shared_ptr<forms::I> >, forms::trace<std::shared_ptr<forms::I> > >'} to 'std::shared_ptr<forms::I>' is ambiguous
+gcc13_plan_shared_ptr_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::shared_ptr<forms::X> >, forms::trace<std::shared_ptr<forms::X> > >'} to 'std::shared_ptr<forms::X>' is ambiguous
+gcc13_plan_shared_ptr_const_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::shared_ptr<const forms::X> >, forms::trace<std::shared_ptr<const forms::X> > >'} to 'std::shared_ptr<const forms::X>' is ambiguous
+gcc13_plan_span_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::span<forms::X> >, forms::trace<std::span<forms::X> > >'} to 'std::span<forms::X>' is ambiguous
+gcc13_plan_span_const_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::span<const forms::X> >, forms::trace<std::span<const forms::X> > >'} to 'std::span<const forms::X>' is ambiguous
+gcc13_plan_string: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::__cxx11::basic_string<char> >, forms::trace<std::__cxx11::basic_string<char> > >'} to 'std::__cxx11::basic_string<char>' is ambiguous
+gcc13_plan_string_view: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::basic_string_view<char> >, forms::trace<std::basic_string_view<char> > >'} to 'std::basic_string_view<char>' is ambiguous
+gcc13_plan_tuple_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::tuple<forms::X> >, forms::trace<std::tuple<forms::X> > >'} to 'std::tuple<forms::X>' is ambiguous
+gcc13_plan_unique_ptr_I_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::unique_ptr<forms::I> >, forms::trace<std::unique_ptr<forms::I> > >'} to 'std::unique_ptr<forms::I>' is ambiguous
+gcc13_plan_unique_ptr_X_: error: invalid user-defined conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::unique_ptr<forms::X>&&>, forms::trace<std::unique_ptr<forms::X>&&> >'} to 'std::unique_ptr<forms::X>&&' [-fpermissive]
+gcc13_plan_variant_X_int_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::variant<forms::X, int> >, forms::trace<std::variant<forms::X, int> > >'} to 'std::variant<forms::X, int>' is ambiguous
+gcc13_plan_vector_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::vector<forms::X> >, forms::trace<std::vector<forms::X> > >'} to 'std::vector<forms::X>' is ambiguous
+gcc13_plan_weak_ptr_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::weak_ptr<forms::X> >, forms::trace<std::weak_ptr<forms::X> > >'} to 'std::weak_ptr<forms::X>' is ambiguous
+gcc13_refq_X_: error: invalid user-defined conversion from 'diag_arg' {aka 'forms::set_refq<forms::consumer<forms::X&&>, forms::trace<forms::X&&> >'} to 'forms::X&&' [-fpermissive]
+gcc13_refq_any: error: conversion from 'diag_arg' {aka 'forms::set_refq<forms::consumer<std::any>, forms::trace<std::any> >'} to 'std::any' is ambiguous
+gcc13_refq_const_X_: error: invalid user-defined conversion from 'diag_arg' {aka 'forms::set_refq<forms::consumer<const forms::X&&>, forms::trace<const forms::X&&> >'} to 'const forms::X&&' [-fpermissive]
+gcc13_refq_optional_X_: error: conversion from 'diag_arg' {aka 'forms::set_refq<forms::consumer<std::optional<forms::X> >, forms::trace<std::optional<forms::X> > >'} to 'std::optional<forms::X>' is ambiguous
+gcc13_refq_reference_wrapper_X_: error: conversion from 'diag_arg' {aka 'forms::set_refq<forms::consumer<std::reference_wrapper<forms::X> >, forms::trace<std::reference_wrapper<forms::X> > >'} to 'std::reference_wrapper<forms::X>' is ambiguous
+gcc13_refq_tuple_X_: error: conversion from 'diag_arg' {aka 'forms::set_refq<forms::consumer<std::tuple<forms::X> >, forms::trace<std::tuple<forms::X> > >'} to 'std::tuple<forms::X>' is ambiguous
+gcc13_refq_unique_ptr_X_: error: invalid user-defined conversion from 'diag_arg' {aka 'forms::set_refq<forms::consumer<std::unique_ptr<forms::X>&&>, forms::trace<std::unique_ptr<forms::X>&&> >'} to 'std::unique_ptr<forms::X>&&' [-fpermissive]
+gcc13_rref_first_any: error: conversion from 'diag_arg' {aka 'forms::set_rref_first<forms::consumer<std::any>, forms::trace<std::any> >'} to 'std::any' is ambiguous
+gcc13_value_I_: error: cannot allocate an object of abstract type 'forms::I'
+gcc13_value_X_: error: cannot bind non-const lvalue reference of type 'forms::X&' to an rvalue of type 'forms::X'
+gcc13_value_any: error: conversion from 'diag_arg' {aka 'forms::set_value<forms::consumer<std::any>, forms::trace<std::any> >'} to 'std::any' is ambiguous
+gcc13_value_const_I_: error: cannot allocate an object of abstract type 'forms::I'
+gcc13_value_optional_X_: error: conversion from 'diag_arg' {aka 'forms::set_value<forms::consumer<std::optional<forms::X> >, forms::trace<std::optional<forms::X> > >'} to 'std::optional<forms::X>' is ambiguous
+gcc13_value_tuple_X_: error: conversion from 'diag_arg' {aka 'forms::set_value<forms::consumer<std::tuple<forms::X> >, forms::trace<std::tuple<forms::X> > >'} to 'std::tuple<forms::X>' is ambiguous
+gcc14_boost_any: error: conversion from 'diag_arg' {aka 'forms::set_boost<forms::consumer<std::any>, forms::trace<std::any> >'} to 'std::any' is ambiguous
+gcc14_min3_any: error: conversion from 'diag_arg' {aka 'forms::set_min3<forms::consumer<std::any>, forms::trace<std::any> >'} to 'std::any' is ambiguous
+gcc14_min3_optional_X_: error: conversion from 'diag_arg' {aka 'forms::set_min3<forms::consumer<std::optional<forms::X> >, forms::trace<std::optional<forms::X> > >'} to 'std::optional<forms::X>' is ambiguous
+gcc14_min3_tuple_X_: error: conversion from 'diag_arg' {aka 'forms::set_min3<forms::consumer<std::tuple<forms::X> >, forms::trace<std::tuple<forms::X> > >'} to 'std::tuple<forms::X>' is ambiguous
+gcc14_min_any: error: conversion from 'diag_arg' {aka 'forms::set_min<forms::consumer<std::any>, forms::trace<std::any> >'} to 'std::any' is ambiguous
+gcc14_min_optional_X_: error: conversion from 'diag_arg' {aka 'forms::set_min<forms::consumer<std::optional<forms::X> >, forms::trace<std::optional<forms::X> > >'} to 'std::optional<forms::X>' is ambiguous
+gcc14_min_rr_any: error: conversion from 'diag_arg' {aka 'forms::set_min_rr<forms::consumer<std::any>, forms::trace<std::any> >'} to 'std::any' is ambiguous
+gcc14_min_tuple_X_: error: conversion from 'diag_arg' {aka 'forms::set_min<forms::consumer<std::tuple<forms::X> >, forms::trace<std::tuple<forms::X> > >'} to 'std::tuple<forms::X>' is ambiguous
+gcc14_plan_I_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<forms::I*>, forms::trace<forms::I*> >'} to 'forms::I*' is ambiguous
+gcc14_plan_X: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<forms::X>, forms::trace<forms::X> >'} to 'forms::X' is ambiguous
+gcc14_plan_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<forms::X*>, forms::trace<forms::X*> >'} to 'forms::X*' is ambiguous
+gcc14_plan_X_const: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<forms::X* const>, forms::trace<forms::X* const> >'} to 'forms::X*' is ambiguous
+gcc14_plan_const_X: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<const forms::X>, forms::trace<const forms::X> >'} to 'forms::X' is ambiguous
+gcc14_plan_const_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<const forms::X*>, forms::trace<const forms::X*> >'} to 'const forms::X*' is ambiguous
+gcc14_plan_function_int_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::function<int()> >, forms::trace<std::function<int()> > >'} to 'std::function<int()>' is ambiguous
+gcc14_plan_function_unique_ptr_I_int_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::function<std::unique_ptr<forms::I>(int)> >, forms::trace<std::function<std::unique_ptr<forms::I>(int)> > >'} to 'std::function<std::unique_ptr<forms::I>(int)>' is ambiguous
+gcc14_plan_int: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<int>, forms::trace<int> >'} to 'int' is ambiguous
+gcc14_plan_lazy_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<forms::lazy<forms::X&> >, forms::trace<forms::lazy<forms::X&> > >'} to 'forms::lazy<forms::X&>' is ambiguous
+gcc14_plan_optional_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::optional<forms::X> >, forms::trace<std::optional<forms::X> > >'} to 'std::optional<forms::X>' is ambiguous
+gcc14_plan_reference_wrapper_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::reference_wrapper<forms::X> >, forms::trace<std::reference_wrapper<forms::X> > >'} to 'std::reference_wrapper<forms::X>' is ambiguous
+gcc14_plan_shared_ptr_I_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::shared_ptr<forms::I> >, forms::trace<std::shared_ptr<forms::I> > >'} to 'std::shared_ptr<forms::I>' is ambiguous
+gcc14_plan_shared_ptr_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::shared_ptr<forms::X> >, forms::trace<std::shared_ptr<forms::X> > >'} to 'std::shared_ptr<forms::X>' is ambiguous
+gcc14_plan_shared_ptr_const_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::shared_ptr<const forms::X> >, forms::trace<std::shared_ptr<const forms::X> > >'} to 'std::shared_ptr<const forms::X>' is ambiguous
+gcc14_plan_span_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::span<forms::X> >, forms::trace<std::span<forms::X> > >'} to 'std::span<forms::X>' is ambiguous
+gcc14_plan_span_const_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::span<const forms::X> >, forms::trace<std::span<const forms::X> > >'} to 'std::span<const forms::X>' is ambiguous
+gcc14_plan_string: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::__cxx11::basic_string<char> >, forms::trace<std::__cxx11::basic_string<char> > >'} to 'std::__cxx11::basic_string<char>' is ambiguous
+gcc14_plan_string_view: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::basic_string_view<char> >, forms::trace<std::basic_string_view<char> > >'} to 'std::basic_string_view<char>' is ambiguous
+gcc14_plan_tuple_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::tuple<forms::X> >, forms::trace<std::tuple<forms::X> > >'} to 'std::tuple<forms::X>' is ambiguous
+gcc14_plan_unique_ptr_I_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::unique_ptr<forms::I> >, forms::trace<std::unique_ptr<forms::I> > >'} to 'std::unique_ptr<forms::I>' is ambiguous
+gcc14_plan_unique_ptr_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::unique_ptr<forms::X>&&>, forms::trace<std::unique_ptr<forms::X>&&> >'} to 'std::unique_ptr<forms::X>' is ambiguous
+gcc14_plan_variant_X_int_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::variant<forms::X, int> >, forms::trace<std::variant<forms::X, int> > >'} to 'std::variant<forms::X, int>' is ambiguous
+gcc14_plan_vector_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::vector<forms::X> >, forms::trace<std::vector<forms::X> > >'} to 'std::vector<forms::X>' is ambiguous
+gcc14_plan_weak_ptr_X_: error: conversion from 'diag_arg' {aka 'forms::set_plan<forms::consumer<std::weak_ptr<forms::X> >, forms::trace<std::weak_ptr<forms::X> > >'} to 'std::weak_ptr<forms::X>' is ambiguous
+gcc14_refq_any: error: conversion from 'diag_arg' {aka 'forms::set_refq<forms::consumer<std::any>, forms::trace<std::any> >'} to 'std::any' is ambiguous
+gcc14_refq_optional_X_: error: conversion from 'diag_arg' {aka 'forms::set_refq<forms::consumer<std::optional<forms::X> >, forms::trace<std::optional<forms::X> > >'} to 'std::optional<forms::X>' is ambiguous
+gcc14_refq_tuple_X_: error: conversion from 'diag_arg' {aka 'forms::set_refq<forms::consumer<std::tuple<forms::X> >, forms::trace<std::tuple<forms::X> > >'} to 'std::tuple<forms::X>' is ambiguous
+gcc14_rref_first_any: error: conversion from 'diag_arg' {aka 'forms::set_rref_first<forms::consumer<std::any>, forms::trace<std::any> >'} to 'std::any' is ambiguous
+gcc14_value_I_: error: cannot allocate an object of abstract type 'forms::I'
+gcc14_value_X_: error: cannot bind non-const lvalue reference of type 'forms::X&' to an rvalue of type 'forms::X'
+gcc14_value_any: error: conversion from 'diag_arg' {aka 'forms::set_value<forms::consumer<std::any>, forms::trace<std::any> >'} to 'std::any' is ambiguous
+gcc14_value_const_I_: error: cannot allocate an object of abstract type 'forms::I'
+gcc14_value_optional_X_: error: conversion from 'diag_arg' {aka 'forms::set_value<forms::consumer<std::optional<forms::X> >, forms::trace<std::optional<forms::X> > >'} to 'std::optional<forms::X>' is ambiguous
+gcc14_value_tuple_X_: error: conversion from 'diag_arg' {aka 'forms::set_value<forms::consumer<std::tuple<forms::X> >, forms::trace<std::tuple<forms::X> > >'} to 'std::tuple<forms::X>' is ambiguous

@@ -1,0 +1,30 @@
+LIMIT|plain, 0 parameters|ok|0|no
+LIMIT|plain, 3 parameters|ok|3|no
+LIMIT|copy + move + default constructor|ok|0|no
+LIMIT|only a copy constructor|not_constructible (E002)|-|no
+LIMIT|explicit constructor|ok|1|no
+LIMIT|aggregate {X, const Y&, unique_ptr<X>}|ok|3|yes
+LIMIT|aggregate with default member initializer|ok|2|yes
+LIMIT|aggregate {int[2], X}|ok|3|yes
+LIMIT|aggregate with a base class|ok|2|yes
+LIMIT|template<class U> C(U&&)|greedy (E004)|1|no
+LIMIT|greedy template + C(X, Y)|ok|2|yes
+LIMIT|template<integral U> C(U) + C(X)|ok|1|no
+LIMIT|C(int) + template<class T> C(T) = delete|not_constructible (E002)|-|no
+LIMIT|template<class... U> C(U&&...)|greedy (E004)|16|no
+LIMIT|C(...)|greedy (E004)|16|no
+LIMIT|C(X, Y) + C(Y, X)|not_constructible (E002)|-|no
+LIMIT|C() + C(X, Y) + C(Y, X)|ok|0|no
+LIMIT|C(X, int = 3)|ok|2|yes
+LIMIT|C(X) + C(X, Y)|ok|2|yes
+LIMIT|private C(X)|not_constructible (E002)|-|no
+LIMIT|C(X) = delete|not_constructible (E002)|-|no
+LIMIT|private C(X, Y) + public C(X)|ok|1|no
+LIMIT|abstract class|abstract (E001)|-|no
+LIMIT|17 parameters (max_ctor_arity 16)|over_limit (E010)|-|no
+LIMIT|int|not_class|-|no
+LIMIT|C(initializer_list<int>) + C(X, Y)|ok|2|yes
+LIMIT|C(optional<X>)|not_constructible (E002)|-|no
+LIMIT|C(X&&)|ok|1|no
+LIMIT|C() + C(const X&)|ok|1|yes
+OK: limits (gcc13 probe workaround off)

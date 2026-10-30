@@ -1,0 +1,11 @@
+PASS one Logger and one Config for the whole graph
+PASS every Logger&, const Logger&, Logger* and aggregate member refers to the singleton
+PASS Config singleton shared
+PASS unique_ptr<Clock> requests get distinct objects
+PASS shared_ptr<Clock> sole owner
+PASS Clock by value delivered
+PASS two Repo objects were built (one by value, one in a shared_ptr)
+PASS three Clock objects alive: two in Repo unique_ptrs, one in Settings
+PASS everything destroyed with the injector and the app
+PASS naive placeholder: HoldsClockRef::c refers to a destroyed temporary
+OK: injector stub

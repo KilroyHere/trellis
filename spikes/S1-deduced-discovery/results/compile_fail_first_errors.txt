@@ -1,0 +1,35 @@
+gcc13 e001_abstract: compile_fail/../injector_stub.hpp:146:24: error: static assertion failed: TRL-E001: no binding for an abstract type
+gcc13 e002_no_fallback: compile_fail/../injector_stub.hpp:162:21: error: static assertion failed: TRL-E002: a constructor parameter is not resolvable
+gcc13 e002_private: compile_fail/../injector_stub.hpp:154:24: error: static assertion failed: TRL-E002: no accessible, unambiguous constructor (private, deleted, or same-arity overloads?)
+gcc13 e004_greedy: compile_fail/../injector_stub.hpp:148:24: error: static assertion failed: TRL-E004: a constructor template or variadic constructor accepts any argument; declare the constructor with ctor_traits
+gcc13 e005_ref_to_unique: compile_fail/../injector_stub.hpp:158:22: error: static assertion failed: TRL-E005: a unique object requested by reference or pointer would dangle
+gcc13 e005_singleton_by_value: compile_fail/../injector_stub.hpp:160:21: error: static assertion failed: TRL-E005: a singleton requested by value or as an owner would be copied
+gcc13 e010_over_limit: compile_fail/../injector_stub.hpp:152:24: error: static assertion failed: TRL-E010: constructor arity above max_ctor_arity
+gcc14 e001_abstract: compile_fail/../injector_stub.hpp:146:24: error: static assertion failed: TRL-E001: no binding for an abstract type
+gcc14 e002_no_fallback: compile_fail/../injector_stub.hpp:162:21: error: static assertion failed: TRL-E002: a constructor parameter is not resolvable
+gcc14 e002_private: compile_fail/../injector_stub.hpp:154:24: error: static assertion failed: TRL-E002: no accessible, unambiguous constructor (private, deleted, or same-arity overloads?)
+gcc14 e004_greedy: compile_fail/../injector_stub.hpp:148:24: error: static assertion failed: TRL-E004: a constructor template or variadic constructor accepts any argument; declare the constructor with ctor_traits
+gcc14 e005_ref_to_unique: compile_fail/../injector_stub.hpp:158:22: error: static assertion failed: TRL-E005: a unique object requested by reference or pointer would dangle
+gcc14 e005_singleton_by_value: compile_fail/../injector_stub.hpp:160:21: error: static assertion failed: TRL-E005: a singleton requested by value or as an owner would be copied
+gcc14 e010_over_limit: compile_fail/../injector_stub.hpp:152:24: error: static assertion failed: TRL-E010: constructor arity above max_ctor_arity
+clang18 e001_abstract: compile_fail/../injector_stub.hpp:146:21: error: static assertion failed due to requirement 'st != ctor_status::abstract': TRL-E001: no binding for an abstract type
+clang18 e002_no_fallback: compile_fail/../injector_stub.hpp:162:21: error: static assertion failed due to requirement 'can_resolve<consumer>': TRL-E002: a constructor parameter is not resolvable
+clang18 e002_private: compile_fail/../injector_stub.hpp:154:21: error: static assertion failed due to requirement 'st != ctor_status::not_constructible': TRL-E002: no accessible, unambiguous constructor (private, deleted, or same-arity overloads?)
+clang18 e004_greedy: compile_fail/../injector_stub.hpp:148:21: error: static assertion failed due to requirement 'st != ctor_status::greedy': TRL-E004: a constructor template or variadic constructor accepts any argument; declare the constructor with ctor_traits
+clang18 e005_ref_to_unique: compile_fail/../injector_stub.hpp:158:21: error: static assertion failed due to requirement '!by_ref': TRL-E005: a unique object requested by reference or pointer would dangle
+clang18 e005_singleton_by_value: compile_fail/../injector_stub.hpp:160:21: error: static assertion failed due to requirement 'by_ref': TRL-E005: a singleton requested by value or as an owner would be copied
+clang18 e010_over_limit: compile_fail/../injector_stub.hpp:152:21: error: static assertion failed due to requirement 'st != ctor_status::over_limit': TRL-E010: constructor arity above max_ctor_arity
+clang20 e001_abstract: compile_fail/../injector_stub.hpp:146:21: error: static assertion failed due to requirement 'st != ctor_status::abstract': TRL-E001: no binding for an abstract type
+clang20 e002_no_fallback: compile_fail/../injector_stub.hpp:162:21: error: static assertion failed due to requirement 'can_resolve<consumer>': TRL-E002: a constructor parameter is not resolvable
+clang20 e002_private: compile_fail/../injector_stub.hpp:154:21: error: static assertion failed due to requirement 'st != ctor_status::not_constructible': TRL-E002: no accessible, unambiguous constructor (private, deleted, or same-arity overloads?)
+clang20 e004_greedy: compile_fail/../injector_stub.hpp:148:21: error: static assertion failed due to requirement 'st != ctor_status::greedy': TRL-E004: a constructor template or variadic constructor accepts any argument; declare the constructor with ctor_traits
+clang20 e005_ref_to_unique: compile_fail/../injector_stub.hpp:158:21: error: static assertion failed due to requirement '!by_ref': TRL-E005: a unique object requested by reference or pointer would dangle
+clang20 e005_singleton_by_value: compile_fail/../injector_stub.hpp:160:21: error: static assertion failed due to requirement 'by_ref': TRL-E005: a singleton requested by value or as an owner would be copied
+clang20 e010_over_limit: compile_fail/../injector_stub.hpp:152:21: error: static assertion failed due to requirement 'st != ctor_status::over_limit': TRL-E010: constructor arity above max_ctor_arity
+clang18-libcxx e001_abstract: compile_fail/../injector_stub.hpp:146:21: error: static assertion failed due to requirement 'st != ctor_status::abstract': TRL-E001: no binding for an abstract type
+clang18-libcxx e002_no_fallback: compile_fail/../injector_stub.hpp:162:21: error: static assertion failed due to requirement 'can_resolve<consumer>': TRL-E002: a constructor parameter is not resolvable
+clang18-libcxx e002_private: compile_fail/../injector_stub.hpp:154:21: error: static assertion failed due to requirement 'st != ctor_status::not_constructible': TRL-E002: no accessible, unambiguous constructor (private, deleted, or same-arity overloads?)
+clang18-libcxx e004_greedy: compile_fail/../injector_stub.hpp:148:21: error: static assertion failed due to requirement 'st != ctor_status::greedy': TRL-E004: a constructor template or variadic constructor accepts any argument; declare the constructor with ctor_traits
+clang18-libcxx e005_ref_to_unique: compile_fail/../injector_stub.hpp:158:21: error: static assertion failed due to requirement '!by_ref': TRL-E005: a unique object requested by reference or pointer would dangle
+clang18-libcxx e005_singleton_by_value: compile_fail/../injector_stub.hpp:160:21: error: static assertion failed due to requirement 'by_ref': TRL-E005: a singleton requested by value or as an owner would be copied
+clang18-libcxx e010_over_limit: compile_fail/../injector_stub.hpp:152:21: error: static assertion failed due to requirement 'st != ctor_status::over_limit': TRL-E010: constructor arity above max_ctor_arity
