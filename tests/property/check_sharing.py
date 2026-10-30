@@ -14,9 +14,10 @@ from its own model of the graph. This is the equivalence oracle of plan §9.1; T
 Trellis variant.
 
 Seeds: --seeds, else the TRELLIS_PROPERTY_SEEDS environment variable, else DEFAULT_SEEDS (1-32). A
-list is "1-32", "7,9" or "1000000+64" (64 seeds from 1000000). CI sets TRELLIS_PROPERTY_SEEDS so
-that it tries seeds local runs never use, such as 1000000 + 64 * the run number, +64. --shard I/N
-takes every Nth seed starting with the Ith; CTest runs the shards as separate tests.
+list is "1-32", "7,9" or "1000000+64" (64 seeds from 1000000). CI sets TRELLIS_PROPERTY_SEEDS from
+the run number, so that it tries seeds local runs never use: .github/workflows/ci.yml 64 per run,
+nightly.yml 256. --shard I/N takes every Nth seed starting with the Ith; CTest runs the shards as
+separate tests.
 
 The programs, BATCH graphs each, are compiled with the build's compiler and flags (the preset's
 flags, sanitizers included, -std=c++20, the include directory and the project warnings, from

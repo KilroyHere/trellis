@@ -1,6 +1,6 @@
 # Linux CI on every push to a branch, and on pull requests from forks. Each job configures, builds
 # and tests one CMake preset, as scripts/check-full.sh does locally, so every test runs: unit,
-# headers, compile_fail, golden and tools. The repository is private and Actions minutes are
+# headers, compile_fail, golden, property and tools. The repository is private and Actions minutes are
 # limited, so TSan and the benchmarks run nightly (nightly.yml), and macOS and Windows weekly
 # (platforms.yml). scripts/ci-status.sh summarizes the results.
 name: ci
@@ -91,7 +91,12 @@ jobs:
           cmake --build --preset ${{ matrix.preset }} -j "$(nproc)"
           ccache --show-stats
 
+      # The property tests (tests/property) run on seeds that local runs never use (they use 1-32):
+      # run N tries the 64 seeds from N × 1,000,000, so every run has fresh ones and a re-run of a
+      # job repeats them. Expressions can't do arithmetic, hence the appended zeros.
       - name: Test
+        env:
+          TRELLIS_PROPERTY_SEEDS: ${{ github.run_number }}000000+64
         run: ctest --preset ${{ matrix.preset }} -j "$(nproc)"
 
       # Saved even when the tests fail, so that the next run doesn't compile everything again.

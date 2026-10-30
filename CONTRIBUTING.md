@@ -36,10 +36,10 @@ The repository is private and GitHub Actions minutes are limited, so only Linux 
 | Workflow | When | What |
 |---|---|---|
 | `.github/workflows/ci.yml` | Every push to a branch; pull requests from forks | The presets `gcc-13-debug`, `gcc-14-debug`, `clang-18-debug`, `clang-20-debug`, `clang-18-libcxx-debug` and `asan-ubsan` on Ubuntu 24.04 |
-| `.github/workflows/nightly.yml` | Daily on `main`; `gh workflow run nightly.yml --ref <branch>` | `tsan`, and `scripts/bench-compile.sh --quick` once it exists |
+| `.github/workflows/nightly.yml` | Daily on `main`; `gh workflow run nightly.yml --ref <branch>` | `tsan`, and `scripts/bench-compile.sh --quick` |
 | `.github/workflows/platforms.yml` | Weekly on `main`; `gh workflow run platforms.yml --ref <branch> [-f os=macos\|windows]` | `appleclang-debug` on macOS and `msvc-debug` on Windows |
 
-A failed scheduled run of `nightly.yml` or `platforms.yml` opens an issue. Actions are pinned to full commit SHAs, with the release tag in a comment. The problem matchers in `.github/problem-matchers.json` turn error lines into annotations, which `scripts/ci-status.sh` shows when the job logs can't be downloaded.
+CI gives the property tests seeds that local runs never use, through `TRELLIS_PROPERTY_SEEDS` and from the run number: run N of `ci.yml` tries the 64 seeds from N × 1,000,000, and run N of `nightly.yml` the 256 from N × 1,000,000 + 500,000. A failed scheduled run of `nightly.yml` or `platforms.yml` opens an issue. Actions are pinned to full commit SHAs, with the release tag in a comment. The problem matchers in `.github/problem-matchers.json` turn error lines into annotations, which `scripts/ci-status.sh` shows when the job logs can't be downloaded.
 
 ## Tests
 
@@ -60,7 +60,7 @@ A failed scheduled run of `nightly.yml` or `platforms.yml` opens an issue. Actio
 - **Golden diagnostics** in `tests/diagnostics_golden/<compiler>-<major>/<name>.txt` hold the normalized output for the compile-fail test `<name>`. `tools/golden.py` compares them. Normalization makes paths repository-relative and drops line and column numbers, colors and version banners.
 
   [`tests/golden_manifest.txt`](tests/golden_manifest.txt) lists which tests have goldens, and for which compilers. CTest registers the golden tests from it, so a missing golden fails. To add one, add a line there, then run `tools/golden.py --preset <preset> --update --reason "<why>" <name>` with a preset of that compiler (such as `clang-18-debug` for clang-18). It records the reason in [`docs/golden-changes.md`](docs/golden-changes.md). Goldens change only at the owner's request. The libc++ preset runs no golden tests, because libc++ spells standard-library names differently from the libstdc++ that the goldens were made with.
-- **Property tests** (`tests/property/check_sharing.py`) wire random dependency graphs from `benchmarks/compile/gen_graph.py` by hand, compile them with the preset's compiler and flags, and check through an identity checksum that each one shares objects exactly as its lifetimes say. The seeds are fixed; set `TRELLIS_PROPERTY_SEEDS` (such as `1000000+64`) to try others. A failure prints the command that reproduces it.
+- **Property tests** (`tests/property/check_sharing.py`) wire random dependency graphs from `benchmarks/compile/gen_graph.py` by hand, compile them with the preset's compiler and flags, and check through an identity checksum that each one shares objects exactly as its lifetimes say. Local runs use the fixed seeds 1-32; set `TRELLIS_PROPERTY_SEEDS` (such as `1000000+64`) to try others, as CI does. A failure prints the command that reproduces it.
 - Never weaken, delete or rewrite an existing test, golden or budget to make a change pass. If one looks wrong, say why in the pull request.
 
 ## Style and commits
