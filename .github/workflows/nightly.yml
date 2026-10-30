@@ -6,11 +6,6 @@ name: nightly
 on:
   schedule:
     - cron: '37 3 * * *' # every day at 03:37 UTC
-  # TEMPORARY (T0.2): GitHub dispatches only workflows it knows, from the default branch or a
-  # run. This push trigger runs it once from the t0.2-ci branch. Remove before merging.
-  push:
-    branches: [t0.2-ci]
-    paths: [.github/workflows/nightly.yml]
   workflow_dispatch:
 
 permissions:

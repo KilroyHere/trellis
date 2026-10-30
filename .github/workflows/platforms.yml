@@ -8,11 +8,6 @@ name: platforms
 on:
   schedule:
     - cron: '53 4 * * 1' # Mondays at 04:53 UTC
-  # TEMPORARY (T0.2): GitHub dispatches only workflows it knows, from the default branch or a
-  # run. This push trigger runs it once from the t0.2-ci branch. Remove before merging.
-  push:
-    branches: [t0.2-ci]
-    paths: [.github/workflows/platforms.yml]
   workflow_dispatch:
     inputs:
       os:
