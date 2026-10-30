@@ -1,0 +1,2 @@
+hazard [libstdc++, plain] call_once retry after a throwing callable: retried (OK)
+hazard [libstdc++, plain] re-entrant call_once on the same flag: HANG (deadlock, nothing reported)

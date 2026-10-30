@@ -1,0 +1,2 @@
+6700  futex(0x7f1b92c7a7bc, FUTEX_WAKE_PRIVATE, 2147483647) = 0
+6700  +++ exited with 0 +++

@@ -1,0 +1,67 @@
+2026-10-30T17:26:55+00:00
+Running build/spikes/S4-storage-threading/bench-spin8
+Run on (4 X 2300 MHz CPU s)
+CPU Caches:
+  L1 Data 48 KiB (x4)
+  L1 Instruction 64 KiB (x4)
+  L2 Unified 2048 KiB (x4)
+  L3 Unified 516096 KiB (x1)
+Load Average: 4.40, 2.69, 1.46
+***WARNING*** Library was built as DEBUG. Timings may be affected.
+----------------------------------------------------------------------------------------------------------------------------------------
+Benchmark                                                                              Time             CPU   Iterations UserCounters...
+----------------------------------------------------------------------------------------------------------------------------------------
+cold8_same_spin1us/inline/wait_spin/iterations:512/real_time/threads:8               191 ns          383 ns         4096 batch=1
+cold8_same_spin1us/inline/wait_spin/iterations:512/real_time/threads:8               202 ns          394 ns         4096 batch=1
+cold8_same_spin1us/inline/wait_spin/iterations:512/real_time/threads:8               195 ns          392 ns         4096 batch=1
+cold8_same_spin1us/inline/wait_spin/iterations:512/real_time/threads:8               195 ns          395 ns         4096 batch=1
+cold8_same_spin1us/inline/wait_spin/iterations:512/real_time/threads:8               184 ns          370 ns         4096 batch=1
+cold8_same_spin1us/inline/wait_spin/iterations:512/real_time/threads:8_mean          193 ns          387 ns            5 batch=1
+cold8_same_spin1us/inline/wait_spin/iterations:512/real_time/threads:8_median        195 ns          392 ns            5 batch=1
+cold8_same_spin1us/inline/wait_spin/iterations:512/real_time/threads:8_stddev       6.87 ns         10.3 ns            5 batch=0
+cold8_same_spin1us/inline/wait_spin/iterations:512/real_time/threads:8_cv           3.55 %          2.67 %             5 batch=0.00%
+cold8_same/inline/cv/iterations:4096/real_time/threads:8                            3.36 ns         6.64 ns        32768 batch=1
+cold8_same/inline/cv/iterations:4096/real_time/threads:8                            9.61 ns         12.3 ns        32768 batch=1
+cold8_same/inline/cv/iterations:4096/real_time/threads:8                            3.05 ns         4.59 ns        32768 batch=1
+cold8_same/inline/cv/iterations:4096/real_time/threads:8                            4.80 ns         7.70 ns        32768 batch=1
+cold8_same/inline/cv/iterations:4096/real_time/threads:8                            3.38 ns         5.13 ns        32768 batch=1
+cold8_same/inline/cv/iterations:4096/real_time/threads:8_mean                       4.84 ns         7.26 ns            5 batch=1
+cold8_same/inline/cv/iterations:4096/real_time/threads:8_median                     3.38 ns         6.64 ns            5 batch=1
+cold8_same/inline/cv/iterations:4096/real_time/threads:8_stddev                     2.75 ns         3.05 ns            5 batch=0
+cold8_same/inline/cv/iterations:4096/real_time/threads:8_cv                        56.85 %         42.06 %             5 batch=0.00%
+cold8_same_spin1us/inline/cv/iterations:512/real_time/threads:8                      190 ns          174 ns         4096 batch=1
+cold8_same_spin1us/inline/cv/iterations:512/real_time/threads:8                      124 ns          147 ns         4096 batch=1
+cold8_same_spin1us/inline/cv/iterations:512/real_time/threads:8                      319 ns          162 ns         4096 batch=1
+cold8_same_spin1us/inline/cv/iterations:512/real_time/threads:8                      147 ns          172 ns         4096 batch=1
+cold8_same_spin1us/inline/cv/iterations:512/real_time/threads:8                      170 ns          195 ns         4096 batch=1
+cold8_same_spin1us/inline/cv/iterations:512/real_time/threads:8_mean                 190 ns          170 ns            5 batch=1
+cold8_same_spin1us/inline/cv/iterations:512/real_time/threads:8_median               170 ns          172 ns            5 batch=1
+cold8_same_spin1us/inline/cv/iterations:512/real_time/threads:8_stddev              76.2 ns         17.7 ns            5 batch=0
+cold8_same_spin1us/inline/cv/iterations:512/real_time/threads:8_cv                 40.16 %         10.43 %             5 batch=0.00%
+cold8_same/inline/wait/iterations:4096/real_time/threads:8                          9.34 ns         19.8 ns        32768 batch=1
+cold8_same/inline/wait/iterations:4096/real_time/threads:8                          6.59 ns         16.9 ns        32768 batch=1
+cold8_same/inline/wait/iterations:4096/real_time/threads:8                          8.12 ns         17.7 ns        32768 batch=1
+cold8_same/inline/wait/iterations:4096/real_time/threads:8                          7.13 ns         17.9 ns        32768 batch=1
+cold8_same/inline/wait/iterations:4096/real_time/threads:8                          8.15 ns         20.8 ns        32768 batch=1
+cold8_same/inline/wait/iterations:4096/real_time/threads:8_mean                     7.87 ns         18.6 ns            5 batch=1
+cold8_same/inline/wait/iterations:4096/real_time/threads:8_median                   8.12 ns         17.9 ns            5 batch=1
+cold8_same/inline/wait/iterations:4096/real_time/threads:8_stddev                   1.06 ns         1.62 ns            5 batch=0
+cold8_same/inline/wait/iterations:4096/real_time/threads:8_cv                      13.48 %          8.70 %             5 batch=0.00%
+cold8_same_spin1us/inline/wait/iterations:512/real_time/threads:8                    175 ns          360 ns         4096 batch=1
+cold8_same_spin1us/inline/wait/iterations:512/real_time/threads:8                    189 ns          378 ns         4096 batch=1
+cold8_same_spin1us/inline/wait/iterations:512/real_time/threads:8                    191 ns          381 ns         4096 batch=1
+cold8_same_spin1us/inline/wait/iterations:512/real_time/threads:8                    198 ns          380 ns         4096 batch=1
+cold8_same_spin1us/inline/wait/iterations:512/real_time/threads:8                    187 ns          376 ns         4096 batch=1
+cold8_same_spin1us/inline/wait/iterations:512/real_time/threads:8_mean               188 ns          375 ns            5 batch=1
+cold8_same_spin1us/inline/wait/iterations:512/real_time/threads:8_median             189 ns          378 ns            5 batch=1
+cold8_same_spin1us/inline/wait/iterations:512/real_time/threads:8_stddev            8.43 ns         8.76 ns            5 batch=0
+cold8_same_spin1us/inline/wait/iterations:512/real_time/threads:8_cv                4.48 %          2.33 %             5 batch=0.00%
+cold8_same/inline/wait_spin/iterations:4096/real_time/threads:8                     40.2 ns         78.3 ns        32768 batch=1
+cold8_same/inline/wait_spin/iterations:4096/real_time/threads:8                     14.1 ns         33.7 ns        32768 batch=1
+cold8_same/inline/wait_spin/iterations:4096/real_time/threads:8                     13.0 ns         36.5 ns        32768 batch=1
+cold8_same/inline/wait_spin/iterations:4096/real_time/threads:8                     12.6 ns         29.7 ns        32768 batch=1
+cold8_same/inline/wait_spin/iterations:4096/real_time/threads:8                     4.88 ns         19.4 ns        32768 batch=1
+cold8_same/inline/wait_spin/iterations:4096/real_time/threads:8_mean                17.0 ns         39.5 ns            5 batch=1
+cold8_same/inline/wait_spin/iterations:4096/real_time/threads:8_median              13.0 ns         33.7 ns            5 batch=1
+cold8_same/inline/wait_spin/iterations:4096/real_time/threads:8_stddev              13.5 ns         22.6 ns            5 batch=0
+cold8_same/inline/wait_spin/iterations:4096/real_time/threads:8_cv                 79.64 %         57.24 %             5 batch=0.00%

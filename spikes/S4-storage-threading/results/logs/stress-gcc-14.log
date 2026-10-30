@@ -1,0 +1,29 @@
+[PASS] exactly once, 8 threads: A call_once, inline
+[PASS] exactly once, 8 threads: B atomic+cv, inline
+[PASS] exactly once, 8 threads: C atomic+wait, inline
+[PASS] exactly once, 8 threads: B atomic+cv, shared
+[PASS] exactly once, 8 threads: C atomic+wait, shared
+[PASS] teardown order: A call_once
+[PASS] teardown order: B atomic+cv
+[PASS] teardown order: C atomic+wait, shared
+[PASS] teardown order: none
+[PASS] throw partway, retry, teardown: A call_once
+[PASS] throw partway, retry, teardown: B atomic+cv
+[PASS] throw partway, retry, teardown: C atomic+wait
+[PASS] throw partway, retry, teardown: none, shared
+[PASS] eager build throws partway: strong guarantee
+[PASS] retry under contention, 8 threads: A call_once
+[PASS] retry under contention, 8 threads: B atomic+cv
+[PASS] retry under contention, 8 threads: C atomic+wait
+[PASS] R004 re-entry detected: none
+[PASS] R004 re-entry detected: B atomic+cv
+[PASS] R004 re-entry detected: C atomic+wait
+[PASS] no false R004 for another thread: B atomic+cv
+[PASS] no false R004 for another thread: C atomic+wait
+[PASS] exactly once, 8 threads: C+spin, inline
+[PASS] throw partway, retry, teardown: C+spin
+[PASS] retry under contention, 8 threads: C+spin
+[PASS] R004 re-entry detected: C+spin
+[PASS] no false R004 for another thread: C+spin
+[PASS] shared_ptr storage: real shared ownership past teardown
+104388 checks, 0 failed
