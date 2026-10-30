@@ -117,9 +117,12 @@ _ABSOLUTE = r"(?:[A-Za-z]:)?[\\/]"  # a POSIX root or a Windows drive
 # A location at the start of a line, up to its ":12", or on a GCC context line up to ": In" or
 # ": At" ("/x/a.hpp: In function 'f':"). The line start anchors it, so it may contain spaces.
 LINE_START_LOCATION = re.compile(rf"^{_ABSOLUTE}[^:\r\n]*?(?=:\d|: (?:In|At) )")
-# A location elsewhere: a path followed by ":12" or MSVC's "(12", as in Clang's
-# "(lambda at /x/a.cpp:3:9)". Nothing anchors its start, so it ends at whitespace.
-LOCATION = re.compile(rf"{_PATH_START}{_ABSOLUTE}(?:{_DIRECTORY}[\\/])*{_DIRECTORY}(?=:\d|\(\d)")
+# A location in the middle of a line. Compilers print one only in Clang's names for unnamed
+# entities, "(lambda at /x/a.cpp:3:9)" or "(unnamed struct at ...)", so the path must follow
+# " at " and be followed by ":12". A path-like string with a number anywhere else stays, such as
+# {"/db/primary:5432"} or a message's "see /docs/db/E001:2". Nothing anchors its start, so it
+# ends at whitespace.
+LOCATION = re.compile(rf"(?<= at ){_ABSOLUTE}(?:{_DIRECTORY}[\\/])*{_DIRECTORY}(?=:\d)")
 # The file of a missing-file message, which ends where the message's fixed text starts, so it may
 # contain spaces: GCC's "fatal error: /x/a.hpp: No such file or directory" (also its warnings about
 # include directories), Clang's "'/x/a.hpp' file not found", Clang's driver's

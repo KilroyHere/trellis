@@ -232,6 +232,23 @@ class NormalizeTest(unittest.TestCase):
         self.assertNotEqual(golden.normalize(output("db"), "/work/trellis"),
                             golden.normalize(output("xy"), "/work/trellis"))
 
+    def test_mid_line_locations_follow_at(self):
+        # In the middle of a line, only Clang's names for unnamed entities hold a location:
+        # "(lambda at /x/a.hpp:7:36)". A path-like string followed by ":<digits>" elsewhere, in a
+        # type's string literal or in a message, is no location.
+        output = (
+            "/work/trellis/a.cpp:3:4: error: no member named 'f' in "
+            "'(lambda at /opt/x/a.hpp:7:36)'\n"
+            "/work/trellis/a.cpp:5:6: note: '(unnamed struct at /opt/x/b.hpp:1:2)' here\n"
+            "/work/trellis/a.cpp:8:9: error: 'always_false<named<fixed_string<18>"
+            "{\"/db/primary:5432\"}>>': TRL-E000: see /docs/db/E001:2\n")
+        expected = (
+            "<src>/a.cpp:L:C: error: no member named 'f' in '(lambda at <external>/a.hpp:L:C)'\n"
+            "<src>/a.cpp:L:C: note: '(unnamed struct at <external>/b.hpp:L:C)' here\n"
+            "<src>/a.cpp:L:C: error: 'always_false<named<fixed_string<18>"
+            "{\"/db/primary:5432\"}>>': TRL-E000: see /docs/db/E001:2\n")
+        self.assertEqual(golden.normalize(output, "/work/trellis"), expected)
+
     def test_locations_and_missing_files_may_contain_spaces(self):
         # A location at the start of a line ends at its line number, or at ": In" on a GCC context
         # line; a missing file at the end of its message.
