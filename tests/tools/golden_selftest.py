@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-"""Self-test of tools/golden.py: normalization, and the update and compare cycle.
+"""Self-test of tools/golden.py: normalization, the compiler invocation, and the update and compare
+cycle.
 
 The normalization cases use canned Clang, GCC and MSVC output (MSVC isn't installed here). The
-update cycle compiles the sample compile-fail test with the build's compiler and writes into a
+invocation test runs golden.py on a stub compiler that reports its arguments and environment. The
+update cycle compiles the sample compile-fail test with the build's compiler. Both write into a
 temporary directory in the build tree, never into tests/ or docs/. CTest runs this as
 tools.golden_selftest with the build's --config.
 """
 import argparse
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -15,11 +18,15 @@ import unittest
 from pathlib import Path
 
 sys.dont_write_bytecode = True
-ROOT = Path(__file__).resolve().parent.parent.parent
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
+sys.path.insert(0, str(HERE))
 import golden  # noqa: E402
+import stub_compiler  # noqa: E402  (INHERITED: what the invocation test adds to the environment)
 
 GOLDEN_SCRIPT = ROOT / "tools" / "golden.py"
+STUB = HERE / "stub_compiler.py"
 SAMPLE = "sample/static_assert_message"
 CONFIG = None  # set by main() from --config
 
@@ -39,15 +46,12 @@ class NormalizeTest(unittest.TestCase):
             "/work/trellis/build/clang-18-debug/gen/y.hpp:4:1: note: generated   \n"
             "1 error generated.\n\n")
         expected = (
-            "tests/compile_fail/a/b.cpp: error: static assertion failed due to requirement "
-            "'x<int>'\n"
-            " |   static_assert(x<T>, \"TRL-E000: a:1\");\n"
-            " |                 ^~~~\n"
-            "tests/compile_fail/a/b.cpp: note: in instantiation of 'f<int>' requested here\n"
-            "In file included from include/trellis/trellis.hpp:\n"
-            "<external>/memory: note: candidate (lambda at tests/x.cpp)\n"
-            "<build>/gen/y.hpp: note: generated\n"
-            "1 error generated.\n")
+            "<src>/tests/compile_fail/a/b.cpp:L:C: error: static assertion failed due to "
+            "requirement 'x<int>'\n"
+            "<src>/tests/compile_fail/a/b.cpp:L:C: note: in instantiation of 'f<int>' requested "
+            "here\n"
+            "<std>/memory:L:C: note: candidate (lambda at <src>/tests/x.cpp:L:C)\n"
+            "<build>/gen/y.hpp:L:C: note: generated\n")
         self.assertEqual(golden.normalize(output, "/work/trellis",
                                           "/work/trellis/build/clang-18-debug"), expected)
 
@@ -60,11 +64,8 @@ class NormalizeTest(unittest.TestCase):
             "/work/trellis/tests/compile_fail/a/b.cpp:25:53:   required from here\n"
             "  125 |   f<int>();\n")
         expected = (
-            "In file included from <external>/memory,\n"
-            "                 from tests/compile_fail/a/b.cpp:\n"
-            "tests/compile_fail/a/b.cpp: In instantiation of 'void f() [with T = int]':\n"
-            "tests/compile_fail/a/b.cpp:   required from here\n"
-            " |   f<int>();\n")
+            "<src>/tests/compile_fail/a/b.cpp: In instantiation of 'void f() [with T = int]':\n"
+            "<src>/tests/compile_fail/a/b.cpp:L:C:   required from here\n")
         self.assertEqual(golden.normalize(output, "/work/trellis"), expected)
 
     def test_msvc_output(self):
@@ -78,16 +79,271 @@ class NormalizeTest(unittest.TestCase):
             "'void f<int>(void)'\r\n"
             "C:\\Program Files (x86)\\MSVC\\include\\memory(12): note: see 'std::unique_ptr'\r\n")
         expected = (
-            "tests\\compile_fail\\a\\b.cpp: error C2338: static_assert failed: "
+            "<src>/tests/compile_fail/a/b.cpp(L,C): error C2338: static_assert failed: "
             "'trellis [TRL-E000]'\n"
-            "tests\\compile_fail\\a\\b.cpp: note: see reference to 'void f<int>(void)'\n"
-            "<external>/memory: note: see 'std::unique_ptr'\n")
+            "<src>/tests/compile_fail/a/b.cpp(L,C): note: see reference to 'void f<int>(void)'\n"
+            "<external>/memory(L,C): note: see 'std::unique_ptr'\n")
         self.assertEqual(golden.normalize(output, "C:\\src\\trellis"), expected)
 
     def test_type_names_and_error_namespaces_are_kept(self):
         line = ("x.cpp: note: 'trellis::error::E001<std::array<int, 3>, a::b>' (a:b) "
                 "ratio<1, 1000>\n")
         self.assertEqual(golden.normalize(line, "/work/trellis"), line)
+
+    def test_colours_and_hyperlinks_are_stripped(self):
+        # GCC's colors (ESC[01m ESC[K ... ESC[m ESC[K) and Clang's (ESC[0;1;31m), and OSC-8
+        # hyperlinks around warning options, which GCC ends with BEL by default and with ESC \
+        # when GCC_URLS=st.
+        output = (
+            "\x1b[01m\x1b[K/work/trellis/a.cpp:2:7:\x1b[m\x1b[K \x1b[01;35m\x1b[Kwarning: "
+            "\x1b[m\x1b[Kunused variable '\x1b[01m\x1b[Kx\x1b[m\x1b[K' [\x1b]8;;https://gcc.gnu.org"
+            "/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable\x07-Wunused-variable"
+            "\x1b]8;;\x07]\n"
+            "/work/trellis/a.cpp:3:1: \x1b[0;1;31merror: \x1b[0mno [\x1b]8;;https://example.org/x"
+            "\x1b\\-Wx\x1b]8;;\x1b\\]\n")
+        expected = (
+            "<src>/a.cpp:L:C: warning: unused variable 'x' [-Wunused-variable]\n"
+            "<src>/a.cpp:L:C: error: no [-Wx]\n")
+        self.assertEqual(golden.normalize(output, "/work/trellis"), expected)
+
+    def test_quoted_source_include_chains_and_banners_are_dropped(self):
+        output = (
+            "In file included from /work/trellis/tests/compile_fail/a/b.cpp:1:\n"
+            "In file included from /work/trellis/include/trellis/trellis.hpp:6:\n"
+            "/work/trellis/include/trellis/x.hpp:5:17: error: no binding\n"
+            "    5 |   static_assert(x<T>);\n"
+            "      |                 ^~~~\n"
+            "      |                 y<T>\n"
+            "In file included from /usr/include/c++/13/memory:78,\n"
+            "                 from /work/trellis/tests/compile_fail/a/b.cpp:9:\n"
+            "/usr/include/c++/13/bits/unique_ptr.h:522:7: note: declared here\n"
+            "  522 |       unique_ptr(const unique_ptr&) = delete;\n"
+            "      |       ^~~~~~~~~~\n"
+            "compilation terminated.\n"
+            "1 error generated.\n"
+            "2 errors generated.\n"
+            "1 warning and 3 errors generated.\n")
+        expected = (
+            "<src>/include/trellis/x.hpp:L:C: error: no binding\n"
+            "<std>/bits/unique_ptr.h:L:C: note: declared here\n")
+        self.assertEqual(golden.normalize(output, "/work/trellis"), expected)
+
+    def test_standard_library_paths(self):
+        # libstdc++ as GCC and Clang find it, and its target-specific directory; libc++ in an LLVM
+        # installation and in Xcode's SDK; MSVC's STL, whose path has spaces.
+        output = (
+            "/usr/include/c++/13/bits/unique_ptr.h:522:7: note: a\n"
+            "/usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/bits/"
+            "stl_construct.h:94:5: note: b\n"
+            "/usr/include/x86_64-linux-gnu/c++/13/bits/c++config.h:3:1: note: c\n"
+            "/usr/lib/llvm-18/bin/../include/c++/v1/__memory/unique_ptr.h:5:1: note: d\n"
+            "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/"
+            "MacOSX.sdk/usr/include/c++/v1/memory:1:1: note: e\n"
+            "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Tools\\MSVC\\"
+            "14.40.33807\\include\\xmemory(1234): note: f\n")
+        expected = (
+            "<std>/bits/unique_ptr.h:L:C: note: a\n"
+            "<std>/bits/stl_construct.h:L:C: note: b\n"
+            "<std>/bits/c++config.h:L:C: note: c\n"
+            "<std>/__memory/unique_ptr.h:L:C: note: d\n"
+            "<std>/memory:L:C: note: e\n"
+            "<std>/xmemory(L,C): note: f\n")
+        self.assertEqual(golden.normalize(output, "/work/trellis"), expected)
+
+    def test_windows_paths_get_forward_slashes(self):
+        output = (
+            "c:\\src\\trellis\\tests\\compile_fail\\a\\b.cpp(18): error C2338: x\n"
+            "C:\\src\\trellis\\include\\trellis\\x.hpp(3,9): note: y\n"
+            "C:\\src\\trellis\\tests\\x.cpp:3:9: error: no member named 'foo' in "
+            "'(lambda at C:\\src\\trellis\\tests\\x.cpp:7:36)'\n"
+            "C:/src/trellis/include/trellis/trellis.hpp:6:1: note: z\n"
+            "D:\\deps\\include\\other.hpp:12:3: note: w\n")
+        expected = (
+            "<src>/tests/compile_fail/a/b.cpp(L,C): error C2338: x\n"
+            "<src>/include/trellis/x.hpp(L,C): note: y\n"
+            "<src>/tests/x.cpp:L:C: error: no member named 'foo' in "
+            "'(lambda at <src>/tests/x.cpp:L:C)'\n"
+            "<src>/include/trellis/trellis.hpp:L:C: note: z\n"
+            "<external>/other.hpp:L:C: note: w\n")
+        self.assertEqual(golden.normalize(output, "C:\\src\\trellis"), expected)
+
+    def test_line_only_locations_external_paths_and_message_text(self):
+        # A location without a column gets the same placeholder. A directory that merely ends
+        # like the source directory is not it. Numbers in the message text stay.
+        output = (
+            "/work/trellis/tests/a.cpp:25: note: line only\n"
+            "/opt/deps/include/dep/b.hpp:3:4: note: outside the repository\n"
+            "/home/u/work/trellis/c.hpp:5:6: note: another tree\n"
+            "/work/trellis/d.cpp:7:8: error: TRL-E000: a:1 size(3): b:2:3\n")
+        expected = (
+            "<src>/tests/a.cpp:L:C: note: line only\n"
+            "<external>/b.hpp:L:C: note: outside the repository\n"
+            "<external>/c.hpp:L:C: note: another tree\n"
+            "<src>/d.cpp:L:C: error: TRL-E000: a:1 size(3): b:2:3\n")
+        self.assertEqual(golden.normalize(output, "/work/trellis"), expected)
+
+    def test_normalized_paths_are_not_rewritten_again(self):
+        # A directory name that ends in '+' doesn't make the rest of the path a new one.
+        output = (
+            "/work/trellis/include/c++/13/x.hpp:1:1: note: q\n"
+            "/usr/include/c++/13/ext/a+/b/c.h:2:3: note: r\n")
+        expected = (
+            "<src>/include/c++/13/x.hpp:L:C: note: q\n"
+            "<std>/ext/a+/b/c.h:L:C: note: r\n")
+        self.assertEqual(golden.normalize(output, "/work/trellis"), expected)
+
+    def test_locations_in_clang_pseudo_files(self):
+        output = (
+            "<scratch space>:2:1: note: expanded from here\n"
+            "<command line>:1:9: note: previous definition is here\n"
+            "<built-in>:1:10: note: x\n")
+        expected = (
+            "<scratch space>:L:C: note: expanded from here\n"
+            "<command line>:L:C: note: previous definition is here\n"
+            "<built-in>:L:C: note: x\n")
+        self.assertEqual(golden.normalize(output, "/work/trellis"), expected)
+
+    def test_only_include_chains_are_dropped(self):
+        # Indented text that starts with "from" but names no file and line stays.
+        output = "   from 'x',\n   from here:\n"
+        self.assertEqual(golden.normalize(output, "/work/trellis"), output)
+
+    def test_path_like_text_that_names_no_file_stays(self):
+        # Named qualifiers are string literals, and messages may mention paths. Neither names a
+        # file the compiler read, so neither is rewritten; otherwise snippets that differ only
+        # in /db/ and /xy/ would normalize to the same text.
+        def output(directory):
+            return (
+                "/work/trellis/a.cpp:10:51: error: static assertion failed due to requirement "
+                f"'always_false<named<fixed_string<12>{{\"/{directory}/primary\"}}>>': "
+                f"TRL-E000: see /docs/{directory}/E001\n"
+                "/work/trellis/a.cpp: In instantiation of 'void require() [with T = "
+                f"named<fixed_string<12>{{\"/{directory}/primary\"}}>]':\n"
+                f"/work/trellis/a.cpp:3:4: error: '/{directory}/x', 'C:\\{directory}\\y', "
+                f"/{directory}/z: 'w'\n")
+        expected = (
+            "<src>/a.cpp:L:C: error: static assertion failed due to requirement "
+            "'always_false<named<fixed_string<12>{\"/db/primary\"}>>': "
+            "TRL-E000: see /docs/db/E001\n"
+            "<src>/a.cpp: In instantiation of 'void require() [with T = "
+            "named<fixed_string<12>{\"/db/primary\"}>]':\n"
+            "<src>/a.cpp:L:C: error: '/db/x', 'C:\\db\\y', /db/z: 'w'\n")
+        self.assertEqual(golden.normalize(output("db"), "/work/trellis"), expected)
+        self.assertNotEqual(golden.normalize(output("db"), "/work/trellis"),
+                            golden.normalize(output("xy"), "/work/trellis"))
+
+    def test_mid_line_locations_follow_at(self):
+        # In the middle of a line, only Clang's names for unnamed entities hold a location:
+        # "(lambda at /x/a.hpp:7:36)". A path-like string followed by ":<digits>" elsewhere, in a
+        # type's string literal or in a message, is no location.
+        output = (
+            "/work/trellis/a.cpp:3:4: error: no member named 'f' in "
+            "'(lambda at /opt/x/a.hpp:7:36)'\n"
+            "/work/trellis/a.cpp:5:6: note: '(unnamed struct at /opt/x/b.hpp:1:2)' here\n"
+            "/work/trellis/a.cpp:8:9: error: 'always_false<named<fixed_string<18>"
+            "{\"/db/primary:5432\"}>>': TRL-E000: see /docs/db/E001:2\n")
+        expected = (
+            "<src>/a.cpp:L:C: error: no member named 'f' in '(lambda at <external>/a.hpp:L:C)'\n"
+            "<src>/a.cpp:L:C: note: '(unnamed struct at <external>/b.hpp:L:C)' here\n"
+            "<src>/a.cpp:L:C: error: 'always_false<named<fixed_string<18>"
+            "{\"/db/primary:5432\"}>>': TRL-E000: see /docs/db/E001:2\n")
+        self.assertEqual(golden.normalize(output, "/work/trellis"), expected)
+
+    def test_locations_and_missing_files_may_contain_spaces(self):
+        # A location at the start of a line ends at its line number, or at ": In" on a GCC context
+        # line; a missing file at the end of its message.
+        output = (
+            "/home/J Doe/lib/x.hpp:3:4: error: a\n"
+            "/home/J Doe/lib/x.hpp: In function 'int main()':\n"
+            "/work/trellis/a.cpp:3:10: fatal error: /nonexistent/reviewer dir/missing.hpp: "
+            "No such file or directory\n"
+            "/work/trellis/b.cpp:3:10: fatal error: '/nonexistent/reviewer dir/missing.hpp' "
+            "file not found\n"
+            "clang++: error: no such file or directory: '/tmp/a b/c.cpp'\n"
+            "cc1plus: warning: /opt/x y/include: No such file or directory "
+            "[-Wmissing-include-dirs]\n")
+        expected = (
+            "<external>/x.hpp:L:C: error: a\n"
+            "<external>/x.hpp: In function 'int main()':\n"
+            "<src>/a.cpp:L:C: fatal error: <external>/missing.hpp: No such file or directory\n"
+            "<src>/b.cpp:L:C: fatal error: '<external>/missing.hpp' file not found\n"
+            "clang++: error: no such file or directory: '<external>/c.cpp'\n"
+            "cc1plus: warning: <external>/include: No such file or directory "
+            "[-Wmissing-include-dirs]\n")
+        self.assertEqual(golden.normalize(output, "/work/trellis"), expected)
+
+    def test_quoted_paths_may_contain_spaces(self):
+        output = (
+            "C:\\src\\trellis\\tests\\a.cpp(3): fatal error C1083: Cannot open include file: "
+            "'C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.22621.0\\ucrt\\std lib.h': "
+            "No such file or directory\n"
+            "C:\\src\\trellis\\tests\\b.cpp(4): error: '/' and '/ x' stay\n")
+        expected = (
+            "<src>/tests/a.cpp(L,C): fatal error C1083: Cannot open include file: "
+            "'<external>/std lib.h': No such file or directory\n"
+            "<src>/tests/b.cpp(L,C): error: '/' and '/ x' stay\n")
+        self.assertEqual(golden.normalize(output, "C:\\src\\trellis"), expected)
+
+
+class InvocationTest(unittest.TestCase):
+    """golden.py compiles with LC_ALL=C, in an environment that keeps nothing of its own beyond
+    what a compiler needs to start, and with the plainest output each compiler offers (spike S3):
+    -fdiagnostics-plain-output on GCC, -fno-color-diagnostics and -fno-caret-diagnostics on Clang.
+    A stub compiler reports what it got; golden.py saves that report as the normalized output."""
+
+    def setUp(self):
+        config = json.loads(Path(CONFIG).read_text(encoding="utf-8"))
+        binary_dir = Path(config["binary_dir"])
+        binary_dir.mkdir(parents=True, exist_ok=True)
+        self.scratch = tempfile.TemporaryDirectory(prefix="golden_invocation-", dir=binary_dir)
+        self.base = config
+
+    def tearDown(self):
+        self.scratch.cleanup()
+
+    def invocation(self, compiler_id):
+        """Run golden.py on the stub playing COMPILER_ID; return its arguments and environment."""
+        scratch = Path(self.scratch.name) / compiler_id
+        scratch.mkdir()
+        config = scratch / "config.json"
+        config.write_text(json.dumps(dict(
+            self.base, compiler=sys.executable, compiler_id=compiler_id, frontend="GNU",
+            golden_name="stub-1", golden_tests=True, binary_dir=str(scratch),
+            flags=["-I", str(STUB), "--scenario", "report-invocation"])), encoding="utf-8")
+        manifest = scratch / "manifest.txt"
+        manifest.write_text(f"{SAMPLE} stub-1\n", encoding="utf-8")
+        env = dict(os.environ, LANG="de_DE.UTF-8", **stub_compiler.INHERITED)
+        result = subprocess.run(
+            [sys.executable, "-I", str(GOLDEN_SCRIPT), "--config", str(config),
+             "--golden-root", str(scratch / "goldens"), "--manifest", str(manifest),
+             "--changes-file", str(scratch / "changes.md"), SAMPLE],
+            env=env, capture_output=True, text=True, check=False)
+        # There is no golden, so the run fails, but only after it saved the normalized output.
+        self.assertIn("no golden", result.stdout, result.stdout + result.stderr)
+        saved = (scratch / "golden" / f"{SAMPLE}.txt").read_text(encoding="utf-8")
+        arguments, environment = stub_compiler.read_report(saved)
+        self.assertIsNotNone(arguments, saved)
+        self.assertIsNotNone(environment, saved)
+        return arguments, environment
+
+    def assert_clean(self, environment):
+        names = {entry.split("=", 1)[0] for entry in environment}
+        self.assertEqual(sorted(set(stub_compiler.INHERITED) & names), [], environment)
+        for entry in ("LC_ALL=C", "LANG=C", "PATH"):
+            self.assertIn(entry, environment)
+
+    def test_gcc(self):
+        arguments, environment = self.invocation("GNU")
+        self.assertIn("-fdiagnostics-plain-output", arguments)
+        self.assert_clean(environment)
+
+    def test_clang(self):
+        for compiler_id in ("Clang", "AppleClang"):
+            arguments, environment = self.invocation(compiler_id)
+            self.assertIn("-fno-color-diagnostics", arguments, compiler_id)
+            self.assertIn("-fno-caret-diagnostics", arguments, compiler_id)
+            self.assertNotIn("-fdiagnostics-plain-output", arguments, compiler_id)
+            self.assert_clean(environment)
 
 
 class UpdateAndCompareTest(unittest.TestCase):
@@ -134,8 +390,12 @@ class UpdateAndCompareTest(unittest.TestCase):
         goldens = list(self.golden_root.rglob("*.txt"))
         self.assertEqual(len(goldens), 1)
         text = goldens[0].read_text(encoding="utf-8")
-        self.assertIn("tests/compile_fail/sample/static_assert_message.cpp", text)
+        # Paths start with <src>/ and use '/', also on Windows; GCC and Clang locations end in
+        # :L:C, MSVC's in (L,C).
+        self.assertIn("<src>/tests/compile_fail/sample/static_assert_message.cpp", text)
+        self.assertRegex(text, r"static_assert_message\.cpp(?::L:C|\(L,C\)): error")
         self.assertNotIn(str(ROOT), text)
+        self.assertNotIn("\\", text)
         self.assertIn("self-test reason", self.changes.read_text(encoding="utf-8"))
         self.assertIn(f"added: {SAMPLE}", self.changes.read_text(encoding="utf-8"))
 

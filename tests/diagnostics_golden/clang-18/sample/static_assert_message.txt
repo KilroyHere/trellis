@@ -1,7 +1,2 @@
-tests/compile_fail/sample/static_assert_message.cpp: error: static assertion failed due to requirement 'always_false<sample::widget>': trellis [TRL-E000]: sample diagnostic: no binding for T
- |   static_assert(always_false<T>, "trellis [TRL-E000]: sample diagnostic: no binding for T");
- |                 ^~~~~~~~~~~~~~~
-tests/compile_fail/sample/static_assert_message.cpp: note: in instantiation of function template specialization 'sample::require_binding<sample::widget>' requested here
- | int main() { sample::require_binding<sample::widget>(); }
- |                      ^
-1 error generated.
+<src>/tests/compile_fail/sample/static_assert_message.cpp:L:C: error: static assertion failed due to requirement 'always_false<sample::widget>': trellis [TRL-E000]: sample diagnostic: no binding for T
+<src>/tests/compile_fail/sample/static_assert_message.cpp:L:C: note: in instantiation of function template specialization 'sample::require_binding<sample::widget>' requested here
