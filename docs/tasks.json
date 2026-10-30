@@ -663,6 +663,53 @@
         "T0.3"
       ],
       "passes": false
+    },
+    {
+      "id": "T0.10",
+      "phase": 0,
+      "title": "Golden normalization (owner-approved)",
+      "description": "Align tools/golden.py and the compile-fail runner's environment with spike S3's normalization rules, and normalize every path to '/'. This also fixes the Windows golden self-test. The owner approved this on 2026-10-30, including regenerating the sample golden through tools/golden.py --update and updating the MSVC self-test expectation.",
+      "plan_refs": [
+        "§7.8",
+        "docs/spikes/S3-diagnostics.md (golden normalization)",
+        "ADR-06"
+      ],
+      "acceptance": [
+        "Normalization drops quoted source excerpts, caret lines, include chains, and the 'N errors generated.' and 'compilation terminated.' lines. It strips ANSI and OSC-8 escapes, maps typographic quotes to ', rewrites paths to <src>/ and <std>/ placeholders with '/' separators, and rewrites :line:col to :L:C.",
+        "tools/golden.py and tools/compile_fail.py run compilers with LC_ALL=C and a clean environment (no inherited CPATH, CPLUS_INCLUDE_PATH, GCC_URLS or similar), with -fdiagnostics-plain-output on GCC and -fno-color-diagnostics -fno-caret-diagnostics on Clang.",
+        "The sample golden is regenerated with tools/golden.py --update, with the reason logged in docs/golden-changes.md. The tests/tools self-tests are updated to the new rules, including the MSVC case, which now expects '/'.",
+        "tools.golden_selftest passes on Windows in platforms.yml: dispatch a run on a work branch and check the result."
+      ],
+      "verify": [
+        "scripts/check-full.sh",
+        "ctest --preset clang-18-debug -L golden"
+      ],
+      "depends_on": [
+        "T0.3"
+      ],
+      "passes": false
+    },
+    {
+      "id": "T0.11",
+      "phase": 0,
+      "title": "Copyright notices",
+      "description": "The owner chose 'Aryan Patel' as the copyright holder. Add 'Copyright (c) 2026 Aryan Patel' directly above every existing SPDX-License-Identifier line in the repository's source files.",
+      "plan_refs": [
+        "§10"
+      ],
+      "acceptance": [
+        "Every file with an SPDX-License-Identifier line has the copyright line directly above it. Protected test files under tests/compile_fail/ and tests/diagnostics_golden/ are left unchanged and listed in the progress entry.",
+        "CONTRIBUTING.md says new files use the same two-line header.",
+        "All presets still build and pass."
+      ],
+      "verify": [
+        "scripts/check-full.sh",
+        "test -z \"$(git grep -l 'SPDX-License-Identifier' -- include tools scripts cmake tests/unit tests/tools benchmarks | xargs -r grep -L 'Copyright (c) 2026 Aryan Patel')\""
+      ],
+      "depends_on": [
+        "T0.10"
+      ],
+      "passes": false
     }
   ]
 }

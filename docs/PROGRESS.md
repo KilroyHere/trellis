@@ -2,32 +2,34 @@
 
 Newest entry first. Each entry records the date, the task, what changed, the evidence (commands and their key results), follow-ups and anything waiting for the owner.
 
-## Waiting for owner
+## Owner decisions
 
-- **Defaults taken from plan §16.** Each is easy to change:
+- **2026-10-30**, answered in the session:
+  - **Spike recommendations accepted** as Trellis's design, to be recorded as Accepted in the ADRs (T0.8):
+    - S1: the operator set for deduced discovery.
+    - S3: the error rendering. NFR-07 is reworded to "the first error line names the error ID; the same diagnostic names the type".
+    - S4: atomic state-machine slots using `atomic::wait`, with a mutex fallback; `std::call_once` is rejected.
+  - **Golden normalization approved.** S3's rules plus `/` path separators, which also fixes the Windows self-test. This is task T0.10, which may regenerate the sample golden through `tools/golden.py --update`.
+  - **Copyright holder: Aryan Patel.** Task T0.11 adds `Copyright (c) 2026 Aryan Patel` above every SPDX line.
+  - **Phase order: diagnostics (plan Phase 4) before binding features (plan Phase 3).** Applies when T3.0 and T4.0 are expanded: expand and implement Phase 4's tasks before Phase 3's.
+- **Defaults taken from plan §16**, unchanged so far:
   - D2: C++20 baseline.
   - D3: Boost Software License 1.0.
   - D4: servers and applications as the main audience.
   - D6: lazy, thread-safe singletons by default.
   - D7: GoogleTest.
   - D9: develop in this repository.
-- **Still open:** D5, whether the runtime container ships in 1.0.
-- **Phase order:** the plan suggests moving Phase 4 (diagnostics) ahead of Phase 3. Decide before T3.0.
+
+## Waiting for owner
+
+- **Still open:** D5, whether the runtime container ships in 1.0. Needed before T5.0.
 - **CI on a private repo:** Linux runs on every push; macOS and Windows run weekly or on demand to save Actions minutes. Making the repository public would allow the full matrix on every push.
-- **Spike decisions.** Each recommendation is the provisional default until confirmed:
-  - S1 (T0.4): the operator set for deduced constructor discovery.
-  - S3 (T0.5): the error-rendering design, and rewording NFR-07 to "the first line names the error ID; the same diagnostic names the type". gcc-13 in C++20 mode puts the type on the next line.
-  - S4 (T0.6): the singleton slot design (atomic state machine with `atomic::wait`, mutex fallback; `std::call_once` rejected).
-- **Copyright holder** for the SPDX headers. They currently carry only `SPDX-License-Identifier: BSL-1.0`.
+- **Stale branches on GitHub:** `wip/t0.1-scaffold` and `t0.2-ci` can be deleted; their content is on `main`. The proxy here refuses branch deletion.
 - **Guardrail changes.** Auto mode treats edits to `scripts/hooks/` and `.claude/` as agent self-modification, so these are the owner's to make:
   - Make `scripts/hooks/protect_files.py` protect only committed files, so a task can fix tests it created itself.
   - Add `tests/golden_manifest.txt` to the protected paths.
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
-- **Golden normalization:** aligning `tools/golden.py` with S3's rules means regenerating the sample golden, which needs approval. The same decision covers Windows paths:
-  - `golden.py` keeps MSVC's backslashes, so `tools.golden_selftest` fails on Windows. Its two cases expect different separators.
-  - Recommended fix: normalize every path to `/` and update the MSVC case.
-  - Until then the weekly `platforms.yml` run is red, and opens one tracking issue.
-- **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev` so new containers start with the full toolchain. `libclang-rt-18-dev` is the TSan runtime.
+- **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev` so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
 
 ## 2026-10-30: T0.2 CI workflows (passed)
 
