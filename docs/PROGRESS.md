@@ -65,6 +65,13 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
 ## 2026-10-30: spikes S1, S3 and S4 (results on main; marked passing after re-verification on main)
 
 - S1 (deduced discovery), S3 (diagnostics rendering) and S4 (storage and threading) ran in parallel git worktrees. Their outputs were copied to `main` file by file, after checking each copy matched. The write-ups are in `docs/spikes/`, and the recommendations are listed above.
+- **Evidence:** each spike's `run.sh` reproduced its results on `main` through `scripts/tasks.py verify`:
+  - T0.6 (S4): 229 s;
+  - T0.4 (S1): 598 s;
+  - T0.5 (S3): 1,121 s, slowed by agents building in parallel.
+
+  All three are marked passing. The design decisions they recommend still wait for the owner.
+- **Environment:** S4 installed `libclang-rt-18-dev` (the clang-18 TSan runtime). It is listed for the setup script above.
 
 ## 2026-10-30: setup session
 
