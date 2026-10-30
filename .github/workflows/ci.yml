@@ -56,6 +56,12 @@ jobs:
         with:
           persist-credentials: false
 
+      # Compiler, CMake, CTest, GoogleTest, sanitizer and tools/*.py errors become annotations.
+      # The checks API serves those even where job logs cannot be downloaded, and
+      # scripts/ci-status.sh falls back to them.
+      - name: Register the problem matchers
+        run: echo "::add-matcher::.github/problem-matchers.json"
+
       - name: Install packages
         run: |
           sudo apt-get update -q

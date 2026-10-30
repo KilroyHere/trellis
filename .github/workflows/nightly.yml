@@ -25,6 +25,10 @@ jobs:
         with:
           persist-credentials: false
 
+      # Error lines become annotations, for scripts/ci-status.sh; see ci.yml.
+      - name: Register the problem matchers
+        run: echo "::add-matcher::.github/problem-matchers.json"
+
       # libclang-rt-18-dev holds the ThreadSanitizer runtime.
       - name: Install packages
         run: |
@@ -73,6 +77,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      # Error lines become annotations, for scripts/ci-status.sh; see ci.yml.
+      - name: Register the problem matchers
+        run: echo "::add-matcher::.github/problem-matchers.json"
 
       # It compiles with g++-13 and clang++-18, which the runner image has, and never through
       # ccache. Task T0.3 adds the script; until then there is nothing to run.

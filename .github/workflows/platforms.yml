@@ -30,11 +30,15 @@ jobs:
         with:
           persist-credentials: false
 
+      # Error lines become annotations, for scripts/ci-status.sh; see ci.yml.
+      - name: Register the problem matchers
+        run: echo "::add-matcher::.github/problem-matchers.json"
+
       - name: Tools
         run: |
           sw_vers
           /usr/bin/clang++ --version
-          cmake --version | head -n 1
+          cmake --version
           echo "ninja $(ninja --version)"
 
       - name: Configure
@@ -59,12 +63,16 @@ jobs:
         with:
           persist-credentials: false
 
+      # Error lines become annotations, for scripts/ci-status.sh; see ci.yml.
+      - name: Register the problem matchers
+        run: echo "::add-matcher::.github/problem-matchers.json"
+
       # What a Visual Studio developer prompt sets (vcvars64.bat: cl, link and the Windows SDK on
       # PATH, INCLUDE and LIB), exported to the later steps through GITHUB_ENV.
       - name: Set up the MSVC developer environment
         run: |
           $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
-          $vs = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          $vs = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
           if (-not $vs) { throw 'vswhere found no Visual Studio with the x64 C++ tools' }
           "Visual Studio: $vs"
           $before = @{}
@@ -81,7 +89,7 @@ jobs:
       - name: Tools
         run: |
           (Get-Command cl).Source
-          cmake --version | Select-Object -First 1
+          cmake --version
           "ninja $(ninja --version)"
 
       - name: Configure

@@ -121,32 +121,53 @@ case $verdict_conclusion in
     ;;
 esac
 
-# print_failures RUN_ID WORKFLOW: each failed job, its failed steps and its first error lines.
+# log_errors JOB: the first error lines of JOB in $log, the output of gh run view --log-failed,
+# which prints "job<TAB>step<TAB>timestamp line".
+log_errors() {
+  local lines errors
+  lines=$(awk -F '\t' -v job="$1" '$1 == job { sub(/^[^\t]*\t[^\t]*\t/, ""); print }' <<<"$log" |
+    sed -E 's/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.]+Z ?//; s/^##\[error\]//' |
+    grep -v -E '^##\[(group|endgroup)\]')
+  errors=$(grep -E -- "$ERROR_PATTERN" <<<"$lines" | grep -v -E -- "$COMPILE_COMMAND")
+  # Nothing recognizable: the end of the log is the next best thing.
+  [[ -n $errors ]] || errors=$(grep -v '^[[:space:]]*$' <<<"$lines" | tail -n 5)
+  printf '%s\n' "$errors"
+}
+
+# annotation_errors JOB_ID: the job's error annotations, as "file:line: message". The workflows'
+# problem matchers (.github/problem-matchers.json) turn error lines into annotations, and the checks
+# API serves them even where the logs can't be downloaded (some proxies block the log storage).
+annotation_errors() {
+  gh api "repos/{owner}/{repo}/check-runs/$1/annotations?per_page=50" --jq '.[] |
+    select(.annotation_level == "failure") |
+    (if .path == ".github" or .path == "" then "" else "\(.path):\(.start_line): " end) +
+    (.message | gsub("[\r\n]+"; " "))'
+}
+
+# print_failures RUN_ID WORKFLOW: each failed job, its failed steps and its first errors.
 print_failures() {
-  local run=$1 workflow=$2 jobs log name conclusion steps lines errors
+  local run=$1 workflow=$2 jobs log="" job_id name conclusion steps url errors
   if ! jobs=$(gh run view "$run" --json jobs --jq "$JQ_FIELDS"' .jobs[] |
       select(.conclusion == "failure" or .conclusion == "timed_out" or .conclusion == "cancelled")
-      | [.name, .conclusion, ([.steps[] | select(.conclusion == "failure") | .name] | join(", "))]
+      | [.databaseId, .name, .conclusion,
+         ([.steps[] | select(.conclusion == "failure") | .name] | join(", ")), .url]
       | map(field) | @tsv'); then
     printf '\n%s run %s: could not list its jobs\n' "$workflow" "$run"
     return
   fi
-  if ! log=$(gh run view "$run" --log-failed); then
-    printf '\n%s run %s: could not fetch the logs of its failed steps\n' "$workflow" "$run"
-    log=""
-  fi
-  while IFS=$'\t' read -r name conclusion steps; do
-    [[ -n $name ]] || continue
+  log=$(gh run view "$run" --log-failed 2>/dev/null) || log=""
+  [[ -n $log ]] || printf '\n(%s run %s: the logs are not downloadable here; showing annotations)\n' \
+    "$workflow" "$run"
+  while IFS=$'\t' read -r job_id name conclusion steps url; do
+    [[ -n $job_id ]] || continue
     printf '\n%s / %s: %s' "$workflow" "$name" "$conclusion"
     [[ $steps == - ]] || printf ' in step %s' "$steps"
-    printf '\n'
-    # --log-failed prints "job<TAB>step<TAB>timestamp line"; keep the line without the timestamp.
-    lines=$(awk -F '\t' -v job="$name" '$1 == job { sub(/^[^\t]*\t[^\t]*\t/, ""); print }' <<<"$log" |
-      sed -E 's/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.]+Z ?//; s/^##\[error\]//' |
-      grep -v -E '^##\[(group|endgroup)\]')
-    errors=$(grep -E -- "$ERROR_PATTERN" <<<"$lines" | grep -v -E -- "$COMPILE_COMMAND")
-    # Nothing recognizable: the end of the log is the next best thing.
-    [[ -n $errors ]] || errors=$(grep -v '^[[:space:]]*$' <<<"$lines" | tail -n 5)
+    printf ', %s\n' "$url"
+    if [[ -n $log ]]; then
+      errors=$(log_errors "$name")
+    else
+      errors=$(annotation_errors "$job_id") || errors="(could not fetch the annotations)"
+    fi
     head -n "$ERROR_LINES" <<<"$errors" | cut -c1-200 | sed 's/^/    /'
   done <<<"$jobs"
 }
