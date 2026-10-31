@@ -71,6 +71,14 @@ set_tests_properties(tools.golden_selftest PROPERTIES LABELS tools)
 add_test(NAME tools.bench_budgets_selftest
   COMMAND "${Python3_EXECUTABLE}" -I "${CMAKE_CURRENT_SOURCE_DIR}/tools/bench_budgets_selftest.py")
 set_tests_properties(tools.bench_budgets_selftest PROPERTIES LABELS tools)
+# The error catalog: every TRL error ID that include/ uses has a page in docs/errors/, linked from
+# the catalog's index. Like the manifest check, it compiles nothing and runs in every build. Its
+# self-test plants IDs in temporary trees, where the check must fail.
+add_test(NAME tools.error_catalog
+  COMMAND "${Python3_EXECUTABLE}" -I "${PROJECT_SOURCE_DIR}/tools/error_catalog.py")
+add_test(NAME tools.error_catalog_selftest
+  COMMAND "${Python3_EXECUTABLE}" -I "${CMAKE_CURRENT_SOURCE_DIR}/tools/error_catalog_selftest.py")
+set_tests_properties(tools.error_catalog tools.error_catalog_selftest PROPERTIES LABELS tools)
 
 add_subdirectory(unit)
 add_subdirectory(property)
