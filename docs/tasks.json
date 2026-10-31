@@ -762,6 +762,30 @@
         "T1.1"
       ],
       "passes": false
+    },
+    {
+      "id": "T1.13",
+      "phase": 1,
+      "title": "Early MSVC check of discovery and chain depth",
+      "description": "ADR-0003 and ADR-0014 rate MSVC as the biggest unknown. S1's operator set relies on five behaviours with no MSVC track record, and S2 rated MSVC's chain-depth risk high. Before T1.3 and T1.5 build on them, run the spikes' tests on MSVC in CI and record the results.",
+      "plan_refs": [
+        "ADR-0003",
+        "ADR-0014",
+        "docs/spikes/S1-deduced-discovery.md",
+        "docs/spikes/S2-memoization-cycles.md"
+      ],
+      "acceptance": [
+        "S1's forms, limits and stub tests (spikes/S1-deduced-discovery) compile and run, unchanged, on the latest MSVC in GitHub Actions, and a per-form result table is recorded.",
+        "S2's chain-depth probe runs on MSVC, and the deepest chain it compiles at default limits is recorded.",
+        "Where MSVC differs, the fallbacks S1 measured (an extra operator const T&() const, or ref-qualifiers instead of const) are tried and their results recorded.",
+        "Results are added as dated sections titled 'Addendum: MSVC' to docs/spikes/S1-deduced-discovery.md and docs/spikes/S2-memoization-cycles.md. ADR-0003 and ADR-0014 are updated if a decision changes."
+      ],
+      "verify": [
+        "grep -q '^## Addendum: MSVC' docs/spikes/S1-deduced-discovery.md",
+        "grep -q '^## Addendum: MSVC' docs/spikes/S2-memoization-cycles.md"
+      ],
+      "depends_on": [],
+      "passes": false
     }
   ]
 }
