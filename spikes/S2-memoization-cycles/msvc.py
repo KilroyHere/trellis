@@ -8,18 +8,20 @@ GitHub's windows-latest runner.
 
 chains   For each of S2's depth configurations (s2.py's DEPTH_CONFIGS, sources from
          s2.chain_source, so the very chains S2 measured on GCC and Clang), the longest chain
-         C_K -> ... -> C_0 that compiles at MSVC's default limits: doubling from 200 hops (NFR-09)
-         up to --max-hops (default 1024), then bisection. cl has no -ftemplate-depth, so S2's
-         levels per hop can't be measured directly. Instead two calibration programs find cl's own
-         nesting limit for a class template and for a variable template, the counterpart of
-         GCC's -ftemplate-depth=900 and Clang's 1024. Also checks the builtins ADR-0014 relies on.
+         C_K -> ... -> C_0 that compiles at cl's default limits: doubling from 200 hops (NFR-09)
+         up to --max-hops (default 1024), then bisection. Where cl has /templateDepth:N (VS 2026),
+         also S2's levels per hop: the smallest /templateDepth that compiles chains of 50 and 100
+         hops. Before that: the builtins ADR-0014 relies on, and cl's nesting limit for a class
+         template and a variable template, the counterpart of GCC's -ftemplate-depth=900 and
+         Clang's 1024.
 cycles   cycles.cpp's four cases under the memo strategy (the default: no cycle check) and the
          depth strategy (the opt-in check, bound 100 as in S2): what cl reports.
 
 Every compile is a full compile (/c, the flags of msvc.py in spikes/S1-deduced-discovery, plus
-/bigobj only if cl asks for it with C1128), under a 300 s timeout. Results are GitHub annotations,
-at most ten per step. Exit status: 1 if the lean memo stub compiles fewer than 200 hops in either
-request form (NFR-09), or if a cycle compiles; 0 otherwise.
+/bigobj only if cl asks for it with C1128), under a 300 s timeout. The chains and cycles get a
+forced include that maps the missing __is_same builtin to std::is_same_v (COMPAT_HEADER). Results
+are GitHub annotations, at most ten per step. Exit status: 1 if the lean memo stub compiles fewer
+than 200 hops in either request form (NFR-09), or if a cycle compiles; 0 otherwise.
 """
 import argparse
 import json
@@ -41,15 +43,38 @@ msvc = s2.variants.load("s1_msvc", S1_DIR / "msvc.py")  # cl, annotations, error
 TIMEOUT_S = 300
 NFR09 = 200
 INCLUDES = [f"/I{HERE}", f"/I{S1_DIR}"]
+# cl has no __is_same builtin (the first run of this probe found it), and stub.hpp's on_path uses
+# one at namespace scope, so stub.hpp doesn't compile at all. The fallback ADR-0014 names,
+# std::is_same_v, comes in through a forced include, so every spike file stays unchanged. on_path
+# serves the path strategy only: the memo and depth strategies never instantiate it. The header
+# first includes every standard header the spike sources use, so the macro can't reach into the
+# standard library (libstdc++, for one, uses __is_same itself).
+COMPAT_HEADER = """// Forced include for spike S2 on MSVC (msvc.py): cl lacks the __is_same builtin.
+#pragma once
+#include <concepts>
+#include <cstddef>
+#include <cstdio>
+#include <exception>
+#include <memory>
+#include <new>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#if defined(_MSC_VER) && !defined(__clang__)
+#define __is_same(A, B) std::is_same_v<A, B>
+#endif
+"""
+TEMPLATE_DEPTH_HOPS = (50, 100)  # chain lengths for the /templateDepth sweep (levels per hop)
 # S2's configurations, most important first: the lean memo stub decides NFR-09.
 CONFIGS = ["memo value", "memo shared_ptr", "memo value, check only", "memo shared_ptr, check only",
            "depth value", "s1-stub value"]
 LEAN = ("memo value", "memo shared_ptr")
 LIMIT_CODES = {  # what stopped a compile, by the first matching error code
-    "C1202": "C1202 recursion limit", "C1063": "C1063 compiler stack overflow",
-    "C1060": "C1060 out of heap space", "C1001": "C1001 internal compiler error",
-    "C1004": "C1004 internal compiler error", "C1128": "C1128 object section limit",
-    "C1054": "C1054 nesting limit", "C1026": "C1026 parser stack overflow",
+    "C2999": "C2999 template depth limit", "C1202": "C1202 recursion limit",
+    "C1063": "C1063 compiler stack overflow", "C1060": "C1060 out of heap space",
+    "C1001": "C1001 internal compiler error", "C1004": "C1004 internal compiler error",
+    "C1128": "C1128 object section limit", "C1054": "C1054 nesting limit",
+    "C1026": "C1026 parser stack overflow",
 }
 print_lock = threading.Lock()
 
@@ -75,31 +100,44 @@ def classify(code, out, timed_out):
     return f"error {m.group(1)}" if m else f"exit {code}"
 
 
-class Probe:
-    """Compiles generated sources in its own directory and caches the outcome per size."""
+class TimedOut(Exception):
+    """A compile hit TIMEOUT_S; its argument is the size."""
 
-    def __init__(self, name, work, source_of):
-        self.name, self.work, self.source_of = name, work, source_of
+
+class Probe:
+    """Compiles generated sources of size n in its own directory, at cl's default limits
+    (self.cache, keyed by n) or with /templateDepth:D (self.depth_cache, keyed "n@D")."""
+
+    def __init__(self, name, work, source_of, flags=()):
+        self.name, self.work, self.source_of, self.flags = name, work, source_of, list(flags)
         self.work.mkdir(parents=True, exist_ok=True)
-        self.cache = {}
+        self.cache, self.depth_cache = {}, {}
+
+    def _compile(self, n, extra):
+        src = self.work / f"{self.name}-{n}.cpp"
+        src.write_text(self.source_of(n))
+        obj = self.work / f"{self.name}-{n}.obj"
+        args = [*INCLUDES, *self.flags, *extra, "/c", str(src), f"/Fo{obj}"]
+        code, out, secs, timed_out = msvc.cl(args, self.work, TIMEOUT_S)
+        bigobj = False
+        if code != 0 and re.search(r"\bC1128\b", out):  # the object format's section limit
+            code, out, secs, timed_out = msvc.cl(["/bigobj", *args], self.work, TIMEOUT_S)
+            bigobj = True
+        src.unlink()
+        obj.unlink(missing_ok=True)
+        return {"ok": code == 0, "kind": classify(code, out, timed_out),
+                "first_error": msvc.first_error(out), "seconds": round(secs, 1), "bigobj": bigobj}
 
     def compiles(self, n):
         if n not in self.cache:
-            src = self.work / f"{self.name}-{n}.cpp"
-            src.write_text(self.source_of(n))
-            obj = self.work / f"{self.name}-{n}.obj"
-            args = [*INCLUDES, "/c", str(src), f"/Fo{obj}"]
-            code, out, secs, timed_out = msvc.cl(args, self.work, TIMEOUT_S)
-            bigobj = False
-            if code != 0 and re.search(r"\bC1128\b", out):  # the object format's section limit
-                code, out, secs, timed_out = msvc.cl(["/bigobj", *args], self.work, TIMEOUT_S)
-                bigobj = True
-            self.cache[n] = {"ok": code == 0, "kind": classify(code, out, timed_out),
-                             "first_error": msvc.first_error(out), "seconds": round(secs, 1),
-                             "bigobj": bigobj}
-            src.unlink()
-            obj.unlink(missing_ok=True)
+            self.cache[n] = self._compile(n, [])
         return self.cache[n]["ok"]
+
+    def compiles_at_depth(self, n, depth):
+        key = f"{n}@{depth}"
+        if key not in self.depth_cache:
+            self.depth_cache[key] = self._compile(n, [f"/templateDepth:{depth}"])
+        return self.depth_cache[key]["ok"]
 
     def longest(self, start, maximum):
         """The largest n in [1, maximum] that compiles, assuming every smaller one does: doubling
@@ -141,9 +179,19 @@ class Probe:
         except TimedOut as stop:
             return best, stop.args[0]
 
-
-class TimedOut(Exception):
-    """A compile hit TIMEOUT_S; its argument is the size."""
+    def min_depth(self, n):
+        """The smallest /templateDepth that compiles size n, assuming 1 to 16 levels per step;
+        None if even the largest fails."""
+        lo, hi = n, 16 * n + 128
+        if not self.compiles_at_depth(n, hi):
+            return None
+        while lo < hi:  # hi compiles; the answer is in [lo, hi]
+            mid = (lo + hi) // 2
+            if self.compiles_at_depth(n, mid):
+                hi = mid
+            else:
+                lo = mid + 1
+        return hi
 
 
 CALIBRATIONS = {  # name -> source with N levels of nesting
@@ -159,7 +207,7 @@ BUILTINS = {"__is_constructible": "static_assert(__is_constructible(int, int));\
 
 
 def outcome_text(probe, n, failing):
-    """'N hops (what stops N+1)' for a search result."""
+    """'N (what stops it at the next size)' for a search result."""
     if failing is None:
         return f">= {n} (the largest tried)"
     f = probe.cache[failing]
@@ -167,6 +215,24 @@ def outcome_text(probe, n, failing):
     known = f["kind"] == "timeout" or f["kind"] in LIMIT_CODES.values() or "0xC00000FD" in f["kind"]
     err = "" if known or not f["first_error"] else ": " + msvc.error_message(f["first_error"], 110)
     return f"{n} ({f['kind']} at {failing}{err})"
+
+
+def template_depth_supported(work):
+    """Whether this cl takes /templateDepth:N. VS 2026's does; an older one ignores an unknown
+    option with command-line warning D9002 and still succeeds, so the output decides."""
+    work.mkdir(parents=True, exist_ok=True)
+    src = work / "template-depth.cpp"
+    src.write_text("int main() { return 0; }\n")
+    code, out, _, _ = msvc.cl(["/templateDepth:2000", "/c", str(src), f"/Fo{work / 'template-depth.obj'}"],
+                              work, 60)
+    return code == 0 and not re.search(r"\bD9002\b|unknown option", out)
+
+
+def compat_flags(out):
+    out.mkdir(parents=True, exist_ok=True)
+    header = out / "msvc_compat.hpp"
+    header.write_text(COMPAT_HEADER)
+    return [f"/FI{header}"]
 
 
 def chains(out, max_hops, configs, jobs):
@@ -187,23 +253,42 @@ def chains(out, max_hops, configs, jobs):
         results["calibration"][name] = {"levels": n, "failing": failing,
                                         "at_failing": p.cache.get(failing)}
         parts.append(f"{name}: {outcome_text(p, n, failing)}")
+    depth_ok = template_depth_supported(out / "calibration")
+    results["template_depth_option"] = depth_ok
     annotate("notice", "S2 cl nesting limit (calibration)",
              "deepest nesting that compiles: " + "; ".join(parts) +
-             ". GCC's default -ftemplate-depth is 900, Clang's 1024")
+             f". /templateDepth:N {'accepted' if depth_ok else 'not accepted'}."
+             " GCC's default -ftemplate-depth is 900, Clang's 1024")
+    flags = compat_flags(out)
     status = 0
 
     def run_config(config):
         stub, strategy, form = s2.DEPTH_CONFIGS[config]
         p = Probe(config.replace(" ", "-").replace(",", ""), out / "chains",
-                  lambda n: s2.chain_source(stub, strategy, form, n))
+                  lambda n: s2.chain_source(stub, strategy, form, n), flags)
         n, failing = p.longest(NFR09, max_hops)
         at_n = p.cache.get(n, {})
-        results["chains"][config] = {"longest": n, "failing": failing, "cache": p.cache}
         lean = config in LEAN
         text = (f"longest chain at cl's default limits: {outcome_text(p, n, failing)}"
                 + (f"; {at_n['seconds']} s at {n}" if at_n else "")
                 + ("; needed /bigobj" if any(c["bigobj"] for c in p.cache.values()) else "")
                 + (f"; NFR-09 (>= {NFR09}) {'met' if n >= NFR09 else 'NOT met'}" if lean else ""))
+        points = {}
+        if depth_ok and n > 0:  # S2's method: the smallest depth that compiles K hops, two Ks
+            for k in TEMPLATE_DEPTH_HOPS:
+                d = p.min_depth(k)
+                if d is None:
+                    break
+                points[k] = d
+        fit = None
+        if len(points) == 2:
+            (k1, d1), (k2, d2) = points.items()
+            slope = (d2 - d1) / (k2 - k1)
+            fit = {"levels_per_hop": round(slope, 2), "intercept": round(d1 - slope * k1, 1)}
+            text += (f"; levels per hop {slope:g} (smallest /templateDepth {d1} at {k1} hops, "
+                     f"{d2} at {k2})")
+        results["chains"][config] = {"longest": n, "failing": failing, "min_template_depth": points,
+                                     "fit": fit, "cache": p.cache, "depth_cache": p.depth_cache}
         annotate("warning" if lean and n < NFR09 else "notice", f"S2 chain {config}", text)
         return lean and n < NFR09
 
@@ -222,11 +307,12 @@ CYCLE_VARIANTS = {"memo": ["/DSTUB=2", "/DS2_STRATEGY=0"],
 def cycles(out):
     work = out / "cycles"
     work.mkdir(parents=True, exist_ok=True)
+    flags = compat_flags(out)
     rows, status = [], 0
     for variant, defines in CYCLE_VARIANTS.items():
         for case, shape in s2.CYCLE_CASES.items():
             obj = work / f"{variant}-{case}.obj"
-            code, text, secs, timed_out = msvc.cl([*INCLUDES, *defines, f"/DCASE={case}", "/c",
+            code, text, secs, timed_out = msvc.cl([*INCLUDES, *flags, *defines, f"/DCASE={case}", "/c",
                                                    str(HERE / "cycles.cpp"), f"/Fo{obj}"], work, TIMEOUT_S)
             msvc.dump(f"cycles.cpp, {variant}, case {case}: output", text)
             kind = classify(code, text, timed_out)

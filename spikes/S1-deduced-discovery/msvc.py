@@ -244,29 +244,38 @@ def cell_text(c):
 
 
 def isolated_rows(work):
-    """When forms.cpp as a whole does not build: compile and run each cell of the key sets on its
-    own, from a copy of forms.cpp's namespace (everything before its main), so a hard error in one
-    cell does not hide the others."""
+    """When forms.cpp as a whole does not build (a hard error in some cell): build and run each
+    form on its own, all 8 sets, from a copy of forms.cpp's namespace (everything before its
+    main), and each cell on its own for a form that still fails, so the hard error is pinned to
+    its cells and hides nothing else. Returns (rows, {"set|form index": first error})."""
     src = (HERE / "forms.cpp").read_text()
     marker = "#if defined(S1_DIAG_SET)"
     if marker not in src:
         return {}, {}
     work.mkdir(parents=True, exist_ok=True)
     (work / "forms_prefix.hpp").write_text(src.split(marker)[0])
+
+    def program(name, cells):
+        tu = work / f"{name}.cpp"
+        tu.write_text('#include "forms_prefix.hpp"\nint main() {\n' + "".join(
+            f"  forms::run_cell<std::tuple_element_t<{si}, forms::sets>, "
+            f"std::tuple_element_t<{fi}, forms::forms_list>, {si}, {fi}>();\n" for si, fi in cells)
+            + "  return 0;\n}\n")
+        b = build([tu], work, name)
+        return parse_rows(execute(work / f"{name}.exe", work)["output"]) if b["ok"] else b
+
     rows, hard = {}, {}
-    for set_name in KEY_SETS:
-        si = SETS.index(set_name)
-        for fi in range(FORMS):
-            tu = work / f"cell-{si}-{fi}.cpp"
-            tu.write_text('#include "forms_prefix.hpp"\nint main() {\n'
-                          f"  forms::run_cell<std::tuple_element_t<{si}, forms::sets>, "
-                          f"std::tuple_element_t<{fi}, forms::forms_list>, {si}, {fi}>();\n"
-                          "  return 0;\n}\n")
-            b = build([tu], work, f"cell-{si}-{fi}")
-            if b["ok"]:
-                rows.update(parse_rows(execute(work / f"cell-{si}-{fi}.exe", work)["output"]))
+    for fi in range(FORMS):
+        got = program(f"form-{fi}", [(si, fi) for si in range(len(SETS))])
+        if "ok" not in got:
+            rows.update(got)
+            continue
+        for si, set_name in enumerate(SETS):
+            cell = program(f"cell-{si}-{fi}", [(si, fi)])
+            if "ok" in cell:
+                hard[f"{set_name}|{fi}"] = error_message(cell["first_error"])
             else:
-                hard[f"{set_name}|{fi}"] = error_message(b["first_error"])
+                rows.update(cell)
     return rows, hard
 
 
@@ -287,12 +296,15 @@ def forms(out):
                  f"ran with exit code {r['exit']}: {r['last']}")
         status = 0 if r["exit"] == 0 else 1
     else:
-        annotate("warning", "S1 forms.cpp",
-                 f"does not build ({describe_warnings(warnings(b['output']))}): "
-                 f"{error_message(b['first_error'], 200)}. Compiling each cell of min, min3 and refq "
-                 "on its own")
         rows, result["hard_errors"] = isolated_rows(out / "cells")
         result["mode"] = "isolated"
+        hard = result["hard_errors"]
+        annotate("warning", "S1 forms.cpp",
+                 f"does not build ({describe_warnings(warnings(b['output']))}): "
+                 f"{error_message(b['first_error'], 160)}. Built form by form instead: "
+                 f"{len(hard)} cell(s) hard-error on their own"
+                 + (": " + "; ".join(f"{k.split('|')[0]} x form {int(k.split('|')[1]) + 1}" for k in hard)
+                    if hard else ""))
         status = 1
     baselines = {name: parse_rows(path.read_text()) for name, path in BASELINES.items()}
     # Why each cell that does not build fails: every not-constructible cell of the key sets, and
@@ -350,17 +362,22 @@ def report(out, span):
         if mine and mine["status"] == "not-constructible" and f"min|{fi}" in data["diag"]:
             text += f"; cl says {data['diag'][f'min|{fi}']}"
         groups = {"as both": [], "as gcc-14 only": [], "as clang-20 only": [], "as neither": [],
-                  "not measured": []}
+                  "hard error": [], "not measured": []}
         for set_name in SETS:
             c = rows.get((set_name, fi))
             g, k = (same(c, baselines[n].get((set_name, fi))) for n in BASELINES)
-            key = "not measured" if c is None else "as both" if g and k else \
+            key = ("hard error" if f"{set_name}|{fi}" in data["hard_errors"] else "not measured") \
+                if c is None else "as both" if g and k else \
                 "as gcc-14 only" if g else "as clang-20 only" if k else "as neither"
             groups[key].append(set_name)
         if len(groups["as both"]) == len(SETS):
             text += "; all 8 sets as gcc-14 and clang-20"
         else:
             text += "; " + "; ".join(f"{k}: {' '.join(v)}" for k, v in groups.items() if v)
+        for set_name in groups["hard error"][:1]:  # what the first hard error says
+            text += f" ({set_name}: {data['hard_errors'][f'{set_name}|{fi}']})"
+        for set_name in groups["as neither"][:2]:  # what MSVC reports where both compilers differ
+            text += f"; {set_name} on cl: {cell_text(rows.get((set_name, fi)))}"
         if not expected:  # the fallbacks for this form
             for set_name in ("min3", "refq"):
                 c = rows.get((set_name, fi))
@@ -536,6 +553,55 @@ def fallback_dir(name, work):
     return d
 
 
+# Why limits.cpp's aggregate {int[2], X} may count differently: which conversion initializes the
+# array member when a placeholder with S1's two operator shapes is the first initializer? GCC and
+# Clang elide the braces (one placeholder per array element); a compiler that initializes the
+# whole array from one placeholder, through operator T&() with T = int[2], counts one field.
+AGGREGATE_ARRAY_PROBE = r"""#include <cstdio>
+#include <typeinfo>
+struct probe {
+  template <class T>
+  operator T() {
+    std::printf(" T() with T = %s;", typeid(T).name());
+    return T{};
+  }
+  template <class T>
+  operator T&() const {
+    static T t{};
+    std::printf(" T&() with T = %s;", typeid(T).name());
+    return t;
+  }
+};
+struct agg {
+  int a[2];
+  int x;
+};
+template <class Array>
+constexpr bool from_array_lvalue = requires(Array& r) { agg{r, 3}; };
+template <class P>
+constexpr bool two = requires { agg{P{}, P{}}; };
+template <class P>
+constexpr bool three = requires { agg{P{}, P{}, P{}}; };
+int main() {
+  std::printf("agg{int[2] lvalue, 3}: %s; agg{p, p}: %s; agg{p, p, p}: %s; agg{p, p} calls:",
+              from_array_lvalue<int[2]> ? "valid" : "invalid", two<probe> ? "valid" : "invalid",
+              three<probe> ? "valid" : "invalid");
+  agg v{probe{}, probe{}};
+  std::printf(" x = %d\n", v.x);
+  return 0;
+}
+"""
+
+
+def aggregate_array_probe(work):
+    work.mkdir(parents=True, exist_ok=True)
+    (work / "aggregate_array.cpp").write_text(AGGREGATE_ARRAY_PROBE)
+    b = build([work / "aggregate_array.cpp"], work, "aggregate_array")
+    if not b["ok"]:
+        return f"does not build: {error_message(b['first_error'])}"
+    return execute(work / "aggregate_array.exe", work)["last"]
+
+
 def prototype(out):
     out.mkdir(parents=True, exist_ok=True)
     result, status = {}, 0
@@ -549,6 +615,9 @@ def prototype(out):
             ok &= mine == ref
         status |= 0 if ok else 1
         annotate("notice" if ok else "warning", f"S1 {name}.cpp", describe_program(name, res, base))
+        if name == "limits":
+            result["aggregate_array"] = aggregate_array_probe(out / "aggregate_array")
+            annotate("notice", "S1 aggregate-array probe (informational)", result["aggregate_array"])
     ok, rows = compile_fail_cases(out / "compile_fail")
     result["compile_fail"] = rows
     status |= 0 if ok else 1
