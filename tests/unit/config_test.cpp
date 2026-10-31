@@ -16,6 +16,11 @@
 #if TRELLIS_HAS_PACK_INDEXING || TRELLIS_HAS_REFLECTION
 #include <type_traits>
 #endif
+// The builtin and signature macros (end of this file) are checked in every mode.
+#include <array>
+#include <string_view>
+#include <type_traits>
+#include <utility>
 
 #include <gtest/gtest.h>
 
@@ -169,4 +174,93 @@ TEST(Config, Reflection) {
 #else
   GTEST_SKIP() << "static reflection is not available in this mode";
 #endif
+}
+
+// ---- Compiler builtins and the function signature, for the meta toolkit (T1.1) ----------------
+
+// TRELLIS_HAS_EXCEPTIONS follows the build: the unit tests build with exceptions, and
+// tests/unit/no_exceptions_test.cpp checks the other way.
+#if !defined(TRELLIS_HAS_EXCEPTIONS)
+#error "config.hpp must define TRELLIS_HAS_EXCEPTIONS"
+#endif
+static_assert(TRELLIS_HAS_EXCEPTIONS == 1);
+
+#if !defined(TRELLIS_HAS_TYPE_PACK_ELEMENT) || !defined(TRELLIS_IS_SAME) || \
+    !defined(TRELLIS_FUNCTION_SIGNATURE_CLASS_KEYS)
+#error \
+    "config.hpp must define TRELLIS_HAS_TYPE_PACK_ELEMENT, TRELLIS_IS_SAME and TRELLIS_FUNCTION_SIGNATURE_CLASS_KEYS"
+#endif
+static_assert(TRELLIS_HAS_TYPE_PACK_ELEMENT == 0 || TRELLIS_HAS_TYPE_PACK_ELEMENT == 1);
+static_assert(TRELLIS_FUNCTION_SIGNATURE_CLASS_KEYS == 0 ||
+              TRELLIS_FUNCTION_SIGNATURE_CLASS_KEYS == 1);
+
+// A toolchain known to have __type_pack_element must detect it, and GCC 13, which lacks it, must
+// not claim it. Apple Clang numbers its versions differently and is left out.
+#if !defined(__apple_build_version__)
+#if defined(__clang__) && __clang_major__ >= 18
+static_assert(TRELLIS_HAS_TYPE_PACK_ELEMENT == 1);
+#endif
+#if !defined(__clang__) && defined(__GNUC__) && __GNUC__ >= 14
+static_assert(TRELLIS_HAS_TYPE_PACK_ELEMENT == 1);
+#endif
+#if !defined(__clang__) && defined(__GNUC__) && __GNUC__ == 13
+static_assert(TRELLIS_HAS_TYPE_PACK_ELEMENT == 0);
+#endif
+#endif
+
+namespace {
+
+#if TRELLIS_HAS_TYPE_PACK_ELEMENT
+// Where the macro is 1, the builtin works under the project warning set with -Werror.
+static_assert(std::is_same_v<__type_pack_element<1, int, char, long>, char>);
+#endif
+
+// TRELLIS_IS_SAME(A, B) is std::is_same_v<A, B>, through a builtin where there is one.
+static_assert(TRELLIS_IS_SAME(int, int));
+static_assert(!TRELLIS_IS_SAME(int, const int));
+static_assert(!TRELLIS_IS_SAME(int, int&));
+static_assert(!TRELLIS_IS_SAME(int, long));
+static_assert(TRELLIS_IS_SAME(void, void));
+// A type argument may contain a comma: the macro is variadic and passes it through whole.
+static_assert(TRELLIS_IS_SAME(std::pair<int, char>, std::pair<int, char>));
+static_assert(!TRELLIS_IS_SAME(std::pair<int, char>, std::pair<char, int>));
+// It expands inside a pack expansion, as the type-list algorithms use it.
+template <class T, class... Ts>
+constexpr std::array<bool, sizeof...(Ts)> matches = {TRELLIS_IS_SAME(T, Ts)...};
+static_assert(matches<int, char, int>[1] && !matches<int, char, int>[0]);
+
+// TRELLIS_FUNCTION_SIGNATURE spells the enclosing function, with its template arguments.
+#if defined(TRELLIS_FUNCTION_SIGNATURE)
+template <class T>
+constexpr std::string_view signature_of() {
+  return TRELLIS_FUNCTION_SIGNATURE;
+}
+static_assert(signature_of<double>().find("double") != std::string_view::npos);
+static_assert(signature_of<double>().find("signature_of") != std::string_view::npos);
+#endif
+#if defined(__clang__) || defined(__GNUC__) || defined(_MSC_VER)
+#if !defined(TRELLIS_FUNCTION_SIGNATURE)
+#error "GCC, Clang and MSVC each have a function-signature string, so TRELLIS_FUNCTION_SIGNATURE"
+#endif
+#endif
+// Only MSVC's __FUNCSIG__ writes class keys ("struct x"); __PRETTY_FUNCTION__ doesn't.
+#if defined(__clang__) || defined(__GNUC__)
+static_assert(TRELLIS_FUNCTION_SIGNATURE_CLASS_KEYS == 0);
+#elif defined(_MSC_VER)
+static_assert(TRELLIS_FUNCTION_SIGNATURE_CLASS_KEYS == 1);
+#endif
+
+}  // namespace
+
+TEST(Config, TypePackElement) {
+#if TRELLIS_HAS_TYPE_PACK_ELEMENT
+  EXPECT_TRUE((std::is_same_v<__type_pack_element<0, char, int>, char>));
+#else
+  GTEST_SKIP() << "__type_pack_element is not available; at_t uses indexed base classes";
+#endif
+}
+
+TEST(Config, IsSame) {
+  EXPECT_TRUE(TRELLIS_IS_SAME(int, int));
+  EXPECT_FALSE(TRELLIS_IS_SAME(int, unsigned));
 }

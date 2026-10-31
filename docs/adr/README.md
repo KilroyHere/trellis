@@ -52,11 +52,14 @@ Each change to docs/plan.md is a minimal edit in place, marked "(amended by ADR-
 | §6.3 | `T&&` and `const T&&` parameters are the request `T`. | 0003 |
 | §6.8 | R004 is detected in all builds. | 0012 |
 | §7.2 | S1's operator set replaces the sketch: deleted twins, a separate probe, the explicit route for `optional`, `tuple` and `any`, two `config.hpp` workarounds and the residual limits. T1.13 found the aggregate-array count compiler-dependent, which only rewords that limit. | 0003 |
+| §7.1 | `type_list` algorithms use flat pack expansions and an inheritance-based set, folding only over packs that can't exceed 256 operands; `type_map` lookups resolve one non-template overload per entry, without deduction (T1.1). | 0010 |
+| §7.1 | `result<T>`'s error type is `trellis::failure`, as `trellis::error` is the compile-error namespace (T1.1). | 0006 |
 | §7.3 | The cycle option: option 3 by default, option 2 as the opt-in. The depth budget covers the creation code. The opt-in check's bound is 150 hops on MSVC before 19.50, an assumed boundary; this part is provisional, awaiting the owner (T1.13). | 0014 |
 | §7.5 | Inline storage in aligned raw bytes, with the state byte as its engaged flag; the two teardown ordering rules. | 0005 |
 | §7.6 | The slot design (spin, then `atomic::wait`; a mutex fallback; `std::call_once` rejected), the retry after a throw, and R004 in all builds. | 0012 |
 | §7.7 | R004 is the static engine's one failure path at run time; how it is reported under `-fno-exceptions` is open. | 0012 |
 | §7.8 | The example's literal, what each compiler prints for the C++20 rendering, and when the C++26 message is used. | 0006 |
+| §8.1, C3 | Flat pack expansions; folds only over packs that can't exceed 256 operands, as Clang rejects longer ones (T1.1). | 0010 |
 | §8.1, C7 | The per-hop budget covers the creation code as well as the check. | 0014 |
 | §12.2 | Phase 4 (diagnostics) comes before Phase 3 (binding features). This is an owner decision with no ADR of its own, so its marker reads "(amended by owner decision, 2026-10-30)". | owner |
 

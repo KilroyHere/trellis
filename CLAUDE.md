@@ -66,7 +66,7 @@ The skeletons for these arrive with T1.12.
 ## Compile-time performance (plan §8.1)
 
 - Memoize per (key, request form, consumer lifetime). Never put a path or a depth into a type on the normal resolution pass.
-- Use fold expressions and inheritance-based maps, not recursive variadic templates or linear searches.
+- Use flat pack expansions and inheritance-based maps and sets, not recursive variadic templates or linear searches. Use fold expressions only over packs that can't exceed 256 operands: Clang rejects longer ones (plan §8.1 C3, ADR-0010).
 - No fluent APIs that accumulate the binding set in a type.
 - After changing anything under `include/trellis/static/` or `include/trellis/discovery/`, run `scripts/bench-compile.sh --quick` and compare with the last numbers in `docs/PROGRESS.md`.
 

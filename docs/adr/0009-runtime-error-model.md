@@ -10,7 +10,7 @@ Fruit's runtime injection errors call `exit(1)`, which a caller can't catch (R8)
 
 ## Decision
 
-- `try_get<T>()` returns `trellis::result<T>`: `std::expected` when it is available (`TRELLIS_HAS_EXPECTED`), otherwise a small internal type.
+- `try_get<T>()` returns `trellis::result<T>`, whose error is a `trellis::failure`: `std::expected` when it is available (`TRELLIS_HAS_EXPECTED`), otherwise a small internal type.
 - `get<T>()` throws `trellis::resolution_error` when exceptions are enabled. Otherwise it calls a handler installed with `trellis::set_error_handler`, and calls `std::abort()` only if that handler returns.
 - The library never calls `exit()`.
 

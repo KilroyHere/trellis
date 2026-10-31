@@ -701,14 +701,14 @@ auto injector = di::make_injector<di::options{
 
 ### 7.1 Meta toolkit
 
-- **`type_list<Ts...>`.** Its algorithms use fold expressions, never recursive variadic templates.
-  - `contains` is `(std::is_same_v<T, Ts> || ...)`.
-  - `index_of` scans a `constexpr` array of booleans.
+- **`type_list<Ts...>`.** Its algorithms use flat pack expansions and inheritance-based sets, never recursive variadic templates, and fold expressions only over packs that can't exceed 256 operands, as Clang rejects longer ones (amended by ADR-0010, 2026-10-31).
+  - `contains` asks `std::is_base_of` whether a tag for `T` is a base of the list's indexed set, a class built once per list (amended by ADR-0010, 2026-10-31).
+  - `index_of` resolves one non-template overload per element on a per-list class, and scans a `constexpr` array of booleans only for a repeated or missing type (amended by ADR-0010, 2026-10-31).
   - `at<I>` uses compiler intrinsics where available (such as `__type_pack_element`), then C++26 pack indexing (`Ts...[I]`), then indexed base classes.
-- **`type_map`.** It is a single struct inheriting from `entry<K_i, V_i>...`. Lookup is `decltype(lookup<K>(static_cast<map*>(nullptr)))` against `template<class K, class V> V lookup(entry<K, V>*)`, so each lookup is one overload resolution rather than a linear recursive search.
+- **`type_map`.** It is a single struct inheriting from `entry<K_i, V_i>...`. Each entry declares one non-template lookup overload for its key, and the map gathers them, so each lookup is one overload resolution, with no search and no deduction (amended by ADR-0010, 2026-10-31: the draft deduced the value from `entry<K, V>*`, and GCC 13 and 14 match `T&` keys against `T&&` bases when deducing).
 - **`fixed_string<N>`.** Used for named qualifiers and for building messages at compile time.
 - **`type_name<T>()`.** Computed at compile time from `__PRETTY_FUNCTION__` or `__FUNCSIG__` on C++20, and from `std::meta::display_string_of(^^T)` on C++26. It feeds runtime messages, C++26 `static_assert` messages and the name-based `type_key`.
-- **`result<T>`.** `std::expected<T, error>` when `__cpp_lib_expected` is defined, otherwise a minimal internal version.
+- **`result<T>`.** `std::expected<T, failure>` when `__cpp_lib_expected` is defined, otherwise a minimal internal version (amended by ADR-0006, 2026-10-31: the error type is `trellis::failure`, because `trellis::error` is the compile-error namespace).
 - **`config.hpp`.** All compiler workarounds live here, behind named macros, each with a link to the compiler bug and a test.
 
 ### 7.2 Constructor discovery (confirm in S1 and S5)
@@ -928,7 +928,7 @@ error: static assertion failed: trellis [TRL-E001]: no binding for abstract type
 |---|---|---|
 | C1 | Memoize per (key, form, lifetime); never per path or depth on the normal pass | qlibs/di's explosion (R9) |
 | C2 | Inheritance-based maps; lookups by overload resolution | Avoid O(N) recursive searches per lookup |
-| C3 | Fold expressions and pack-indexing intrinsics; no recursive variadic templates | Instantiation count and depth |
+| C3 | Flat pack expansions and pack-indexing intrinsics; folds only over packs that can't exceed 256 operands; no recursive variadic templates (amended by ADR-0010, 2026-10-31) | Instantiation count and depth; Clang rejects a fold over more than 256 operands |
 | C4 | Flatten modules once; no fluent type accumulation | Fruit's flat-component blow-up (ADR-10) |
 | C5 | Short, flat type names: `binding<K, Impl, L>`, not stacks of nested policies | Symbol length drives compiler memory and debug-info size |
 | C6 | Instantiate creation code only for roots that are actually requested | Unused bindings cost only their binding type |

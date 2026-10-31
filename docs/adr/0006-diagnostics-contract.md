@@ -78,3 +78,4 @@ Renderings S3 measured (S3 §3.2, §4.4). Lines are for E001 three hops deep, on
 - **2026-10-31, T0.8:** recorded in this file. Plan §3.2 (NFR-07) and §7.8 amended.
 - **2026-10-31, T0.8 review:** keeping the error vocabulary outside `inline namespace v1` moved from the Decision to an open point for T1.6, because it conflicts with the project's namespace rule (CLAUDE.md, plan §7.5). The example in plan §7.8 gained its literal.
 - **2026-10-31, owner decision:** the error vocabulary lives in `trellis::error`, outside `inline namespace v1`, as a documented exception to the namespace rule.
+- **2026-10-31, T1.1 review:** the runtime error value of `result<T>` (ADR-0009) is `trellis::failure`, because `trellis::error` is the compile-error namespace: a class of that name in `inline namespace v1` makes every use of `trellis::error` ambiguous on GCC, and Clang rejects the namespace outright. Plan §7.1 amended; `tests/unit/error_namespace_test.cpp` guards the name.
