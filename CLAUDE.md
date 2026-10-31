@@ -52,6 +52,7 @@ The skeletons for these arrive with T1.12.
 - A user-visible change gets a line under "Unreleased" in `CHANGELOG.md`.
 - A new metaprogramming technique gets a note in `docs/internals/`: what it does, why, and which tests cover it.
 - A design change updates or adds an ADR in `docs/adr/`. Never let the code drift silently from `docs/plan.md`.
+- At each phase gate, update the status line and anything else outdated in `README.md`.
 
 ## C++ conventions
 
