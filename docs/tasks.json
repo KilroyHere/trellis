@@ -736,6 +736,32 @@
         "T1.9"
       ],
       "passes": false
+    },
+    {
+      "id": "T1.12",
+      "phase": 1,
+      "title": "Documentation scaffold",
+      "description": "Start the user-facing and maintainer documentation now, so each task adds to it instead of leaving it all for Phase 7: a changelog, the error catalog, internals notes, and the doc-comment convention for public headers.",
+      "plan_refs": [
+        "§11",
+        "§9.3",
+        "§7.8"
+      ],
+      "acceptance": [
+        "CHANGELOG.md in Keep a Changelog style, with an Unreleased section listing what Phase 0 and T1.1 delivered for users.",
+        "docs/errors/README.md holds the error-catalog index from plan §7.8: every TRL-E0xx and TRL-R0xx ID with its meaning, each linking to docs/errors/<ID>.md. Pages exist for the IDs already used in include/ or tests/, and there is a template for new pages.",
+        "docs/internals/README.md is an index for maintainer notes, with a first note on the meta toolkit (T1.1) that explains each metaprogramming technique and points to its tests.",
+        "A documented doc-comment convention for public headers (purpose, constraints, the error IDs it can raise, a short example), applied to T1.1's public headers.",
+        "A test or check-fast.sh step fails when a TRL error ID used in include/ has no page in docs/errors/."
+      ],
+      "verify": [
+        "scripts/check-fast.sh",
+        "test -f CHANGELOG.md && test -f docs/errors/README.md && test -f docs/internals/README.md"
+      ],
+      "depends_on": [
+        "T1.1"
+      ],
+      "passes": false
     }
   ]
 }

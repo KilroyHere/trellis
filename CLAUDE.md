@@ -43,6 +43,16 @@ Build output is long. Scripts write full logs to `build/logs/` and print a summa
 - Commits: imperative subject of at most 72 characters, and a body that says what changed and why. No Co-Authored-By or other AI attribution trailers, and no links to Claude sessions.
 - `include/` is header-only and uses only the standard library. Macros live only in `config.hpp`, with a `TRELLIS_` prefix.
 
+## Documentation (part of done)
+
+The skeletons for these arrive with T1.12.
+
+- Every public entity in `include/` gets a doc comment in the documented convention: purpose, constraints, the error IDs it can raise, and a short example.
+- A new error ID gets a page in `docs/errors/`. A check fails when an ID used in `include/` has no page.
+- A user-visible change gets a line under "Unreleased" in `CHANGELOG.md`.
+- A new metaprogramming technique gets a note in `docs/internals/`: what it does, why, and which tests cover it.
+- A design change updates or adds an ADR in `docs/adr/`. Never let the code drift silently from `docs/plan.md`.
+
 ## C++ conventions
 
 - C++20 is the baseline. Use C++23/26 features only behind the `TRELLIS_HAS_*` macros from `config.hpp`.
