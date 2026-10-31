@@ -19,6 +19,9 @@ The design is in [`docs/plan.md`](docs/plan.md), and the decisions behind it are
 |---|---|
 | [`docs/plan.md`](docs/plan.md) | The design and implementation plan |
 | [`docs/adr/`](docs/adr/README.md) | Architecture decision records |
+| [`docs/errors/`](docs/errors/README.md) | The error catalog: one page per error ID |
+| [`docs/internals/`](docs/internals/README.md) | Maintainer notes, and the doc-comment convention for public headers |
+| [`CHANGELOG.md`](CHANGELOG.md) | User-visible changes, release by release |
 | [`docs/PROGRESS.md`](docs/PROGRESS.md) | Progress log: what is done, the evidence, decisions, open items |
 | `docs/tasks.json` | The task list, managed with `scripts/tasks.py` |
 | `docs/spikes/`, `spikes/` | The Phase 0 experiments behind the decisions |
