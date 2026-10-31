@@ -868,7 +868,7 @@ The message is built at compile time in a `fixed_string` buffer:
 error: static assertion failed: trellis [TRL-E001]: no binding for abstract type 'IRepository'
   requested as 'std::shared_ptr<IRepository>' by 'Service' (parameter 1)
   path: App -> Service -> IRepository
-  fix: add di::bind<IRepository>.to<YourImplementation>() (docs: errors/E001)
+  fix: add di::bind<IRepository>.to<YourImplementation>() (docs: errors/TRL-E001)
 ```
 
 **The explain pass**

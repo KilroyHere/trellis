@@ -24,11 +24,11 @@ Compile-time wiring was measured at hand-wired speed (R1), while the containers 
 ## Consequences
 
 - Two engines to maintain. Mitigated by a shared discovery layer, a shared vocabulary and one test suite parameterized over both engines.
-- **D5 is still open:** whether the runtime container ships in 1.0. The owner's answer is needed before T5.0.
+- **D5 is decided:** the runtime container ships in 1.0 (owner, 2026-10-31), so Phase 5 is part of the 1.0 scope and T5.0 expands it normally.
 - **Spike S6 is deferred to Phase 5.** It decides how the runtime engine learns the dependency lists of classes found by deduced discovery (§7.4): self-registration from the placeholder's conversion operators, or a dry run inside `validate(roots...)`, including how either behaves across shared libraries. Reasons:
   - nothing before Phase 5 builds the runtime engine, and the static engine doesn't need dependency lists;
   - the plan allows it: §12.2's Phase 0 row says S5 and S6 can be shortened, and §13 (week 3) that S6 can be postponed to Phase 5;
-  - D5 may still take the runtime engine out of 1.0.
+  - when S6 was deferred, D5 could still have taken the runtime engine out of 1.0. D5 has since kept it in, and the first two reasons still hold.
 
   T5.0 should schedule S6 before the runtime engine's discovery work. Inputs so far:
   - S1 §5: self-registration can hook the bodies of the placeholder's conversion operators, which know the consumer, the request and the parameter position.
@@ -36,6 +36,7 @@ Compile-time wiring was measured at hand-wired speed (R1), while the containers 
 
 ## History
 
+- **2026-10-31, T1.12:** the Consequences updated for the D5 decision; S6 stays deferred to Phase 5.
 - **2026-10-31, owner decision (plan D5):** the runtime engine ships in 1.0, so Phase 5 is part of the 1.0 scope.
 - **2026-10-30, plan draft 1:** drafted as ADR-02 in plan §4.
 - **2026-10-31, T0.8:** recorded in this file, unchanged. S6 recorded as deferred, with the reasons above.
