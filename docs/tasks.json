@@ -785,7 +785,7 @@
         "grep -q '^## Addendum: MSVC' docs/spikes/S2-memoization-cycles.md"
       ],
       "depends_on": [],
-      "passes": false
+      "passes": true
     }
   ]
 }

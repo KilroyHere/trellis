@@ -31,14 +31,35 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
 
 ## Waiting for owner
 
+- **MSVC chain depth (T1.13, ADR-0014's provisional amendment).** cl 19.44 (VS 2022) stops a dependency chain at 161 hops, below the 200 hops that NFR-09 and the cycle check assume; cl 19.51 (VS 2026) reaches 245. Options:
+  - (a) keep NFR-13's minimum, 19.38, and use a 150-hop bound on MSVC before 19.50: the provisional text, measured to give exactly one TRL-E007 on cl 19.44;
+  - (b) raise NFR-13's MSVC minimum to 19.51. 19.45 to 19.50 can't be measured on GitHub's image, so 19.50 is only an assumed boundary.
+  Not blocking until the cycle check lands in Phase 2.
 - **The ADR set (T0.8)** is owner-reviewable: `docs/adr/README.md` indexes ADR-0001 to ADR-0014 with their statuses.
 - **CI on a private repo:** Linux runs on every push; macOS and Windows run weekly or on demand to save Actions minutes. Making the repository public would allow the full matrix on every push.
-- **Stale branches on GitHub:** `wip/t0.1-scaffold`, `t0.2-ci` and `t0.10-goldens` can be deleted; their content is on `main`. The proxy here refuses branch deletion.
+- **Stale branches on GitHub:** `wip/t0.1-scaffold`, `t0.2-ci`, `t0.9-ci-polish`, `t0.10-goldens` and `t1.13-msvc-probe` can be deleted; their content is on `main`. The proxy here refuses branch deletion.
 - **Guardrail changes.** Auto mode treats edits to `scripts/hooks/` and `.claude/` as agent self-modification, so these are the owner's to make:
   - Make `scripts/hooks/protect_files.py` protect only committed files, so a task can fix tests it created itself.
   - Add `tests/golden_manifest.txt` to the protected paths.
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev` so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
+
+## 2026-10-31: T1.13 early MSVC check of discovery and chain depth (passed)
+
+- **What changed** (squashed as 51fb862):
+  - `.github/workflows/msvc-probe.yml`, a manual-dispatch workflow (`gh workflow run msvc-probe.yml`). It runs spike S1's forms, limits and stub tests and S2's chain-depth and cycle probes with cl 19.51 and cl 19.44, then compares every result with the record (`results/msvc.json` and `forms-msvc.txt` in each spike directory). Green means unchanged; red lists what changed.
+  - `spikes/S1-deduced-discovery/msvc.py` and `spikes/S2-memoization-cycles/msvc.py` drive the probe.
+  - Dated "Addendum: MSVC" sections in `docs/spikes/S1-deduced-discovery.md` and `S2-memoization-cycles.md`.
+  - ADR-0003 points to the S1 addendum; no decision changes. ADR-0014 has a provisional amendment (see "Waiting for owner"). Plan NFR-09, §7.2, §7.3 and §9 and the ADR index follow.
+- **Results** (runs [41235251688](https://github.com/KilroyHere/trellis/actions/runs/41235251688) and [41239761408](https://github.com/KilroyHere/trellis/actions/runs/41239761408), all jobs green):
+  - **S1:** the recommended operator set behaves on both cl versions exactly as on GCC 14 and Clang 20, in every form cell. The fallbacks build too. Array members are compiler-dependent, so T1.3 must handle them explicitly.
+  - **S2:** the deepest chain at default limits is 245 hops on cl 19.51 and 161 on cl 19.44. With the opt-in cycle check, cl 19.44 gives exactly one TRL-E007 at a 150-hop bound and the fatal C1202 at 200; cl 19.51 gives one TRL-E007 at both. MSVC prints 8 lines per hop. Toolsets 14.45 to 14.50 aren't on the image.
+- **Review:** failed once on four documentation gaps: an unmeasured 19.50 cutoff, a missing NFR-09 row in the ADR index, a stale ADR-0003, and a wrong note count. The recheck passed. A non-blocking wording slip in ADR-0014 was fixed on landing.
+- **Evidence:** `scripts/tasks.py verify T1.13`: both `## Addendum: MSVC` checks pass.
+- **Follow-ups:**
+  - T1.3: array members, and warning C4127 in the deduced probe.
+  - T1.5: avoid `std::terminate` in `create()` paths that MSVC reports as unreachable code (C4702).
+  - A green dispatch skips a missing toolset with a notice, so check the notice when an image changes.
 
 ## 2026-10-31: T0.8 architecture decision records (passed). Phase 0 complete
 
