@@ -14,11 +14,11 @@
 #   gh api repos/{owner}/{repo}/check-runs/<job id>/annotations
 #
 # A Windows minute costs two Linux minutes on a private repository, so this runs only on demand.
+# (T1.13 ran it from a push trigger on its own branch, because a workflow that isn't on the
+# default branch can't be dispatched.)
 name: msvc-probe
 
 on:
-  push:
-    branches: [t1.13-msvc-probe]
   workflow_dispatch:
 
 permissions:
