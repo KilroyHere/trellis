@@ -57,7 +57,7 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
 - **Review:** failed once on four documentation gaps: an unmeasured 19.50 cutoff, a missing NFR-09 row in the ADR index, a stale ADR-0003, and a wrong note count. The recheck passed. A non-blocking wording slip in ADR-0014 was fixed on landing.
 - **Evidence:** `scripts/tasks.py verify T1.13`: both `## Addendum: MSVC` checks pass.
 - **Follow-ups:**
-  - T1.3: array members, and warning C4127 in the deduced probe.
+  - T1.3: handle array members explicitly.
   - T1.5: avoid `std::terminate` in `create()` paths that MSVC reports as unreachable code (C4702).
   - A green dispatch skips a missing toolset with a notice, so check the notice when an image changes.
 
