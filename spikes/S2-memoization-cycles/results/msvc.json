@@ -1,0 +1,89 @@
+{
+ "about": "What cl reported for spike S2 in GitHub Actions run 41235251688, and for the cycle check at bounds 150 and 200 in run 41239761408 (T1.13), per cl version (major.minor). msvc.py compares every run with the record of its cl version, or with the newest record, and fails when anything differs, so a green run means MSVC's behaviour is unchanged. See docs/spikes/S2-memoization-cycles.md, Addendum: MSVC.",
+ "versions": {
+  "19.44": {
+   "builtins": {"__is_constructible": true, "__is_same": false},
+   "calibration": {
+    "class template": {"levels": 499, "stopped_by": "C1202 recursion limit"},
+    "variable template": {"levels": 500, "stopped_by": "C1202 recursion limit"}
+   },
+   "template_depth_option": false,
+   "chains": {
+    "memo value": {"longest": 161, "stopped_by": "C1202 recursion limit", "min_template_depth": {}},
+    "memo shared_ptr": {"longest": 161, "stopped_by": "C1202 recursion limit", "min_template_depth": {}},
+    "memo value, check only": {"longest": 161, "stopped_by": "C1202 recursion limit", "min_template_depth": {}},
+    "memo shared_ptr, check only": {"longest": 161, "stopped_by": "C1202 recursion limit", "min_template_depth": {}},
+    "depth value": {"longest": 161, "stopped_by": "C1202 recursion limit", "min_template_depth": {}},
+    "s1-stub value": {"longest": 60, "stopped_by": "C1202 recursion limit", "min_template_depth": {}}
+   },
+   "cycles": {
+    "memo": {
+     "1": {"kind": "error C7608", "errors": 3},
+     "2": {"kind": "error C7608", "errors": 3},
+     "3": {"kind": "error C7608", "errors": 3},
+     "4": {"kind": "error C7608", "errors": 5}
+    },
+    "depth-100": {
+     "1": {"kind": "TRL-E007", "errors": 1},
+     "2": {"kind": "TRL-E007", "errors": 1},
+     "3": {"kind": "TRL-E007", "errors": 1},
+     "4": {"kind": "TRL-E007", "errors": 1}
+    },
+    "depth-150": {
+     "1": {"kind": "TRL-E007", "errors": 1},
+     "2": {"kind": "TRL-E007", "errors": 1},
+     "3": {"kind": "TRL-E007", "errors": 1},
+     "4": {"kind": "TRL-E007", "errors": 1}
+    },
+    "depth-200": {
+     "1": {"kind": "C1202 recursion limit", "errors": 1},
+     "2": {"kind": "C1202 recursion limit", "errors": 1},
+     "3": {"kind": "C1202 recursion limit", "errors": 1},
+     "4": {"kind": "C1202 recursion limit", "errors": 1}
+    }
+   }
+  },
+  "19.51": {
+   "builtins": {"__is_constructible": true, "__is_same": false},
+   "calibration": {
+    "class template": {"levels": 999, "stopped_by": "C2999 template depth limit"},
+    "variable template": {"levels": 1000, "stopped_by": "C2999 template depth limit"}
+   },
+   "template_depth_option": true,
+   "chains": {
+    "memo value": {"longest": 245, "stopped_by": "C2999 template depth limit", "min_template_depth": {"50": 217, "100": 417}},
+    "memo shared_ptr": {"longest": 245, "stopped_by": "C2999 template depth limit", "min_template_depth": {"50": 217, "100": 417}},
+    "memo value, check only": {"longest": 245, "stopped_by": "C2999 template depth limit", "min_template_depth": {"50": 217, "100": 417}},
+    "memo shared_ptr, check only": {"longest": 245, "stopped_by": "C2999 template depth limit", "min_template_depth": {"50": 217, "100": 417}},
+    "depth value": {"longest": 245, "stopped_by": "C2999 template depth limit", "min_template_depth": {"50": 217, "100": 417}},
+    "s1-stub value": {"longest": 98, "stopped_by": "C2999 template depth limit", "min_template_depth": {"50": 516, "100": 1016}}
+   },
+   "cycles": {
+    "memo": {
+     "1": {"kind": "error C7608", "errors": 3},
+     "2": {"kind": "error C7608", "errors": 3},
+     "3": {"kind": "error C7608", "errors": 3},
+     "4": {"kind": "error C7608", "errors": 5}
+    },
+    "depth-100": {
+     "1": {"kind": "TRL-E007", "errors": 1},
+     "2": {"kind": "TRL-E007", "errors": 1},
+     "3": {"kind": "TRL-E007", "errors": 1},
+     "4": {"kind": "TRL-E007", "errors": 1}
+    },
+    "depth-150": {
+     "1": {"kind": "TRL-E007", "errors": 1},
+     "2": {"kind": "TRL-E007", "errors": 1},
+     "3": {"kind": "TRL-E007", "errors": 1},
+     "4": {"kind": "TRL-E007", "errors": 1}
+    },
+    "depth-200": {
+     "1": {"kind": "TRL-E007", "errors": 1},
+     "2": {"kind": "TRL-E007", "errors": 1},
+     "3": {"kind": "TRL-E007", "errors": 1},
+     "4": {"kind": "TRL-E007", "errors": 1}
+    }
+   }
+  }
+ }
+}

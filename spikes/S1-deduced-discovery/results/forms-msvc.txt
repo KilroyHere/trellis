@@ -1,0 +1,279 @@
+ROW|min|X|resolves|operator T()|X|exact|0|0
+ROW|min|const X|resolves|operator T()|X|exact|0|1
+ROW|min|X&|resolves|operator T&()|X&|exact|0|2
+ROW|min|const X&|resolves|operator T&()|const X&|exact|0|3
+ROW|min|X&&|resolves|operator T()|X|differs|0|4
+ROW|min|const X&&|resolves|operator T()|X|differs|0|5
+ROW|min|X*|resolves|operator T()|X*|exact|0|6
+ROW|min|const X*|resolves|operator T()|const X*|exact|0|7
+ROW|min|X* const|resolves|operator T()|X*|exact|0|8
+ROW|min|unique_ptr<X>|resolves|operator T()|unique_ptr<X>|exact|0|9
+ROW|min|unique_ptr<X>&&|resolves|operator T()|unique_ptr<X>|differs|0|10
+ROW|min|shared_ptr<X>|resolves|operator T()|shared_ptr<X>|exact|0|11
+ROW|min|const shared_ptr<X>&|resolves|operator T&()|const shared_ptr<X>&|exact|0|12
+ROW|min|shared_ptr<const X>|resolves|operator T()|shared_ptr<const X>|exact|0|13
+ROW|min|weak_ptr<X>|resolves|operator T()|weak_ptr<X>|exact|0|14
+ROW|min|function<int()>|resolves|operator T()|function<int()>|exact|0|15
+ROW|min|function<unique_ptr<I>(int)>|resolves|operator T()|function<unique_ptr<I>(int)>|exact|0|16
+ROW|min|span<X>|resolves|operator T()|span<X>|exact|0|17
+ROW|min|span<const X>|resolves|operator T()|span<const X>|exact|0|18
+ROW|min|optional<X>|not-constructible|-|-|see diag|0|19
+ROW|min|int|resolves|operator T()|int|exact|0|20
+ROW|min|const int&|resolves|operator T&()|const int&|exact|0|21
+ROW|min|string|resolves|operator T()|string|exact|0|22
+ROW|min|string_view|resolves|operator T()|string_view|exact|0|23
+ROW|min|vector<X>|resolves|operator T()|vector<X>|exact|0|24
+ROW|min|I&|resolves|operator T&()|I&|exact|0|25
+ROW|min|const I&|resolves|operator T&()|const I&|exact|0|26
+ROW|min|I*|resolves|operator T()|I*|exact|0|27
+ROW|min|unique_ptr<I>|resolves|operator T()|unique_ptr<I>|exact|0|28
+ROW|min|shared_ptr<I>|resolves|operator T()|shared_ptr<I>|exact|0|29
+ROW|min|reference_wrapper<X>|resolves|operator T()|reference_wrapper<X>|exact|0|30
+ROW|min|lazy<X&>|resolves|operator T()|lazy<X&>|exact|0|31
+ROW|min|tuple<X>|not-constructible|-|-|see diag|0|32
+ROW|min|any|not-constructible|-|-|see diag|0|33
+ROW|min|variant<X,int>|resolves|operator T()|variant<X,int>|exact|0|34
+ROW|min3|X|resolves|operator T()|X|exact|1|0
+ROW|min3|const X|resolves|operator T()|X|exact|1|1
+ROW|min3|X&|resolves|operator T&()|X&|exact|1|2
+ROW|min3|const X&|resolves|operator const T&()|const X&|exact|1|3
+ROW|min3|X&&|resolves|operator T()|X|differs|1|4
+ROW|min3|const X&&|resolves|operator T()|X|differs|1|5
+ROW|min3|X*|resolves|operator T()|X*|exact|1|6
+ROW|min3|const X*|resolves|operator T()|const X*|exact|1|7
+ROW|min3|X* const|resolves|operator T()|X*|exact|1|8
+ROW|min3|unique_ptr<X>|resolves|operator T()|unique_ptr<X>|exact|1|9
+ROW|min3|unique_ptr<X>&&|resolves|operator T()|unique_ptr<X>|differs|1|10
+ROW|min3|shared_ptr<X>|resolves|operator T()|shared_ptr<X>|exact|1|11
+ROW|min3|const shared_ptr<X>&|resolves|operator const T&()|const shared_ptr<X>&|exact|1|12
+ROW|min3|shared_ptr<const X>|resolves|operator T()|shared_ptr<const X>|exact|1|13
+ROW|min3|weak_ptr<X>|resolves|operator T()|weak_ptr<X>|exact|1|14
+ROW|min3|function<int()>|resolves|operator T()|function<int()>|exact|1|15
+ROW|min3|function<unique_ptr<I>(int)>|resolves|operator T()|function<unique_ptr<I>(int)>|exact|1|16
+ROW|min3|span<X>|resolves|operator T()|span<X>|exact|1|17
+ROW|min3|span<const X>|resolves|operator T()|span<const X>|exact|1|18
+ROW|min3|optional<X>|not-constructible|-|-|see diag|1|19
+ROW|min3|int|resolves|operator T()|int|exact|1|20
+ROW|min3|const int&|resolves|operator const T&()|const int&|exact|1|21
+ROW|min3|string|resolves|operator T()|string|exact|1|22
+ROW|min3|string_view|resolves|operator T()|string_view|exact|1|23
+ROW|min3|vector<X>|resolves|operator T()|vector<X>|exact|1|24
+ROW|min3|I&|resolves|operator T&()|I&|exact|1|25
+ROW|min3|const I&|resolves|operator const T&()|const I&|exact|1|26
+ROW|min3|I*|resolves|operator T()|I*|exact|1|27
+ROW|min3|unique_ptr<I>|resolves|operator T()|unique_ptr<I>|exact|1|28
+ROW|min3|shared_ptr<I>|resolves|operator T()|shared_ptr<I>|exact|1|29
+ROW|min3|reference_wrapper<X>|resolves|operator T()|reference_wrapper<X>|exact|1|30
+ROW|min3|lazy<X&>|resolves|operator T()|lazy<X&>|exact|1|31
+ROW|min3|tuple<X>|not-constructible|-|-|see diag|1|32
+ROW|min3|any|not-constructible|-|-|see diag|1|33
+ROW|min3|variant<X,int>|resolves|operator T()|variant<X,int>|exact|1|34
+ROW|min_rr|X|resolves|operator T()|X|exact|2|0
+ROW|min_rr|const X|resolves|operator T()|X|exact|2|1
+ROW|min_rr|X&|resolves|operator T&()|X&|exact|2|2
+ROW|min_rr|const X&|resolves|operator T&()|const X&|exact|2|3
+ROW|min_rr|X&&|resolves|operator T()|X|differs|2|4
+ROW|min_rr|const X&&|resolves|operator T()|X|differs|2|5
+ROW|min_rr|X*|resolves|operator T()|X*|exact|2|6
+ROW|min_rr|const X*|resolves|operator T()|const X*|exact|2|7
+ROW|min_rr|X* const|resolves|operator T()|X*|exact|2|8
+ROW|min_rr|unique_ptr<X>|resolves|operator T()|unique_ptr<X>|exact|2|9
+ROW|min_rr|unique_ptr<X>&&|resolves|operator T()|unique_ptr<X>|differs|2|10
+ROW|min_rr|shared_ptr<X>|resolves|operator T()|shared_ptr<X>|exact|2|11
+ROW|min_rr|const shared_ptr<X>&|resolves|operator T&()|const shared_ptr<X>&|exact|2|12
+ROW|min_rr|shared_ptr<const X>|resolves|operator T()|shared_ptr<const X>|exact|2|13
+ROW|min_rr|weak_ptr<X>|resolves|operator T()|weak_ptr<X>|exact|2|14
+ROW|min_rr|function<int()>|resolves|operator T()|function<int()>|exact|2|15
+ROW|min_rr|function<unique_ptr<I>(int)>|resolves|operator T()|function<unique_ptr<I>(int)>|exact|2|16
+ROW|min_rr|span<X>|resolves|operator T()|span<X>|exact|2|17
+ROW|min_rr|span<const X>|resolves|operator T()|span<const X>|exact|2|18
+ROW|min_rr|optional<X>|not-constructible|-|-|see diag|2|19
+ROW|min_rr|int|resolves|operator T()|int|exact|2|20
+ROW|min_rr|const int&|resolves|operator T&()|const int&|exact|2|21
+ROW|min_rr|string|resolves|operator T()|string|exact|2|22
+ROW|min_rr|string_view|resolves|operator T()|string_view|exact|2|23
+ROW|min_rr|vector<X>|resolves|operator T()|vector<X>|exact|2|24
+ROW|min_rr|I&|resolves|operator T&()|I&|exact|2|25
+ROW|min_rr|const I&|resolves|operator T&()|const I&|exact|2|26
+ROW|min_rr|I*|resolves|operator T()|I*|exact|2|27
+ROW|min_rr|unique_ptr<I>|resolves|operator T()|unique_ptr<I>|exact|2|28
+ROW|min_rr|shared_ptr<I>|resolves|operator T()|shared_ptr<I>|exact|2|29
+ROW|min_rr|reference_wrapper<X>|resolves|operator T()|reference_wrapper<X>|exact|2|30
+ROW|min_rr|lazy<X&>|resolves|operator T()|lazy<X&>|exact|2|31
+ROW|min_rr|tuple<X>|not-constructible|-|-|see diag|2|32
+ROW|min_rr|any|not-constructible|-|-|see diag|2|33
+ROW|min_rr|variant<X,int>|resolves|operator T()|variant<X,int>|exact|2|34
+ROW|refq|X|resolves|operator T()|X|exact|3|0
+ROW|refq|const X|resolves|operator T()|X|exact|3|1
+ROW|refq|X&|resolves|operator T&()|X&|exact|3|2
+ROW|refq|const X&|resolves|operator T&()|const X&|exact|3|3
+ROW|refq|X&&|resolves|operator T()|X|differs|3|4
+ROW|refq|const X&&|resolves|operator T()|X|differs|3|5
+ROW|refq|X*|resolves|operator T()|X*|exact|3|6
+ROW|refq|const X*|resolves|operator T()|const X*|exact|3|7
+ROW|refq|X* const|resolves|operator T()|X*|exact|3|8
+ROW|refq|unique_ptr<X>|resolves|operator T()|unique_ptr<X>|exact|3|9
+ROW|refq|unique_ptr<X>&&|resolves|operator T()|unique_ptr<X>|differs|3|10
+ROW|refq|shared_ptr<X>|resolves|operator T()|shared_ptr<X>|exact|3|11
+ROW|refq|const shared_ptr<X>&|resolves|operator T&()|const shared_ptr<X>&|exact|3|12
+ROW|refq|shared_ptr<const X>|resolves|operator T()|shared_ptr<const X>|exact|3|13
+ROW|refq|weak_ptr<X>|resolves|operator T()|weak_ptr<X>|exact|3|14
+ROW|refq|function<int()>|resolves|operator T()|function<int()>|exact|3|15
+ROW|refq|function<unique_ptr<I>(int)>|resolves|operator T()|function<unique_ptr<I>(int)>|exact|3|16
+ROW|refq|span<X>|resolves|operator T()|span<X>|exact|3|17
+ROW|refq|span<const X>|resolves|operator T()|span<const X>|exact|3|18
+ROW|refq|optional<X>|not-constructible|-|-|see diag|3|19
+ROW|refq|int|resolves|operator T()|int|exact|3|20
+ROW|refq|const int&|resolves|operator T&()|const int&|exact|3|21
+ROW|refq|string|resolves|operator T()|string|exact|3|22
+ROW|refq|string_view|resolves|operator T()|string_view|exact|3|23
+ROW|refq|vector<X>|resolves|operator T()|vector<X>|exact|3|24
+ROW|refq|I&|resolves|operator T&()|I&|exact|3|25
+ROW|refq|const I&|resolves|operator T&()|const I&|exact|3|26
+ROW|refq|I*|resolves|operator T()|I*|exact|3|27
+ROW|refq|unique_ptr<I>|resolves|operator T()|unique_ptr<I>|exact|3|28
+ROW|refq|shared_ptr<I>|resolves|operator T()|shared_ptr<I>|exact|3|29
+ROW|refq|reference_wrapper<X>|resolves|operator T()|reference_wrapper<X>|exact|3|30
+ROW|refq|lazy<X&>|resolves|operator T()|lazy<X&>|exact|3|31
+ROW|refq|tuple<X>|not-constructible|-|-|see diag|3|32
+ROW|refq|any|not-constructible|-|-|see diag|3|33
+ROW|refq|variant<X,int>|resolves|operator T()|variant<X,int>|exact|3|34
+ROW|boost|X|resolves|operator T()|X|exact|4|0
+ROW|boost|const X|resolves|operator T()|X|exact|4|1
+ROW|boost|X&|resolves|operator T&()|X&|exact|4|2
+ROW|boost|const X&|resolves|operator const T&()|const X&|exact|4|3
+ROW|boost|X&&|resolves|operator T()|X|differs|4|4
+ROW|boost|const X&&|resolves|operator T()|X|differs|4|5
+ROW|boost|X*|resolves|operator T()|X*|exact|4|6
+ROW|boost|const X*|resolves|operator T()|const X*|exact|4|7
+ROW|boost|X* const|resolves|operator T()|X*|exact|4|8
+ROW|boost|unique_ptr<X>|resolves|operator T()|unique_ptr<X>|exact|4|9
+ROW|boost|unique_ptr<X>&&|resolves|operator T()|unique_ptr<X>|differs|4|10
+ROW|boost|shared_ptr<X>|resolves|operator T()|shared_ptr<X>|exact|4|11
+ROW|boost|const shared_ptr<X>&|resolves|operator const T&()|const shared_ptr<X>&|exact|4|12
+ROW|boost|shared_ptr<const X>|resolves|operator T()|shared_ptr<const X>|exact|4|13
+ROW|boost|weak_ptr<X>|resolves|operator T()|weak_ptr<X>|exact|4|14
+ROW|boost|function<int()>|resolves|operator T()|function<int()>|exact|4|15
+ROW|boost|function<unique_ptr<I>(int)>|resolves|operator T()|function<unique_ptr<I>(int)>|exact|4|16
+ROW|boost|span<X>|resolves|operator T()|span<X>|exact|4|17
+ROW|boost|span<const X>|resolves|operator T()|span<const X>|exact|4|18
+ROW|boost|optional<X>|not-constructible|-|-|see diag|4|19
+ROW|boost|int|resolves|operator T()|int|exact|4|20
+ROW|boost|const int&|resolves|operator const T&()|const int&|exact|4|21
+ROW|boost|string|resolves|operator T()|string|exact|4|22
+ROW|boost|string_view|resolves|operator T()|string_view|exact|4|23
+ROW|boost|vector<X>|resolves|operator T()|vector<X>|exact|4|24
+ROW|boost|I&|resolves|operator T&()|I&|exact|4|25
+ROW|boost|const I&|resolves|operator const T&()|const I&|exact|4|26
+ROW|boost|I*|resolves|operator T()|I*|exact|4|27
+ROW|boost|unique_ptr<I>|resolves|operator T()|unique_ptr<I>|exact|4|28
+ROW|boost|shared_ptr<I>|resolves|operator T()|shared_ptr<I>|exact|4|29
+ROW|boost|reference_wrapper<X>|resolves|operator T()|reference_wrapper<X>|exact|4|30
+ROW|boost|lazy<X&>|resolves|operator T()|lazy<X&>|exact|4|31
+ROW|boost|tuple<X>|not-constructible|-|-|see diag|4|32
+ROW|boost|any|not-constructible|-|-|see diag|4|33
+ROW|boost|variant<X,int>|resolves|operator T()|variant<X,int>|exact|4|34
+ROW|plan|X|not-constructible|-|-|see diag|5|0
+ROW|plan|const X|not-constructible|-|-|see diag|5|1
+ROW|plan|X&|resolves|operator T&()|X&|exact|5|2
+ROW|plan|const X&|resolves|operator T&()|const X&|exact|5|3
+ROW|plan|X&&|resolves|operator T()|X|differs|5|4
+ROW|plan|const X&&|resolves|operator T()|X|differs|5|5
+ROW|plan|X*|not-constructible|-|-|see diag|5|6
+ROW|plan|const X*|not-constructible|-|-|see diag|5|7
+ROW|plan|X* const|not-constructible|-|-|see diag|5|8
+ROW|plan|unique_ptr<X>|not-constructible|-|-|see diag|5|9
+ROW|plan|unique_ptr<X>&&|resolves|operator T()|unique_ptr<X>|differs|5|10
+ROW|plan|shared_ptr<X>|not-constructible|-|-|see diag|5|11
+ROW|plan|const shared_ptr<X>&|resolves|operator T&()|const shared_ptr<X>&|exact|5|12
+ROW|plan|shared_ptr<const X>|not-constructible|-|-|see diag|5|13
+ROW|plan|weak_ptr<X>|not-constructible|-|-|see diag|5|14
+ROW|plan|function<int()>|not-constructible|-|-|see diag|5|15
+ROW|plan|function<unique_ptr<I>(int)>|not-constructible|-|-|see diag|5|16
+ROW|plan|span<X>|not-constructible|-|-|see diag|5|17
+ROW|plan|span<const X>|not-constructible|-|-|see diag|5|18
+ROW|plan|optional<X>|not-constructible|-|-|see diag|5|19
+ROW|plan|int|not-constructible|-|-|see diag|5|20
+ROW|plan|const int&|resolves|operator T&()|const int&|exact|5|21
+ROW|plan|string|not-constructible|-|-|see diag|5|22
+ROW|plan|string_view|not-constructible|-|-|see diag|5|23
+ROW|plan|vector<X>|not-constructible|-|-|see diag|5|24
+ROW|plan|I&|resolves|operator T&()|I&|exact|5|25
+ROW|plan|const I&|resolves|operator T&()|const I&|exact|5|26
+ROW|plan|I*|not-constructible|-|-|see diag|5|27
+ROW|plan|unique_ptr<I>|not-constructible|-|-|see diag|5|28
+ROW|plan|shared_ptr<I>|not-constructible|-|-|see diag|5|29
+ROW|plan|reference_wrapper<X>|not-constructible|-|-|see diag|5|30
+ROW|plan|lazy<X&>|not-constructible|-|-|see diag|5|31
+ROW|plan|tuple<X>|not-constructible|-|-|see diag|5|32
+ROW|plan|any|resolves|-|-|constructed without a conversion?|5|33
+ROW|plan|variant<X,int>|not-constructible|-|-|see diag|5|34
+ROW|rref_first|X|resolves|operator T&&()|X&&|differs|6|0
+ROW|rref_first|const X|resolves|operator T&&()|X&&|differs|6|1
+ROW|rref_first|X&|resolves|operator T&()|X&|exact|6|2
+ROW|rref_first|const X&|resolves|operator T&()|const X&|exact|6|3
+ROW|rref_first|X&&|resolves|operator T&&()|X&&|exact|6|4
+ROW|rref_first|const X&&|resolves|operator T&&()|const X&&|exact|6|5
+ROW|rref_first|X*|resolves|operator T&&()|X*&&|differs|6|6
+ROW|rref_first|const X*|resolves|operator T&&()|const X*&&|differs|6|7
+ROW|rref_first|X* const|resolves|operator T&&()|X*&&|differs|6|8
+ROW|rref_first|unique_ptr<X>|resolves|operator T&&()|unique_ptr<X>&&|differs|6|9
+ROW|rref_first|unique_ptr<X>&&|resolves|operator T&&()|unique_ptr<X>&&|exact|6|10
+ROW|rref_first|shared_ptr<X>|resolves|operator T&&()|shared_ptr<X>&&|differs|6|11
+ROW|rref_first|const shared_ptr<X>&|resolves|operator T&()|const shared_ptr<X>&|exact|6|12
+ROW|rref_first|shared_ptr<const X>|resolves|operator T&&()|shared_ptr<const X>&&|differs|6|13
+ROW|rref_first|weak_ptr<X>|resolves|operator T&&()|weak_ptr<X>&&|differs|6|14
+ROW|rref_first|function<int()>|resolves|operator T&&()|function<int()>&&|differs|6|15
+ROW|rref_first|function<unique_ptr<I>(int)>|resolves|operator T&&()|function<unique_ptr<I>(int)>&&|differs|6|16
+ROW|rref_first|span<X>|resolves|operator T&&()|span<X>&&|differs|6|17
+ROW|rref_first|span<const X>|resolves|operator T&&()|span<const X>&&|differs|6|18
+ROW|rref_first|optional<X>|not-constructible|-|-|see diag|6|19
+ROW|rref_first|int|resolves|operator T&&()|int&&|differs|6|20
+ROW|rref_first|const int&|resolves|operator T&()|const int&|exact|6|21
+ROW|rref_first|string|resolves|operator T&&()|string&&|differs|6|22
+ROW|rref_first|string_view|resolves|operator T&&()|string_view&&|differs|6|23
+ROW|rref_first|vector<X>|resolves|operator T&&()|vector<X>&&|differs|6|24
+ROW|rref_first|I&|resolves|operator T&()|I&|exact|6|25
+ROW|rref_first|const I&|resolves|operator T&()|const I&|exact|6|26
+ROW|rref_first|I*|resolves|operator T&&()|I*&&|differs|6|27
+ROW|rref_first|unique_ptr<I>|resolves|operator T&&()|unique_ptr<I>&&|differs|6|28
+ROW|rref_first|shared_ptr<I>|resolves|operator T&&()|shared_ptr<I>&&|differs|6|29
+ROW|rref_first|reference_wrapper<X>|resolves|operator T&&()|reference_wrapper<X>&&|differs|6|30
+ROW|rref_first|lazy<X&>|resolves|operator T&&()|lazy<X&>&&|differs|6|31
+ROW|rref_first|tuple<X>|not-constructible|-|-|see diag|6|32
+ROW|rref_first|any|not-constructible|-|-|see diag|6|33
+ROW|rref_first|variant<X,int>|resolves|operator T&&()|variant<X,int>&&|differs|6|34
+ROW|value|X|resolves|operator T()|X|exact|7|0
+ROW|value|const X|resolves|operator T()|X|exact|7|1
+ROW|value|X&|not-constructible|-|-|see diag|7|2
+ROW|value|const X&|resolves|operator T()|X|differs|7|3
+ROW|value|X&&|resolves|operator T()|X|differs|7|4
+ROW|value|const X&&|resolves|operator T()|X|differs|7|5
+ROW|value|X*|resolves|operator T()|X*|exact|7|6
+ROW|value|const X*|resolves|operator T()|const X*|exact|7|7
+ROW|value|X* const|resolves|operator T()|X*|exact|7|8
+ROW|value|unique_ptr<X>|resolves|operator T()|unique_ptr<X>|exact|7|9
+ROW|value|unique_ptr<X>&&|resolves|operator T()|unique_ptr<X>|differs|7|10
+ROW|value|shared_ptr<X>|resolves|operator T()|shared_ptr<X>|exact|7|11
+ROW|value|const shared_ptr<X>&|resolves|operator T()|shared_ptr<X>|differs|7|12
+ROW|value|shared_ptr<const X>|resolves|operator T()|shared_ptr<const X>|exact|7|13
+ROW|value|weak_ptr<X>|resolves|operator T()|weak_ptr<X>|exact|7|14
+ROW|value|function<int()>|resolves|operator T()|function<int()>|exact|7|15
+ROW|value|function<unique_ptr<I>(int)>|resolves|operator T()|function<unique_ptr<I>(int)>|exact|7|16
+ROW|value|span<X>|resolves|operator T()|span<X>|exact|7|17
+ROW|value|span<const X>|resolves|operator T()|span<const X>|exact|7|18
+ROW|value|optional<X>|not-constructible|-|-|see diag|7|19
+ROW|value|int|resolves|operator T()|int|exact|7|20
+ROW|value|const int&|resolves|operator T()|int|differs|7|21
+ROW|value|string|resolves|operator T()|string|exact|7|22
+ROW|value|string_view|resolves|operator T()|string_view|exact|7|23
+ROW|value|vector<X>|resolves|operator T()|vector<X>|exact|7|24
+ROW|value|I&|not-constructible|-|-|see diag|7|25
+ROW|value|I*|resolves|operator T()|I*|exact|7|27
+ROW|value|unique_ptr<I>|resolves|operator T()|unique_ptr<I>|exact|7|28
+ROW|value|shared_ptr<I>|resolves|operator T()|shared_ptr<I>|exact|7|29
+ROW|value|reference_wrapper<X>|resolves|operator T()|reference_wrapper<X>|exact|7|30
+ROW|value|lazy<X&>|resolves|operator T()|lazy<X&>|exact|7|31
+ROW|value|tuple<X>|not-constructible|-|-|see diag|7|32
+ROW|value|any|not-constructible|-|-|see diag|7|33
+ROW|value|variant<X,int>|resolves|operator T()|variant<X,int>|exact|7|34

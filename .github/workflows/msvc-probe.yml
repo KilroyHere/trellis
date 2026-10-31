@@ -1,0 +1,140 @@
+# Spikes S1 and S2 on MSVC (task T1.13). GitHub's windows-latest runner (Windows Server 2025 with
+# Visual Studio 2026) is the only MSVC this project can reach, so this workflow compiles the spikes'
+# tests there, unchanged, with cl /std:c++20 /permissive- /W4 /EHsc. The drivers are msvc.py in
+# spikes/S1-deduced-discovery/ and spikes/S2-memoization-cycles/. Results are annotations, which the
+# checks API serves even where job logs can't be downloaded; at most ten per step, hence the report
+# steps. "Addendum: MSVC" in docs/spikes/S1-deduced-discovery.md and S2-memoization-cycles.md holds
+# the results.
+#
+# Each job compares its results with the recorded MSVC results (results/msvc.json in each spike's
+# directory): green means MSVC behaves as recorded, red that its behaviour changed, and the
+# warning annotations say what changed.
+#
+# Toolsets: the image's latest, which T1.13 asks about; 14.44 (cl 19.44, VS 2022 17.14), the newest
+# compiler of the series NFR-13's minimum (19.38, VS 2022 17.8) belongs to; and 14.50 (VS 2026's
+# first) for S2 alone, if the image has it, to place the switch to /templateDepth. A toolset the
+# image lacks is reported, and its job skips the rest.
+#
+#   gh workflow run msvc-probe.yml --ref <branch>
+#   gh run view <run id> --json jobs --jq '.jobs[] | [.databaseId, .name] | @tsv'
+#   gh api repos/{owner}/{repo}/check-runs/<job id>/annotations
+#
+# A Windows minute costs two Linux minutes on a private repository, so this runs only on demand.
+# (T1.13 ran it from a push trigger on its own branch, because a workflow that isn't on the
+# default branch can't be dispatched.)
+name: msvc-probe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    name: ${{ matrix.part }}, MSVC ${{ matrix.toolset }}
+    runs-on: windows-latest
+    timeout-minutes: ${{ matrix.part == 's2' && 50 || 20 }}
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [s1-forms, s1-prototype, s2]
+        toolset: [latest, '14.44']
+        include:
+          - part: s2
+            toolset: '14.50'
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      PYTHONUTF8: '1' # cl's output may not fit the console code page
+      PYTHONUNBUFFERED: '1'
+      MSVC_PROBE_TOOLSET: ${{ matrix.toolset }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # As in platforms.yml: what vcvars64.bat sets, exported to the later steps through
+      # GITHUB_ENV; -vcvars_ver picks a toolset other than the latest. The toolsets on the image
+      # go to MSVC_TOOLSETS; asking for one it lacks sets the output missing instead of failing.
+      - name: Set up the MSVC developer environment
+        id: msvc
+        run: |
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+          $vs = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if (-not $vs) { throw 'vswhere found no Visual Studio with the x64 C++ tools' }
+          $display = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property catalog_productDisplayVersion
+          "Visual Studio $display at $vs"
+          $toolsets = (Get-ChildItem (Join-Path $vs 'VC\Tools\MSVC') -Directory | ForEach-Object Name) -join ', '
+          "Toolsets: $toolsets"
+          "VS_DISPLAY_VERSION=$display" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "MSVC_TOOLSETS=$toolsets" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          $version = ''
+          if ($env:MSVC_PROBE_TOOLSET -ne 'latest') {
+            if (-not (Test-Path (Join-Path $vs "VC\Tools\MSVC\$env:MSVC_PROBE_TOOLSET.*"))) {
+              "::notice title=MSVC toolset $env:MSVC_PROBE_TOOLSET::not on this image ($env:ImageOS $env:ImageVersion), which has $toolsets; the job skips the rest"
+              "missing=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+              exit 0
+            }
+            $version = "-vcvars_ver=$env:MSVC_PROBE_TOOLSET"
+          }
+          $before = @{}
+          Get-ChildItem env: | ForEach-Object { $before[$_.Name] = $_.Value }
+          $vcvars = Join-Path $vs 'VC\Auxiliary\Build\vcvars64.bat'
+          $after = cmd /c "`"$vcvars`" $version >nul && set"
+          if ($LASTEXITCODE -ne 0) { throw "$vcvars $version failed with exit code $LASTEXITCODE" }
+          foreach ($line in $after) {
+            if ($line -match '^([^=]+)=(.*)$' -and $before[$Matches[1]] -cne $Matches[2]) {
+              "$($Matches[1])=$($Matches[2])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+            }
+          }
+
+      # Fails if the toolset on PATH is not the one asked for.
+      - name: Versions
+        if: steps.msvc.outputs.missing != 'true'
+        run: |
+          python --version
+          python spikes/S1-deduced-discovery/msvc.py version
+
+      - name: 'S1: forms.cpp, 8 operator sets x 35 parameter forms'
+        id: forms
+        if: steps.msvc.outputs.missing != 'true' && matrix.part == 's1-forms'
+        run: python spikes/S1-deduced-discovery/msvc.py forms out/msvc/s1
+
+      - name: 'S1: forms 1-10'
+        if: ${{ !cancelled() && matrix.part == 's1-forms' && (steps.forms.outcome == 'success' || steps.forms.outcome == 'failure') }}
+        run: python spikes/S1-deduced-discovery/msvc.py report out/msvc/s1 1-10
+
+      - name: 'S1: forms 11-20'
+        if: ${{ !cancelled() && matrix.part == 's1-forms' && (steps.forms.outcome == 'success' || steps.forms.outcome == 'failure') }}
+        run: python spikes/S1-deduced-discovery/msvc.py report out/msvc/s1 11-20
+
+      - name: 'S1: forms 21-30'
+        if: ${{ !cancelled() && matrix.part == 's1-forms' && (steps.forms.outcome == 'success' || steps.forms.outcome == 'failure') }}
+        run: python spikes/S1-deduced-discovery/msvc.py report out/msvc/s1 21-30
+
+      - name: 'S1: forms 31-35'
+        if: ${{ !cancelled() && matrix.part == 's1-forms' && (steps.forms.outcome == 'success' || steps.forms.outcome == 'failure') }}
+        run: python spikes/S1-deduced-discovery/msvc.py report out/msvc/s1 31-35
+
+      - name: 'S1: limits.cpp, stub_test.cpp, compile_fail and the fallback operator sets'
+        if: steps.msvc.outputs.missing != 'true' && matrix.part == 's1-prototype'
+        run: python spikes/S1-deduced-discovery/msvc.py prototype out/msvc/s1
+
+      - name: 'S2: builtins, nesting limit and chain depth'
+        id: chains
+        if: steps.msvc.outputs.missing != 'true' && matrix.part == 's2'
+        run: python spikes/S2-memoization-cycles/msvc.py chains out/msvc/s2
+
+      - name: 'S2: cycles, without a check and with the opt-in check bounded at 100 hops'
+        if: ${{ !cancelled() && matrix.part == 's2' && (steps.chains.outcome == 'success' || steps.chains.outcome == 'failure') }}
+        run: python spikes/S2-memoization-cycles/msvc.py cycles out/msvc/s2 --variants memo,depth-100
+
+      - name: 'S2: cycles, with the opt-in check bounded at 150 and 200 hops'
+        if: ${{ !cancelled() && matrix.part == 's2' && (steps.chains.outcome == 'success' || steps.chains.outcome == 'failure') }}
+        run: python spikes/S2-memoization-cycles/msvc.py cycles out/msvc/s2 --variants depth-150,depth-200

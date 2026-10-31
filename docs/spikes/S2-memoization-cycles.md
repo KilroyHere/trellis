@@ -179,3 +179,67 @@ No strategy compiles a cycle, and no compiler crashes or recurses into its depth
 - **Not tested:** aggregates, scoped lifetimes, factories, `lazy`, MSVC and Apple Clang. Option 2's cost at N = 1,000 was not measured: it cannot compile there at the default limits.
 - **Warming the memo in binding order** (checking every binding's node in declaration order before the root, so that a graph listed dependencies-first never recurses more than a hop) was tried by hand and did not help: the creation code still nests 3–4 levels per hop (§3.3), and Clang refuses a fold over more than 256 bindings (`-fbracket-depth`). Lifting NFR-09's limit would need the creation code instantiated in binding order as well. This is a possible Phase 1 experiment, not part of this spike's numbers.
 - **Explain pass.** S3's explain pass needs each class's parameter list, which deduced mode cannot enumerate. In deduced mode it can name the consumer whose construction failed, but not the parameter; the deleted twin names the request in the compiler's note (S1).
+
+## Addendum: MSVC (2026-10-31, task T1.13)
+
+S2 couldn't test MSVC, and rated the risk high for NFR-09 and medium for cycles (§5). Task T1.13 ran the chain-depth probe and the cycle cases on GitHub's `windows-latest` runner. The compilers, flags and runs are those of S1's addendum (docs/spikes/S1-deduced-discovery.md, "Addendum: MSVC"): cl 19.51.36260 (Visual Studio 2026, the runner's latest) and cl 19.44.35229 (Visual Studio 2022 17.14), with `/std:c++20 /permissive- /W4 /EHsc`. The numbers come from [run 41235251688](https://github.com/KilroyHere/trellis/actions/runs/41235251688). The opt-in check at bounds of 150 and 200 hops comes from [run 41239761408](https://github.com/KilroyHere/trellis/actions/runs/41239761408), which also repeated everything else unchanged.
+
+**Method.**
+
+- **The chains.** `msvc.py`, next to `s2.py`, takes its chains from `s2.chain_source()`, so they are the ones measured in §3.3. It uses §3.3's configurations except `path value`, which ADR-0014 rejects for deduced mode. Every compile is a full compile (`/c`), so the creation code is instantiated as in a real build.
+- **The longest chain at cl's default limits:** doubling from 200 hops, up to 1,024, then bisection.
+- **Levels per hop.** cl 19.44 has no switch for its recursion limit. cl 19.51 has a new one, `/templateDepth:N` (default 1,000; error C2999). Where it exists, the levels per hop come from §2's method: the smallest depth that compiles chains of 50 and 100 hops. Through a cl-to-clang test shim, the same code reproduces §3.3's clang-18 figures exactly: 4 levels and 251 hops for the memo stub, 8 and 125 for S1's stub.
+- **Calibration.** Two programs, a class template and a variable template that nest N levels, measure cl's raw nesting limit: the counterpart of GCC's `-ftemplate-depth=900` and Clang's 1,024.
+- **cl has no `__is_same` builtin** (error C2144 on both versions). `stub.hpp`'s `on_path` uses one at namespace scope, so `stub.hpp` doesn't compile on MSVC at all, in any strategy; the probe's first run found this. The probe maps it to `std::is_same_v`, the fallback ADR-0014 names, through a forced include (`/FI`), so the spike files stay unchanged. Only the path strategy uses `on_path`, so the memo and depth numbers are unaffected. `__is_constructible` exists on both versions.
+- **The record.** `results/msvc.json` holds these results per cl version, and every run of the probe is compared with it. A green run means MSVC behaves as recorded; a red one lists what changed.
+
+**Results: NFR-09 holds on cl 19.51, with 245 hops, and fails on cl 19.44, with 161.**
+
+| | cl 19.51 (VS 2026) | cl 19.44 (VS 2022 17.14) |
+|---|---|---|
+| Recursion limit | `/templateDepth`, default 1,000: the class-template calibration compiles 999 levels, the variable template 1,000 | Fixed, with no switch: 499 and 500 levels; C1202, "recursive type or function dependency context too complex" |
+
+Each cell gives levels per hop / **the longest chain at the default limits**, in hops. The GCC and Clang columns are §3.3's.
+
+| Configuration | gcc-13, gcc-14 | clang-18, clang-20 | cl 19.51 | cl 19.44 |
+|---|---|---|---|---|
+| S1's stub as written, by value | 6 / **148** | 8 / **125** | 10 / **98** | **60** |
+| memo, by value | 3 / **298** | 4 / **251** | 4 / **245** | **161** |
+| memo, `shared_ptr<I>` to singletons | 4 / **221** | 4 / **251** | 4 / **245** | **161** |
+| depth, by value | 3 / **298** | 4 / **251** | 4 / **245** | **161** |
+| memo, by value, check only | 2 / **445** | 4 / **251** | 4 / **245** | **161** |
+| memo, `shared_ptr<I>`, check only | 2 / **445** | 4 / **251** | 4 / **245** | **161** |
+
+- **cl 19.51 meets NFR-09** with 245 hops, between GCC's 221 and Clang's 251. The limit is C2999, "maximum template instantiation depth of 1000 exceeded".
+  - The lean stub's hop costs 4 levels: the smallest `/templateDepth` is 217 at 50 hops and 417 at 100, in every lean configuration. That fit predicts the default limit exactly: (1,000 − 17) / 4 = 245.
+  - S1's stub as written costs 10 levels per hop (516 and 1,016) and reaches only 98 hops, which confirms §4.3's call for the lean shape.
+  - The switch raises the limit too: by the same fit, `/templateDepth:817` would reach 200 hops and `/templateDepth:2048` about 500. These were not measured.
+- **cl 19.44 doesn't meet NFR-09.** Every lean configuration stops at 161 hops, with C1202, and the switch that would raise the limit doesn't exist.
+  - The levels per hop can't be measured there. Its 500-level limit over 161 hops suggests about 3, so 19.44 counts these levels differently from 19.51.
+  - Versions 19.38 to 19.43, the rest of NFR-13's MSVC range, weren't on the runner. They presumably behave like 19.44.
+- **The creation code adds nothing on MSVC.** With or without it, by value or through a singleton's `shared_ptr`, every lean configuration stops at the same length, and the check alone sets the limit. This is consistent with cl instantiating function bodies at the end of the translation unit, rather than where they are first used, which is what made GCC's creation code the limit (§3.3).
+- **The depth strategy** stops where memo does: 245 hops on 19.51 and 161 on 19.44. So the opt-in `cycle_check`'s bound of 200 (ADR-0014) is below 19.51's limit, but above 19.44's. The cycle cases confirm it (below): with a bound of 200, every cycle on 19.44 ends in C1202, without TRL-E007, while a bound of 150 gives TRL-E007 on both versions.
+
+**Cycles.** Both versions give the same results, except with a bound of 200:
+
+| Strategy | Errors | Lines (bytes) | First error |
+|---|---|---|---|
+| memo | 3–5 | 23–57 (2–5 KB) | `C7608: atomic constraint should be a constant expression`, at `can_take`. Then C2131, "expression did not evaluate to a constant", and the root's TRL-E002. |
+| depth (bound 100) | **1** | 824 (62–63 KB) | `C2338: static assertion failed: 'TRL-E007: dependency chain longer than S2_MAX_DEPTH hops: a dependency cycle?'` |
+| depth (bound 150) | **1** | 1,224 (93–94 KB) | the same TRL-E007 |
+| depth (bound 200), cl 19.51 | **1** | 1,624 (123–125 KB) | the same TRL-E007 |
+| depth (bound 200), cl 19.44 | 1 | 2 | `C1202: recursive type or function dependency context too complex`, with no ID |
+
+- **Option 3's premise holds on MSVC.** No cycle compiles, none crashes cl, and none runs into the recursion limit: the memoized recursion stops at the re-entered node, as on GCC and Clang (§3.4). The E007 catalog's MSVC entry is C7608.
+- **The opt-in check gives exactly one error, TRL-E007, as on GCC and Clang,** as long as its bound stays below cl's limit.
+  - cl prints its whole instantiation context with that error: 309 note lines at a bound of 100, three per hop (the concept, the variable template and the member function being instantiated).
+  - With their `with [...]` blocks that is 8 lines of output per hop: 824 lines (62–63 KB) at a bound of 100, against 11–48 lines and 1–5 KB on GCC and Clang.
+- **Above cl's limit the check no longer reports.** At a bound of 200 on 19.44, whose limit is 161 hops, every case ends in the fatal C1202 instead. That is why ADR-0014's amendment bounds the check at 150 there, and 150 does give TRL-E007 on 19.44.
+
+**What this changes.** NFR-09's "≥ 200 hops at the default limits" holds on the latest MSVC, so T1.13's question gets a yes. It can't hold on Visual Studio 2022, which NFR-13 supports (MSVC ≥ 19.38). The chain is limited by the check, which already has the lean shape, and 19.44 offers no switch. So either NFR-09 is qualified for older MSVC, or NFR-13's MSVC minimum moves up.
+
+**The boundary at 19.50 is assumed, not measured.** 19.44 is the newest version measured without `/templateDepth`, and 19.51 the first measured with it. 19.50, Visual Studio 2026's first toolset, isn't on the runner image, which has 14.29, 14.44 and 14.51 (run 41239761408 listed them, and its 14.50 job found none). Until 19.50 is checked, 19.51 is the only minimum known to reach 200 hops.
+
+ADR-0014 now carries a provisional amendment, awaiting the owner. NFR-09 becomes ≥ 200 hops on GCC, Clang and MSVC ≥ 19.50, and ≥ 150 hops on MSVC 19.38 to 19.4x. On MSVC before 19.50, the opt-in check's bound drops to 150, so it stays below the 161 measured there. Raising NFR-13's minimum is the recorded alternative.
+
+**Not measured on MSVC:** compile time and memory against hand-wiring (§3.2), request forms other than by value and `shared_ptr`, the path strategy, and clang-cl. Versions 19.38 to 19.43 and 19.45 to 19.50 weren't on the runner either, so the boundary at 19.50 is assumed.

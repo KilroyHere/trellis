@@ -19,7 +19,7 @@ Each file records one decision: its context, the decision itself, the alternativ
 | [0011](0011-type-identity-policy.md) | Type identity as a policy in the runtime engine | Accepted (plan baseline) | S3, S4; S6 (deferred) |
 | [0012](0012-threading-model.md) | Threading model | Accepted (owner, 2026-10-30) | **S4** |
 | [0013](0013-governance-and-releases.md) | Governance and release discipline | Accepted (plan baseline) | none |
-| [0014](0014-resolution-memoization-and-cycles.md) | Resolution: memoization, depth per hop and cycles in deduced mode | Accepted (owner, 2026-10-31) | **S2** |
+| [0014](0014-resolution-memoization-and-cycles.md) | Resolution: memoization, depth per hop and cycles in deduced mode | Accepted (owner, 2026-10-31); its MSVC amendment is provisional (T1.13) | **S2** |
 
 A spike in bold changed or settled the decision; the others confirmed it, or added consequences and open points.
 
@@ -27,7 +27,7 @@ A spike in bold changed or settled the decision; the others confirmed it, or add
 
 - **Accepted (owner, *date*):** the owner confirmed the decision, including the spike results it records (docs/PROGRESS.md, "Owner decisions").
 - **Accepted (plan baseline):** the decision as plan §4 states it; no spike changed it.
-- **Accepted (provisional, awaiting owner review):** a spike settled the decision, and the owner hasn't confirmed it yet. Work follows it as the default until then, and it stays under "Waiting for owner" in docs/PROGRESS.md. No ADR has this status at present.
+- **Accepted (provisional, awaiting owner review):** a spike settled the decision, and the owner hasn't confirmed it yet. Work follows it as the default until then, and it stays under "Waiting for owner" in docs/PROGRESS.md. At present only one amendment has this status: ADR-0014's, for MSVC before 19.50 (T1.13).
 
 ## Spikes
 
@@ -47,11 +47,12 @@ Each change to docs/plan.md is a minimal edit in place, marked "(amended by ADR-
 | Plan section | Change | By |
 |---|---|---|
 | §3.2, NFR-07 | The first error line names the error ID; the same diagnostic names the type. | 0006 |
+| §3.2, NFR-09 | ≥ 150 hops on MSVC before 19.50, an assumed boundary; ≥ 200 hops elsewhere. Provisional, awaiting the owner (T1.13). | 0014 |
 | §4 | A pointer to this directory. | this index |
 | §6.3 | `T&&` and `const T&&` parameters are the request `T`. | 0003 |
 | §6.8 | R004 is detected in all builds. | 0012 |
-| §7.2 | S1's operator set replaces the sketch: deleted twins, a separate probe, the explicit route for `optional`, `tuple` and `any`, two `config.hpp` workarounds and the residual limits. | 0003 |
-| §7.3 | The cycle option: option 3 by default, option 2 as the opt-in. The depth budget covers the creation code. | 0014 |
+| §7.2 | S1's operator set replaces the sketch: deleted twins, a separate probe, the explicit route for `optional`, `tuple` and `any`, two `config.hpp` workarounds and the residual limits. T1.13 found the aggregate-array count compiler-dependent, which only rewords that limit. | 0003 |
+| §7.3 | The cycle option: option 3 by default, option 2 as the opt-in. The depth budget covers the creation code. The opt-in check's bound is 150 hops on MSVC before 19.50, an assumed boundary; this part is provisional, awaiting the owner (T1.13). | 0014 |
 | §7.5 | Inline storage in aligned raw bytes, with the state byte as its engaged flag; the two teardown ordering rules. | 0005 |
 | §7.6 | The slot design (spin, then `atomic::wait`; a mutex fallback; `std::call_once` rejected), the retry after a throw, and R004 in all builds. | 0012 |
 | §7.7 | R004 is the static engine's one failure path at run time; how it is reported under `-fno-exceptions` is open. | 0012 |

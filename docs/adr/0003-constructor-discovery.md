@@ -74,12 +74,14 @@ Plan §7.2 sketched the placeholder with two `const` operators, `operator T()` a
       - same-arity overloads next to a shorter constructor: the shorter one is chosen silently;
       - defaulted parameters, which are injected (S1's `shorter_viable` flag sees them, but a shorter overload gives the same signal);
       - constructor templates whose constraints the probe satisfies;
-      - aggregate array members, which brace elision overcounts;
+      - aggregate array members, whose count depends on the compiler: GCC and Clang elide the braces and count each element, while cl counts the whole array as one field (T1.13, S1's MSVC addendum). Once the element type is bound, GCC and Clang build such an aggregate and cl doesn't;
       - private, deleted and absent constructors, which look the same.
 
 Cycle handling in deduced mode is a separate decision, [ADR-0014](0014-resolution-memoization-and-cycles.md).
 
-### MSVC risk (S1 §5: medium, untested)
+### MSVC risk (S1 §5: medium; tested by T1.13)
+
+**T1.13 tested it** on cl 19.51 (Visual Studio 2026) and cl 19.44 (Visual Studio 2022 17.14), in S1's "Addendum: MSVC". The operator set behaves there as on GCC and Clang, all six behaviours below hold, and the fallbacks weren't needed. The rest of this section is the assessment as S1 left it.
 
 The design depends on six behaviours that couldn't be tested here:
 
@@ -92,7 +94,7 @@ The design depends on six behaviours that couldn't be tested here:
 
 Boost.DI relies on points 1 and 2 and lists MSVC 2015 to 2019 support; points 3 to 5 have no track record. Mitigation:
 
-- The first MSVC CI job runs S1's `forms.cpp`, `limits.cpp` and `stub_test.cpp` unchanged; they need only the standard library.
+- The first MSVC CI job runs S1's `forms.cpp`, `limits.cpp` and `stub_test.cpp` unchanged; they need only the standard library. Done by T1.13 (`.github/workflows/msvc-probe.yml`).
 - If cells differ, try `min3`, which adds `operator const T&() const` and so removes point 3, then `refq` (`operator T() &&` and `operator T&() const&`), which replaces point 1 with ref-qualifiers. Both give the same verdicts as `min` on GCC and Clang.
 - The operator shapes live in one internal header, so a `config.hpp` switch can pick the set.
 - Phase 1 builds with `/permissive-`.
@@ -119,7 +121,7 @@ Other choices:
 - **Discovery cost** (S1 §3.4): full discovery costs 1.5–1.6 ms per class on GCC and 2.9–3.2 ms on Clang, plus about 0.4 MB of compiler memory per class, close to linear up to 1,000 classes. At 100 components that is about 10% (GCC) to 25% (Clang) of NFR-04's compile-time headroom, and a quarter to a third of NFR-05's memory headroom.
 - **Some checks are stronger in the explicit and reflection modes** (§7.4). Deduced mode can't enumerate a class's parameters, which limits the explain pass (ADR-0006) and cycle reports (ADR-0014).
 - **T1.3 implements this decision.** Every row of S1's form table gets a resolution test, and every limit a compile-fail test or a documented message. The form table goes into `docs/internals/deduction.md` (§7.2).
-- **Untested** (S1 §5): MSVC, Apple Clang, the NFR-13 minimums GCC 12 and Clang 16 (GCC 12 presumably needs the gcc-13 workaround), `-std=c++23`, modules and `-fno-exceptions`.
+- **Untested** (S1 §5): Apple Clang, the NFR-13 minimums GCC 12 and Clang 16 (GCC 12 presumably needs the gcc-13 workaround), `-std=c++23`, modules and `-fno-exceptions`. MSVC was tested by T1.13 on cl 19.51 and 19.44, not on NFR-13's minimum, 19.38 (S1's MSVC addendum).
 - **Open questions for Phase 1** (S1 §5):
   - The explain pass should report E005 with the parameter index rather than a generic E002 (ADR-0006).
   - Whether `const shared_ptr<T>&` and `const T&` parameters of unique objects should be allowed, with the placeholder holding the object until the constructor returns (ADR-0004).
@@ -131,3 +133,7 @@ Other choices:
 - **2026-10-30, spike S1 (T0.4):** recommended amendments 1–6 (S1 §4): the `min` set with deleted twins, a separate probe, `T&&` as the request `T`, the explicit route for `optional`, `tuple` and `any`, the flat search with `max_ctor_arity` 16, and two `config.hpp` workarounds.
 - **2026-10-30, owner:** accepted S1's recommendation (docs/PROGRESS.md, "Owner decisions").
 - **2026-10-31, T0.8:** recorded in this file, with S1's outcome folded into the Decision. Plan §6.3 and §7.2 amended. S5 recorded as deferred.
+- **2026-10-31, T1.13 (MSVC check):** S1's tests ran on cl 19.51 and 19.44 in GitHub Actions (S1's "Addendum: MSVC"). No decision changes.
+  - The operator set behaves as on GCC and Clang, in all 35 forms, and all six behaviours under "MSVC risk" hold.
+  - One residual limit turned out compiler-dependent: cl counts an aggregate's array member as one field, where GCC and Clang count each element. Its wording changed here and in plan §7.2.
+  - The MSVC risk section and the "Untested" list now point to the addendum.
