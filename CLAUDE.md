@@ -46,7 +46,7 @@ Build output is long. Scripts write full logs to `build/logs/` and print a summa
 ## C++ conventions
 
 - C++20 is the baseline. Use C++23/26 features only behind the `TRELLIS_HAS_*` macros from `config.hpp`.
-- Namespace `trellis` with `inline namespace v1`; internals go in `trellis::detail`.
+- Namespace `trellis` with `inline namespace v1`; internals go in `trellis::detail`. The one exception, decided by the owner: the compile-error vocabulary lives in `trellis::error`, outside `v1` (ADR-0006).
 - snake_case for types, functions and variables; CamelCase for template parameters.
 - Every public header compiles on its own. Code is warning-free under the project warning set with `-Werror`.
 - Every metaprogramming trick gets a comment saying what it does and why, plus a test.

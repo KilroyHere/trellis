@@ -18,6 +18,7 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
     - T0.8's verify command, whose grep check inverted on GNU grep 3.5 and later;
     - T1.6's NFR-07 wording;
     - T4.0 now depends on T2.0 and T3.0 on T4.0, implementing the phase order. When T4.0 expands Phase 4, the last Phase 4 task should become T3.0's dependency, through another amendment.
+  - **Error vocabulary namespace:** the compile-error types live in `trellis::error`, outside `inline namespace v1`, as one documented exception. Recorded in ADR-0006 and CLAUDE.md.
   - **Scope of the 2026-10-30 acceptance:** read as covering every recommendation in the S1 and S4 reports, including R004 detection in all builds, retry on throw, both teardown-ordering rules, and T&& treated as T. Say so if any of these should be revisited.
 - **Defaults taken from plan §16**, unchanged so far:
   - D2: C++20 baseline.
@@ -29,7 +30,6 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
 
 ## Waiting for owner
 
-- **Error vocabulary namespace (ADR-0006, open point):** S3 recommends putting the error types outside `inline namespace v1`, so GCC doesn't print `v1::` in diagnostics. That conflicts with CLAUDE.md's rule and the versioning promise in plan §7.5. Both are owner-level, so decide before T1.6. Options: an exception for `trellis::error`, or keep v1 and accept the longer GCC output.
 - **The ADR set (T0.8)** is owner-reviewable: `docs/adr/README.md` indexes ADR-0001 to ADR-0014 with their statuses.
 - **Still open:** D5, whether the runtime container ships in 1.0. Needed before T5.0.
 - **CI on a private repo:** Linux runs on every push; macOS and Windows run weekly or on demand to save Actions minutes. Making the repository public would allow the full matrix on every push.
