@@ -13,6 +13,66 @@ A header-only C++20 dependency injection library. It builds and connects the obj
 
 The design is in [`docs/plan.md`](docs/plan.md), and the decisions behind it are in [`docs/adr/`](docs/adr/README.md).
 
+## What it will look like
+
+> **Planned API, not implemented yet.** This is the design in [plan §6.1](docs/plan.md#61-hello-world). Names may still change before v0.1. Once `create<T>()` exists (task T1.5), this example becomes a compiled test.
+
+Your classes stay plain C++: none of them includes Trellis, and constructors are discovered without macros.
+
+```cpp
+struct ILogger     { virtual ~ILogger() = default;     virtual void log(std::string_view) = 0; };
+struct IRepository { virtual ~IRepository() = default; virtual void save(int) = 0; };
+struct IClock      { virtual ~IClock() = default;      virtual long now() const = 0; };
+struct Config      { std::string db_url; };
+
+class ConsoleLogger final : public ILogger     { /* ... */ };
+class SystemClock   final : public IClock      { /* ... */ };
+class SqlRepository final : public IRepository {
+ public:
+  SqlRepository(const Config& cfg, ILogger& log);
+};
+
+class Service {
+ public:
+  Service(std::shared_ptr<IRepository> repo, ILogger& log, std::unique_ptr<IClock> clock);
+};
+
+class App {
+ public:
+  explicit App(Service& service);
+  void run();
+};
+```
+
+The composition root says which implementation goes with each interface, and how long each object lives:
+
+```cpp
+#include <trellis/trellis.hpp>
+namespace di = trellis;
+
+int main() {
+  const Config cfg = load_config();
+  auto injector = di::make_injector(
+      di::bind<ILogger>.to<ConsoleLogger>().in(di::singleton),      // one per injector
+      di::bind<IRepository>.to<SqlRepository>().in(di::singleton),
+      di::bind<IClock>.to<SystemClock>(),                           // unique: a new one per request
+      di::bind<Service>.in(di::singleton),                          // App takes Service&, so it needs an owner
+      di::bind<Config>.to_ref(cfg));                                // external: used, never owned
+  injector.create<App>().run();
+}
+```
+
+Trellis checks the wiring at compile time. For example, a missing binding is one error that names the type and the path to it. This is the planned format on GCC 14+ and Clang 20+; older compilers show the same ID and type in a shorter form:
+
+```text
+error: static assertion failed: trellis [TRL-E001]: no binding for abstract type 'IRepository'
+  requested as 'std::shared_ptr<IRepository>' by 'Service' (parameter 1)
+  path: App -> Service -> IRepository
+  fix: add di::bind<IRepository>.to<YourImplementation>() (docs: errors/TRL-E001)
+```
+
+Each error ID has a page in [`docs/errors/`](docs/errors/README.md).
+
 ## Repository map
 
 | Path | What it holds |
