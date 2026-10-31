@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Spike S1 on MSVC (task T1.13): build and run forms.cpp, limits.cpp, stub_test.cpp and the
-compile-fail cases with cl, unchanged, and compare every result with the GCC and Clang snapshot in
-results/. Run it from a Visual Studio developer prompt (vcvars64.bat).
+compile-fail cases with cl, unchanged. Run it from a Visual Studio developer prompt (vcvars64.bat);
 .github/workflows/msvc-probe.yml does that on GitHub's windows-latest runner, the only MSVC this
 project can reach.
 
@@ -13,13 +12,16 @@ project can reach.
                                           limits.cpp and stub_test.cpp again with each fallback
                                           operator set (min3, refq) in deduce.hpp's prototype
 
-Results are printed as GitHub annotations (::notice and ::warning lines), at most ten per step,
-because the checks API serves annotations even where job logs cannot be downloaded. Full outputs go
-to the job log and to OUT. Flags: /std:c++20 /permissive- /W4 /EHsc, no /WX (warnings are counted
-instead). MSVC_PROBE_CL overrides the compiler, for testing this script elsewhere.
+Each result is reported two ways. Against GCC 14 and Clang 20 (the snapshot in results/), for the
+write-up. And against the recorded MSVC results (results/msvc.json, with results/forms-msvc.txt
+for the form cells), for the exit status: the record of this cl version (major.minor), or the
+newest record if this version has none. Exit status: 0 when the results are unchanged, 1 when
+MSVC's behaviour changed. Results are GitHub annotations (::notice and ::warning lines), at most
+ten per step, because the checks API serves annotations even where job logs can't be downloaded.
+Full outputs go to the job log and to OUT, OUT/*-summary.json in the record's format.
 
-Exit status: 0 when every expectation run.sh checks on GCC and Clang also holds here, 1 otherwise.
-The fallback builds are informational and never change the exit status.
+Flags: /std:c++20 /permissive- /W4 /EHsc, no /WX (warnings are counted instead). MSVC_PROBE_CL
+overrides the compiler and MSVC_PROBE_RECORD the record, for testing this script elsewhere.
 """
 import json
 import os
@@ -39,6 +41,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 RESULTS = HERE / "results"
 BASELINES = {"gcc-14": RESULTS / "forms-gcc14.txt", "clang-20": RESULTS / "forms-clang20.txt"}
+RECORD = Path(os.environ.get("MSVC_PROBE_RECORD") or RESULTS / "msvc.json")
 FLAGS = ["/nologo", "/std:c++20", "/permissive-", "/W4", "/EHsc"]
 TIMEOUT_S = 600
 # forms.cpp's sets, in its order; the fallbacks S1 measured are min3 and refq.
@@ -71,6 +74,13 @@ def cl(args, cwd, timeout=TIMEOUT_S):
     return run([compiler(), *FLAGS, *args], cwd, timeout)
 
 
+def cl_version():
+    """(full version, architecture) from cl's banner, e.g. ("19.51.36260", "x64")."""
+    _, banner, _, _ = run([compiler()], Path(tempfile.gettempdir()), timeout=60)
+    m = re.search(r"Version (\d[\d.]*) for (\S+)", banner)
+    return (m.group(1), m.group(2)) if m else ("unknown", "?")
+
+
 def shorten(text):
     """Drop the repository's path prefix, in either separator style."""
     for root in {str(ROOT), str(ROOT).replace("\\", "/")}:
@@ -88,6 +98,13 @@ def first_error(output):
         if ERROR_LINE.search(line):
             return shorten(line.strip())
     return ""
+
+
+def error_code(line):
+    """The code of an error line ('...: error C2259: ...') or of an error_message() ('C2259: ...'),
+    or '' if it has none."""
+    m = re.search(r"\berror ([A-Z]+\d+)", line) or re.match(r"([A-Z]+\d+): ", line)
+    return m.group(1) if m else ""
 
 
 def error_message(line, width=160):
@@ -160,6 +177,55 @@ def execute(exe, work):
     return {"exit": code, "timed_out": timed_out, "output": out, "last": lines[-1] if lines else ""}
 
 
+# ---- the record --------------------------------------------------------------------------------
+
+def record(path=None):
+    """(the record's cl version, its data) from a record file shaped {"versions": {"19.51": {...}}}:
+    this cl's major.minor, or else the newest recorded version. (None, {}) without a record."""
+    path = path or RECORD
+    if not path.exists():
+        return None, {}
+    versions = json.loads(path.read_text()).get("versions", {})
+    if not versions:
+        return None, {}
+    mine = ".".join(cl_version()[0].split(".")[:2])
+    key = mine if mine in versions else max(versions, key=lambda v: [int(x) for x in v.split(".")])
+    return key, versions[key]
+
+
+def compare(recorded, measured, path=""):
+    """Differences between a recorded and a measured summary, as 'path: recorded X, now Y', key by
+    key through nested dicts. A key on one side only is a difference too."""
+    if isinstance(recorded, dict) and isinstance(measured, dict):
+        diffs = []
+        for key in list(recorded) + [k for k in measured if k not in recorded]:
+            diffs += compare(recorded.get(key, "(not recorded)"), measured.get(key, "(missing)"),
+                             f"{path}{key}/")
+        return diffs
+    return [] if recorded == measured else [f"{path.rstrip('/')}: recorded {recorded!r}, now {measured!r}"]
+
+
+def verdict(title, version, recorded, measured):
+    """Annotate whether measured matches the record; returns 0 when it does, 1 otherwise."""
+    if version is None or recorded is None:
+        annotate("warning", title, "no recorded MSVC results to compare with")
+        return 1
+    diffs = compare(recorded, measured)
+    mine = cl_version()[0]
+    against = f"the record for cl {version}" + ("" if mine.startswith(version + ".") else f" (this is cl {mine})")
+    if not diffs:
+        annotate("notice", title, f"unchanged: equal to {against}")
+        return 0
+    text = "; ".join(diffs[:8]) + (f"; and {len(diffs) - 8} more" if len(diffs) > 8 else "")
+    annotate("warning", title, f"MSVC behaviour changed against {against}: {text}")
+    return 1
+
+
+def save_summary(out, name, summary):
+    (out / f"{name}-summary.json").write_text(json.dumps(summary, indent=1, sort_keys=True) + "\n")
+    dump(f"{name}: summary in the record's format", json.dumps(summary, indent=1, sort_keys=True))
+
+
 # ---- version -----------------------------------------------------------------------------------
 
 VERSION_PROGRAM = r"""#include <cstdio>
@@ -186,9 +252,7 @@ def version():
     """The compiler's banner and macros, the toolset and the runner image, as one notice. Fails if
     the toolset the workflow asked for (MSVC_PROBE_TOOLSET, e.g. 14.44) is not the one on PATH."""
     work = Path(tempfile.mkdtemp(prefix="msvc-version-"))
-    _, banner, _, _ = run([compiler()], work, timeout=60)
-    m = re.search(r"Version (\d[\d.]*) for (\S+)", banner)
-    cl_version = f"{m.group(1)} {m.group(2)}" if m else "unknown"
+    full, arch = cl_version()
     src = work / "version.cpp"
     src.write_text(VERSION_PROGRAM)
     b = build([src], work, "version")
@@ -197,12 +261,13 @@ def version():
         r = execute(work / "version.exe", work)
         macros = dict(ln.split(" ", 1) for ln in r["output"].splitlines() if " " in ln)
     toolset = os.environ.get("VCToolsVersion", "unknown")
-    parts = [f"cl {cl_version}", f"_MSC_FULL_VER {macros.get('_MSC_FULL_VER', '?')}",
+    parts = [f"cl {full} {arch}", f"_MSC_FULL_VER {macros.get('_MSC_FULL_VER', '?')}",
              f"toolset {toolset}", f"Visual Studio {os.environ.get('VS_DISPLAY_VERSION', '?')}",
              f"STL {macros.get('_MSVC_STL_UPDATE', '?')}",
              f"__cpp_concepts {macros.get('__cpp_concepts', '?')}",
-             f"image {os.environ.get('ImageOS', '?')} {os.environ.get('ImageVersion', '?')}"]
-    dump("cl banner and version program", banner + "\n" + b["output"])
+             f"image {os.environ.get('ImageOS', '?')} {os.environ.get('ImageVersion', '?')}",
+             f"toolsets on the image: {os.environ.get('MSVC_TOOLSETS', '?')}"]
+    dump("version program", b["output"])
     wanted = os.environ.get("MSVC_PROBE_TOOLSET", "latest")
     if wanted != "latest" and not toolset.startswith(wanted):
         annotate("error", "MSVC version", f"asked for toolset {wanted}, got {toolset}: " + ", ".join(parts))
@@ -219,18 +284,23 @@ def parse_rows(text):
     for line in text.splitlines():
         if not line.startswith("ROW|"):
             continue
-        _, set_name, form, status, oper, request, verdict, si, fi = line.split("|")
+        _, set_name, form, status, oper, request, verdict_text, si, fi = line.split("|")
         rows[(set_name, int(fi))] = {"set": set_name, "set_index": int(si), "form": form,
                                      "form_index": int(fi), "status": status, "operator": oper,
                                      "request": request,
-                                     "verdict": verdict.replace(" UNEXPECTED", ""),
-                                     "unexpected": verdict.endswith("UNEXPECTED")}
+                                     "verdict": verdict_text.replace(" UNEXPECTED", ""),
+                                     "unexpected": verdict_text.endswith("UNEXPECTED")}
     return rows
 
 
 def same(a, b):
     keys = ("status", "operator", "request", "verdict")
     return a is not None and b is not None and all(a[k] == b[k] for k in keys)
+
+
+def cell_key(c):
+    """A cell as one comparable string: status|operator|request|verdict."""
+    return "|".join(c[k] for k in ("status", "operator", "request", "verdict"))
 
 
 def cell_text(c):
@@ -279,33 +349,40 @@ def isolated_rows(work):
     return rows, hard
 
 
+def recorded_forms(data):
+    """The forms part of a record, with its cells loaded from its rows file."""
+    forms_record = dict(data.get("forms", {}))
+    rows_file = forms_record.pop("rows_file", None)
+    if rows_file:
+        forms_record["cells"] = {f"{s}|{f}": cell_key(c)
+                                 for (s, f), c in parse_rows((RECORD.parent / rows_file).read_text()).items()}
+    return forms_record
+
+
 def forms(out):
     out.mkdir(parents=True, exist_ok=True)
     b = build([HERE / "forms.cpp"], out, "forms")
     dump("forms.cpp: build output", b["output"])
     result = {"build": {k: v for k, v in b.items() if k != "output"}, "mode": "full", "diag": {},
               "hard_errors": {}}
-    status = 0
     if b["ok"]:
         r = execute(out / "forms.exe", out)
         dump("forms.cpp: program output", r["output"])
         result["run"] = {"exit": r["exit"], "last": r["last"]}
         rows = parse_rows(r["output"])
-        annotate("notice" if r["exit"] == 0 else "warning", "S1 forms.cpp",
+        annotate("notice", "S1 forms.cpp",
                  f"built in {b['seconds']:.0f} s, {describe_warnings(warnings(b['output']))}; "
                  f"ran with exit code {r['exit']}: {r['last']}")
-        status = 0 if r["exit"] == 0 else 1
     else:
         rows, result["hard_errors"] = isolated_rows(out / "cells")
         result["mode"] = "isolated"
         hard = result["hard_errors"]
-        annotate("warning", "S1 forms.cpp",
+        annotate("notice", "S1 forms.cpp",
                  f"does not build ({describe_warnings(warnings(b['output']))}): "
                  f"{error_message(b['first_error'], 160)}. Built form by form instead: "
                  f"{len(hard)} cell(s) hard-error on their own"
                  + (": " + "; ".join(f"{k.split('|')[0]} x form {int(k.split('|')[1]) + 1}" for k in hard)
                     if hard else ""))
-        status = 1
     baselines = {name: parse_rows(path.read_text()) for name, path in BASELINES.items()}
     # Why each cell that does not build fails: every not-constructible cell of the key sets, and
     # every cell whose status differs from both GCC and Clang (at most 30 more compiles).
@@ -333,11 +410,19 @@ def forms(out):
     annotate("notice", "S1 sets vs " + " and ".join(BASELINES),
              f"of the {FORMS} cells of each set, how many equal ({', '.join(BASELINES)}): " +
              ", ".join(parts) + ". min on MSVC: " + ", ".join(f"{n} {k}" for k, n in mins.most_common()))
-    return status
+    summary = {"builds": b["ok"], "first_error": error_code(b["first_error"]),
+               "build_warnings": dict(warnings(b["output"])),
+               "hard_errors": {k: error_code(v) for k, v in result["hard_errors"].items()},
+               "cells": {key: cell_key(c) for key, c in result["rows"].items()}}
+    save_summary(out, "forms", summary)
+    version_key, data = record()
+    return verdict("S1 forms.cpp against the MSVC record", version_key,
+                   recorded_forms(data) if version_key else None, summary)
 
 
 def report(out, span):
-    """One annotation per form in span ('1-10'), from OUT/forms.json."""
+    """One annotation per form in span ('1-10'), from OUT/forms.json: what MSVC reports, how that
+    compares with GCC and Clang, and whether it matches the MSVC record."""
     path = out / "forms.json"
     if not path.exists():
         annotate("warning", f"S1 forms {span}", "no forms.json: the forms step did not finish")
@@ -345,6 +430,8 @@ def report(out, span):
     data = json.loads(path.read_text())
     rows = {(c["set"], c["form_index"]): c for c in data["rows"].values()}
     baselines = {name: parse_rows(p.read_text()) for name, p in BASELINES.items()}
+    version_key, record_data = record()
+    recorded = recorded_forms(record_data) if version_key else {}
     first, last = (int(x) for x in span.split("-"))
     status = 0
     for number in range(first, min(last, FORMS) + 1):
@@ -353,9 +440,9 @@ def report(out, span):
         mine = rows.get(("min", fi))
         base = {n: b.get(("min", fi)) for n, b in baselines.items()}
         hard = data["hard_errors"].get(f"min|{fi}")
-        expected = mine is not None and not mine["unexpected"] and all(same(mine, c) for c in base.values())
+        as_others = mine is not None and all(same(mine, c) for c in base.values())
         text = f"min: {cell_text(mine) if not hard else 'hard error: ' + hard}"
-        if not expected:
+        if not as_others:
             texts = sorted({cell_text(c) for c in base.values()})
             text += f" (gcc-14 and clang-20: {texts[0]})" if len(texts) == 1 else \
                     " (" + "; ".join(f"{n}: {cell_text(c)}" for n, c in base.items()) + ")"
@@ -378,14 +465,24 @@ def report(out, span):
             text += f" ({set_name}: {data['hard_errors'][f'{set_name}|{fi}']})"
         for set_name in groups["as neither"][:2]:  # what MSVC reports where both compilers differ
             text += f"; {set_name} on cl: {cell_text(rows.get((set_name, fi)))}"
-        if not expected:  # the fallbacks for this form
-            for set_name in ("min3", "refq"):
-                c = rows.get((set_name, fi))
-                text += f"; {set_name}: {cell_text(c)}"
-                if c and c["status"] == "not-constructible" and f"{set_name}|{fi}" in data["diag"]:
-                    text += f" ({data['diag'][f'{set_name}|{fi}']})"
+        # Against the MSVC record: every set's cell, and the hard errors, of this form.
+        changed = []
+        for set_name in SETS:
+            key = f"{set_name}|{fi}"
+            now = cell_key(rows[(set_name, fi)]) if (set_name, fi) in rows else \
+                f"hard error {error_code(data['hard_errors'][key])}" \
+                if key in data["hard_errors"] else "not measured"
+            then = recorded.get("cells", {}).get(key) or \
+                (f"hard error {recorded.get('hard_errors', {}).get(key)}" if key in recorded.get("hard_errors", {})
+                 else "not recorded")
+            if now != then:
+                changed.append(f"{set_name}: recorded {then}, now {now}")
+        if changed:
+            text += "; CHANGED against the MSVC record: " + "; ".join(changed[:3])
             status = 1
-        annotate("notice" if expected else "warning", f"S1 form {number:02d} {label}", text)
+        else:
+            text += "; unchanged against the MSVC record"
+        annotate("warning" if changed else "notice", f"S1 form {number:02d} {label}", text)
     return status
 
 
@@ -424,12 +521,13 @@ def strip_static_asserts(text):
 
 
 def failed_asserts(output, source):
-    """'line: source text' for each static_assert of `source` (a file name) that failed."""
+    """[(line, source text)] for each line of `source` (a file name) with an error: in limits.cpp
+    and stub_test.cpp, the static_asserts that failed."""
     lines = (HERE / source).read_text().splitlines()
     found = []
     for line_no in re.findall(re.escape(source) + r"\((\d+)(?:,\d+)?\)\s*: (?:fatal )?error", output):
         n = int(line_no)
-        entry = f"{n}: {lines[n - 1].strip().rstrip(';')[:70]}" if 0 < n <= len(lines) else line_no
+        entry = (n, lines[n - 1].strip().rstrip(";")[:70] if 0 < n <= len(lines) else "")
         if entry not in found:
             found.append(entry)
     return found
@@ -467,44 +565,68 @@ def limit_rows(text):
     return {ln.split("|")[1]: ln for ln in text.splitlines() if ln.startswith("LIMIT|")}
 
 
-def describe_program(name, res, baseline_file=None):
+def limits_differing(res):
+    """{case: 'status|arity|shorter viable'} for each LIMIT row that differs from GCC and Clang
+    (identical in results/), from the run, or from the run without assertions."""
+    if not res.get("output"):
+        return {"(no output)": ""}
+    mine, base = limit_rows(res["output"]), limit_rows((RESULTS / "limits-gcc14.txt").read_text())
+    return {label: "|".join(mine.get(label, "missing").split("|")[2:])
+            for label in base if mine.get(label) != base[label]}
+
+
+def program_summary(name, res):
+    """The parts of a check_program result that the record holds."""
+    summary = {"built": res["built"], "warnings": res["warnings"],
+               "failed_asserts": [n for n, _ in res["failed_asserts"]]}
+    if name == "limits":
+        summary["limit_rows_unlike_gcc_clang"] = limits_differing(res)
+    else:
+        lines = (res.get("output") or "").splitlines()
+        summary["passes"] = sum(ln.startswith("PASS ") for ln in lines)
+        summary["fails"] = [ln[5:] for ln in lines if ln.startswith("FAIL ")]
+        summary["last"] = res.get("last") or res.get("stripped_last", "")
+    return summary
+
+
+def describe_program(name, res):
     """One line about a check_program result."""
     head = f"{name}.cpp: "
     if res["built"]:
         head += f"built, {describe_warnings(Counter(res['warnings']))}; exit {res['exit']}: {res['last']}"
     else:
-        asserts = res["failed_asserts"]
+        asserts = [f"{n}: {text}" for n, text in res["failed_asserts"]]
         head += (f"does not build: {len(asserts)} static_assert(s) failed, at " + "; ".join(asserts[:4])
                  if asserts else f"does not build: {error_message(res['first_error'])}")
         if "stripped_last" in res:
             head += f". Without its static_asserts it runs: {res['stripped_last']}"
         elif "stripped_error" in res:
             head += f". Without its static_asserts: {res['stripped_error']}"
-    if baseline_file and res.get("output"):
-        mine, base = limit_rows(res["output"]), limit_rows((RESULTS / baseline_file).read_text())
-        differ = [label for label in base if mine.get(label) != base[label]]
-        head += f"; LIMIT rows equal to gcc-14 and clang-20: {len(base) - len(differ)} of {len(base)}"
+    if name == "limits" and res.get("output"):
+        differ = limits_differing(res)
+        total = len(limit_rows((RESULTS / "limits-gcc14.txt").read_text()))
+        head += f"; LIMIT rows equal to gcc-14 and clang-20: {total - len(differ)} of {total}"
         if differ:  # label: MSVC's status|arity|shorter-viable
-            cells = [f"{d}: {'|'.join(mine.get(d, 'missing').split('|')[2:])}" for d in differ[:4]]
-            head += " (differ: " + "; ".join(cells) + ")"
+            head += " (differ: " + "; ".join(f"{d}: {v}" for d, v in list(differ.items())[:4]) + ")"
     if name == "stub_test" and res.get("output"):
-        passes = sum(ln.startswith("PASS ") for ln in res["output"].splitlines())
-        fails = [ln[5:] for ln in res["output"].splitlines() if ln.startswith("FAIL ")]
-        head += f"; {passes} PASS, {len(fails)} FAIL" + (f": {'; '.join(fails[:3])}" if fails else "")
+        s = program_summary(name, res)
+        head += f"; {s['passes']} PASS, {len(s['fails'])} FAIL"
+        head += f": {'; '.join(s['fails'][:3])}" if s["fails"] else ""
     return head
 
 
 def compile_fail_cases(work):
-    rows, ok = [], True
+    """{case: {"ok": the first error has the intended ID, "errors": error lines, "lines": lines}}"""
+    cases = {}
     for f in sorted((HERE / "compile_fail").glob("*.cpp")):
         want = re.search(r"^// expect: (\S+)", f.read_text(), flags=re.MULTILINE).group(1)
         b = build([f], work, f.stem, link=False)
         dump(f"compile_fail/{f.name}: output", b["output"])
-        good = not b["ok"] and want in b["first_error"]
-        ok &= good
-        rows.append(f"{f.stem} {'ok' if good else 'FAIL'} ({b['errors']} error{'s' if b['errors'] != 1 else ''}, "
-                    f"{b['lines']} lines)" + ("" if good else f": {error_message(b['first_error'], 90) or 'compiled'}"))
-    return ok, rows
+        cases[f.stem] = {"ok": not b["ok"] and want in b["first_error"], "errors": b["errors"],
+                         "lines": b["lines"]}
+        if not cases[f.stem]["ok"]:
+            cases[f.stem]["first_error"] = error_message(b["first_error"], 90) or "compiled"
+    return cases
 
 
 # Each fallback, as replacements in deduce.hpp: (text, replacement), each text found exactly once.
@@ -604,42 +726,33 @@ def aggregate_array_probe(work):
 
 def prototype(out):
     out.mkdir(parents=True, exist_ok=True)
-    result, status = {}, 0
-    for name, last, base in (("limits", "OK: limits", "limits-gcc14.txt"),
-                             ("stub_test", "OK: injector stub", None)):
+    summary = {}
+    for name, last in (("limits", "OK: limits"), ("stub_test", "OK: injector stub")):
         res = check_program(name, HERE, out / name, last)
-        result[name] = res
-        ok = res["ok"]
-        if name == "limits" and res.get("output"):
-            mine, ref = limit_rows(res["output"]), limit_rows((RESULTS / base).read_text())
-            ok &= mine == ref
-        status |= 0 if ok else 1
-        annotate("notice" if ok else "warning", f"S1 {name}.cpp", describe_program(name, res, base))
+        summary[name] = program_summary(name, res)
+        annotate("notice", f"S1 {name}.cpp", describe_program(name, res))
         if name == "limits":
-            result["aggregate_array"] = aggregate_array_probe(out / "aggregate_array")
-            annotate("notice", "S1 aggregate-array probe (informational)", result["aggregate_array"])
-    ok, rows = compile_fail_cases(out / "compile_fail")
-    result["compile_fail"] = rows
-    status |= 0 if ok else 1
-    annotate("notice" if ok else "warning", "S1 compile_fail",
-             f"{sum(r.split(' ')[1] == 'ok' for r in rows)} of {len(rows)} give the intended ID as the "
-             "first error: " + "; ".join(rows))
+            summary["aggregate_array"] = aggregate_array_probe(out / "aggregate_array")
+            annotate("notice", "S1 aggregate-array probe", summary["aggregate_array"])
+    cases = compile_fail_cases(out / "compile_fail")
+    summary["compile_fail"] = cases
+    annotate("notice", "S1 compile_fail",
+             f"{sum(c['ok'] for c in cases.values())} of {len(cases)} give the intended ID as the first error: "
+             + "; ".join(f"{name} {'ok' if c['ok'] else 'FAIL'} ({c['errors']} error{'s' if c['errors'] != 1 else ''}, "
+                         f"{c['lines']} lines)" + ("" if c["ok"] else f": {c['first_error']}")
+                         for name, c in cases.items()))
+    summary["fallbacks"] = {}
     for name in FALLBACKS:
         d = fallback_dir(name, out)
-        parts, good = [], True
-        for prog, last, base in (("limits", "OK: limits", "limits-gcc14.txt"),
-                                 ("stub_test", "OK: injector stub", None)):
+        parts, summary["fallbacks"][name] = [], {}
+        for prog, last in (("limits", "OK: limits"), ("stub_test", "OK: injector stub")):
             res = check_program(prog, d, out / f"fallback-{name}-build" / prog, last)
-            result[f"{name}:{prog}"] = res
-            good &= res["ok"]
-            parts.append(describe_program(prog, res, base))
-        annotate("notice", f"S1 fallback {name} (informational)",
-                 f"{'passes' if good else 'fails'}: " + " | ".join(parts))
-    for res in result.values():
-        if isinstance(res, dict):
-            res.pop("output", None)
-    (out / "prototype.json").write_text(json.dumps(result, indent=1) + "\n")
-    return status
+            summary["fallbacks"][name][prog] = program_summary(prog, res)
+            parts.append(describe_program(prog, res))
+        annotate("notice", f"S1 fallback {name}", " | ".join(parts))
+    save_summary(out, "prototype", summary)
+    version_key, data = record()
+    return verdict("S1 prototype against the MSVC record", version_key, data.get("prototype"), summary)
 
 
 def main(argv):

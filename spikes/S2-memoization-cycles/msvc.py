@@ -4,7 +4,7 @@ Run it from a Visual Studio developer prompt; .github/workflows/msvc-probe.yml d
 GitHub's windows-latest runner.
 
   python msvc.py chains OUT [--max-hops N] [--configs "NAME;..."] [--jobs N]
-  python msvc.py cycles OUT
+  python msvc.py cycles OUT [--variants NAME,...]
 
 chains   For each of S2's depth configurations (s2.py's DEPTH_CONFIGS, sources from
          s2.chain_source, so the very chains S2 measured on GCC and Clang), the longest chain
@@ -15,16 +15,19 @@ chains   For each of S2's depth configurations (s2.py's DEPTH_CONFIGS, sources f
          template and a variable template, the counterpart of GCC's -ftemplate-depth=900 and
          Clang's 1024.
 cycles   cycles.cpp's four cases under the memo strategy (the default: no cycle check) and the
-         depth strategy (the opt-in check, bound 100 as in S2): what cl reports.
+         depth strategy (the opt-in check) with bounds of 100 hops (as in S2), 150 and 200
+         (ADR-0014's bounds before and from MSVC 19.50).
 
 Every compile is a full compile (/c, the flags of msvc.py in spikes/S1-deduced-discovery, plus
 /bigobj only if cl asks for it with C1128), under a 300 s timeout. The chains and cycles get a
 forced include that maps the missing __is_same builtin to std::is_same_v (COMPAT_HEADER). Results
-are GitHub annotations, at most ten per step. Exit status: 1 if the lean memo stub compiles fewer
-than 200 hops in either request form (NFR-09), or if a cycle compiles; 0 otherwise.
+are GitHub annotations, at most ten per step. Each step's results are compared with the recorded
+MSVC results (results/msvc.json; MSVC_PROBE_S2_RECORD overrides it): exit status 0 when they are
+unchanged, 1 when MSVC's behaviour changed.
 """
 import argparse
 import json
+import os
 import re
 import sys
 import threading
@@ -38,8 +41,9 @@ S1_DIR = HERE.parent / "S1-deduced-discovery"
 sys.path.insert(0, str(HERE))
 import s2  # noqa: E402  spike S2's driver: chain_source() and the configurations
 
-msvc = s2.variants.load("s1_msvc", S1_DIR / "msvc.py")  # cl, annotations, error parsing
+msvc = s2.variants.load("s1_msvc", S1_DIR / "msvc.py")  # cl, annotations, errors, the record
 
+RECORD = Path(os.environ.get("MSVC_PROBE_S2_RECORD") or HERE / "results" / "msvc.json")
 TIMEOUT_S = 300
 NFR09 = 200
 INCLUDES = [f"/I{HERE}", f"/I{S1_DIR}"]
@@ -76,6 +80,11 @@ LIMIT_CODES = {  # what stopped a compile, by the first matching error code
     "C1128": "C1128 object section limit", "C1054": "C1054 nesting limit",
     "C1026": "C1026 parser stack overflow",
 }
+# cycles.cpp's strategies: the default (memo) and the opt-in check at three bounds.
+CYCLE_VARIANTS = {"memo": ["/DSTUB=2", "/DS2_STRATEGY=0"],
+                  "depth-100": ["/DSTUB=2", "/DS2_STRATEGY=1", "/DS2_MAX_DEPTH=100"],
+                  "depth-150": ["/DSTUB=2", "/DS2_STRATEGY=1", "/DS2_MAX_DEPTH=150"],
+                  "depth-200": ["/DSTUB=2", "/DS2_STRATEGY=1", "/DS2_MAX_DEPTH=200"]}
 print_lock = threading.Lock()
 
 
@@ -235,32 +244,43 @@ def compat_flags(out):
     return [f"/FI{header}"]
 
 
+def check_against_record(title, out, name, summary, select):
+    """Save the summary, then compare it with the record's matching part: select(record data)
+    picks what this step measured. Returns the step's exit status."""
+    (out / f"{name}-summary.json").write_text(json.dumps(summary, indent=1, sort_keys=True) + "\n")
+    msvc.dump(f"{name}: summary in the record's format", json.dumps(summary, indent=1, sort_keys=True))
+    version_key, data = msvc.record(RECORD)
+    with print_lock:
+        return msvc.verdict(title, version_key, select(data) if version_key else None, summary)
+
+
 def chains(out, max_hops, configs, jobs):
     out.mkdir(parents=True, exist_ok=True)
-    results = {"builtins": {}, "calibration": {}, "chains": {}}
+    summary = {"builtins": {}, "calibration": {}, "chains": {}}
+    details = {}
     for name, src in BUILTINS.items():
         p = Probe(name.strip("_"), out / "builtins", lambda n, s=src: s + "int main() {}\n")
         p.compiles(1)
-        results["builtins"][name] = p.cache[1]
+        summary["builtins"][name] = p.cache[1]["ok"]
+        details[name] = p.cache[1]
     annotate("notice", "S2 builtins on cl",
              "; ".join(f"{k}: {'yes' if v['ok'] else 'no (' + msvc.error_message(v['first_error'], 80) + ')'}"
-                       for k, v in results["builtins"].items()))
+                       for k, v in ((k, details[k]) for k in BUILTINS)))
     parts = []
     for name, template in CALIBRATIONS.items():
         p = Probe(name.replace(" ", "-"), out / "calibration",
                   lambda n, t=template: t.format(n=n) + "int main() {}\n")
         n, failing = p.longest(256, 65536)
-        results["calibration"][name] = {"levels": n, "failing": failing,
-                                        "at_failing": p.cache.get(failing)}
+        summary["calibration"][name] = {"levels": n,
+                                        "stopped_by": p.cache[failing]["kind"] if failing else None}
         parts.append(f"{name}: {outcome_text(p, n, failing)}")
     depth_ok = template_depth_supported(out / "calibration")
-    results["template_depth_option"] = depth_ok
+    summary["template_depth_option"] = depth_ok
     annotate("notice", "S2 cl nesting limit (calibration)",
              "deepest nesting that compiles: " + "; ".join(parts) +
              f". /templateDepth:N {'accepted' if depth_ok else 'not accepted'}."
              " GCC's default -ftemplate-depth is 900, Clang's 1024")
     flags = compat_flags(out)
-    status = 0
 
     def run_config(config):
         stub, strategy, form = s2.DEPTH_CONFIGS[config]
@@ -279,57 +299,56 @@ def chains(out, max_hops, configs, jobs):
                 d = p.min_depth(k)
                 if d is None:
                     break
-                points[k] = d
-        fit = None
+                points[str(k)] = d
         if len(points) == 2:
-            (k1, d1), (k2, d2) = points.items()
+            (k1, d1), (k2, d2) = ((int(k), d) for k, d in points.items())
             slope = (d2 - d1) / (k2 - k1)
-            fit = {"levels_per_hop": round(slope, 2), "intercept": round(d1 - slope * k1, 1)}
             text += (f"; levels per hop {slope:g} (smallest /templateDepth {d1} at {k1} hops, "
                      f"{d2} at {k2})")
-        results["chains"][config] = {"longest": n, "failing": failing, "min_template_depth": points,
-                                     "fit": fit, "cache": p.cache, "depth_cache": p.depth_cache}
-        annotate("warning" if lean and n < NFR09 else "notice", f"S2 chain {config}", text)
-        return lean and n < NFR09
+        summary["chains"][config] = {"longest": n,
+                                     "stopped_by": p.cache[failing]["kind"] if failing else None,
+                                     "min_template_depth": points}
+        details[config] = {"cache": p.cache, "depth_cache": p.depth_cache}
+        annotate("notice", f"S2 chain {config}", text)
 
     with ThreadPoolExecutor(max_workers=jobs) as pool:
-        for failed in pool.map(run_config, configs):
-            status |= 1 if failed else 0
-    (out / "chains.json").write_text(json.dumps(results, indent=1, default=str) + "\n")
-    msvc.dump("S2 chains: every compile", json.dumps(results, indent=1, default=str))
-    return status
+        list(pool.map(run_config, configs))
+    (out / "chains.json").write_text(json.dumps(details, indent=1, default=str) + "\n")
+    msvc.dump("S2 chains: every compile", json.dumps(details, indent=1, default=str))
+
+    def select(data):
+        part = {k: data[k] for k in ("builtins", "calibration", "template_depth_option") if k in data}
+        part["chains"] = {c: v for c, v in data.get("chains", {}).items() if c in configs}
+        return part
+
+    return check_against_record("S2 chains against the MSVC record", out, "chains", summary, select)
 
 
-CYCLE_VARIANTS = {"memo": ["/DSTUB=2", "/DS2_STRATEGY=0"],
-                  "depth": ["/DSTUB=2", "/DS2_STRATEGY=1", "/DS2_MAX_DEPTH=100"]}
-
-
-def cycles(out):
+def cycles(out, variants):
     work = out / "cycles"
     work.mkdir(parents=True, exist_ok=True)
     flags = compat_flags(out)
-    rows, status = [], 0
-    for variant, defines in CYCLE_VARIANTS.items():
+    summary = {}
+    for variant in variants:
+        summary[variant] = {}
         for case, shape in s2.CYCLE_CASES.items():
             obj = work / f"{variant}-{case}.obj"
-            code, text, secs, timed_out = msvc.cl([*INCLUDES, *flags, *defines, f"/DCASE={case}", "/c",
-                                                   str(HERE / "cycles.cpp"), f"/Fo{obj}"], work, TIMEOUT_S)
+            code, text, secs, timed_out = msvc.cl([*INCLUDES, *flags, *CYCLE_VARIANTS[variant], f"/DCASE={case}",
+                                                   "/c", str(HERE / "cycles.cpp"), f"/Fo{obj}"], work, TIMEOUT_S)
             msvc.dump(f"cycles.cpp, {variant}, case {case}: output", text)
             kind = classify(code, text, timed_out)
             errors = msvc.error_lines(text)
-            row = {"variant": variant, "case": case, "shape": shape, "kind": kind, "errors": len(errors),
-                   "lines": len(text.splitlines()), "bytes": len(text.encode()), "seconds": round(secs, 1),
-                   "first_error": msvc.first_error(text)}
-            rows.append(row)
-            bad = kind == "ok" or "internal compiler error" in kind or "stack overflow" in kind
-            status |= 1 if bad else 0
-            summary = (f"{len(errors)} error{'s' if len(errors) != 1 else ''}, {row['lines']} lines, "
-                       f"{row['bytes'] / 1024:.0f} KB ({kind}); first: "
-                       f"{msvc.error_message(row['first_error'], 150)}")
-            annotate("warning" if bad else "notice", f"S2 cycle {variant} case {case}",
-                     f"{shape}: " + ("COMPILES" if kind == "ok" else summary))
-    (out / "cycles.json").write_text(json.dumps(rows, indent=1) + "\n")
-    return status
+            lines = len(text.splitlines())
+            summary[variant][str(case)] = {"kind": kind, "errors": len(errors)}
+            line = (f"{len(errors)} error{'s' if len(errors) != 1 else ''}, {lines} lines, "
+                    f"{len(text.encode()) / 1024:.0f} KB ({kind}); first: "
+                    f"{msvc.error_message(msvc.first_error(text), 150)}")
+            annotate("notice", f"S2 cycle {variant} case {case}", f"{shape}: " + ("COMPILES" if kind == "ok" else line))
+    name = "cycles-" + "-".join(variants)
+    return check_against_record(f"S2 cycles ({', '.join(variants)}) against the MSVC record", out, name,
+                                {"cycles": summary},
+                                lambda data: {"cycles": {v: data.get("cycles", {}).get(v, "(not recorded)")
+                                                         for v in variants}})
 
 
 def main(argv=None):
@@ -340,6 +359,8 @@ def main(argv=None):
     parser.add_argument("--configs", default=";".join(CONFIGS),
                         help="separated by semicolons (the names contain commas), from: " + "; ".join(CONFIGS))
     parser.add_argument("--jobs", type=int, default=2, help="configurations compiled at once (default 2)")
+    parser.add_argument("--variants", default=",".join(CYCLE_VARIANTS),
+                        help="cycle strategies, from: " + ", ".join(CYCLE_VARIANTS))
     args = parser.parse_args(argv)
     out = args.out.resolve()
     if args.section == "chains":
@@ -348,7 +369,11 @@ def main(argv=None):
         if unknown or not wanted:
             parser.error(f"unknown configuration(s): {'; '.join(unknown) or args.configs}")
         return chains(out, args.max_hops, [c for c in CONFIGS if c in wanted], max(1, args.jobs))
-    return cycles(out)
+    variants = [v.strip() for v in args.variants.split(",") if v.strip()]
+    unknown = sorted(set(variants) - set(CYCLE_VARIANTS))
+    if unknown or not variants:
+        parser.error(f"unknown variant(s): {', '.join(unknown) or args.variants}")
+    return cycles(out, variants)
 
 
 if __name__ == "__main__":

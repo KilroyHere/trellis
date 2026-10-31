@@ -1,0 +1,95 @@
+{
+ "about": "What cl reported for spike S1 in GitHub Actions run 41235251688 (T1.13), per cl version (major.minor). msvc.py compares every run with the record of its cl version, or with the newest record, and fails when anything differs, so a green run means MSVC's behaviour is unchanged. The form cells are in forms-msvc.txt: they equal results/forms-clang20.txt, except value x const I&, which is a hard error on cl. See docs/spikes/S1-deduced-discovery.md, Addendum: MSVC.",
+ "versions": {
+  "19.44": {
+   "forms": {
+    "builds": false,
+    "first_error": "C2259",
+    "build_warnings": {"C4127": 4},
+    "hard_errors": {"value|26": "C2259"},
+    "rows_file": "forms-msvc.txt"
+   },
+   "prototype": {
+    "limits": {
+     "built": false,
+     "warnings": {},
+     "failed_asserts": [161],
+     "limit_rows_unlike_gcc_clang": {"aggregate {int[2], X}": "ok|2|yes"}
+    },
+    "aggregate_array": "agg{int[2] lvalue, 3}: invalid; agg{p, p}: valid; agg{p, p, p}: invalid; agg{p, p} calls: T&() with T = int [2]; T() with T = int; x = 0",
+    "stub_test": {
+     "built": true,
+     "warnings": {"C4702": 3},
+     "failed_asserts": [],
+     "passes": 10,
+     "fails": [],
+     "last": "OK: injector stub"
+    },
+    "compile_fail": {
+     "e001_abstract": {"ok": true, "errors": 1, "lines": 9},
+     "e002_no_fallback": {"ok": true, "errors": 1, "lines": 9},
+     "e002_private": {"ok": true, "errors": 1, "lines": 9},
+     "e004_greedy": {"ok": true, "errors": 1, "lines": 9},
+     "e005_ref_to_unique": {"ok": true, "errors": 1, "lines": 9},
+     "e005_singleton_by_value": {"ok": true, "errors": 1, "lines": 9},
+     "e010_over_limit": {"ok": true, "errors": 1, "lines": 9}
+    },
+    "fallbacks": {
+     "min3": {
+      "limits": {"built": false, "warnings": {}, "failed_asserts": [161], "limit_rows_unlike_gcc_clang": {"aggregate {int[2], X}": "ok|2|yes"}},
+      "stub_test": {"built": true, "warnings": {"C4702": 3}, "failed_asserts": [], "passes": 10, "fails": [], "last": "OK: injector stub"}
+     },
+     "refq": {
+      "limits": {"built": false, "warnings": {}, "failed_asserts": [161], "limit_rows_unlike_gcc_clang": {"aggregate {int[2], X}": "ok|2|yes"}},
+      "stub_test": {"built": true, "warnings": {"C4702": 3}, "failed_asserts": [], "passes": 10, "fails": [], "last": "OK: injector stub"}
+     }
+    }
+   }
+  },
+  "19.51": {
+   "forms": {
+    "builds": false,
+    "first_error": "C2259",
+    "build_warnings": {},
+    "hard_errors": {"value|26": "C2259"},
+    "rows_file": "forms-msvc.txt"
+   },
+   "prototype": {
+    "limits": {
+     "built": false,
+     "warnings": {},
+     "failed_asserts": [161],
+     "limit_rows_unlike_gcc_clang": {"aggregate {int[2], X}": "ok|2|yes"}
+    },
+    "aggregate_array": "agg{int[2] lvalue, 3}: invalid; agg{p, p}: valid; agg{p, p, p}: invalid; agg{p, p} calls: T&() with T = int [2]; T() with T = int; x = 0",
+    "stub_test": {
+     "built": true,
+     "warnings": {"C4702": 3},
+     "failed_asserts": [],
+     "passes": 10,
+     "fails": [],
+     "last": "OK: injector stub"
+    },
+    "compile_fail": {
+     "e001_abstract": {"ok": true, "errors": 1, "lines": 9},
+     "e002_no_fallback": {"ok": true, "errors": 1, "lines": 9},
+     "e002_private": {"ok": true, "errors": 1, "lines": 9},
+     "e004_greedy": {"ok": true, "errors": 1, "lines": 9},
+     "e005_ref_to_unique": {"ok": true, "errors": 1, "lines": 9},
+     "e005_singleton_by_value": {"ok": true, "errors": 1, "lines": 9},
+     "e010_over_limit": {"ok": true, "errors": 1, "lines": 9}
+    },
+    "fallbacks": {
+     "min3": {
+      "limits": {"built": false, "warnings": {}, "failed_asserts": [161], "limit_rows_unlike_gcc_clang": {"aggregate {int[2], X}": "ok|2|yes"}},
+      "stub_test": {"built": true, "warnings": {"C4702": 3}, "failed_asserts": [], "passes": 10, "fails": [], "last": "OK: injector stub"}
+     },
+     "refq": {
+      "limits": {"built": false, "warnings": {}, "failed_asserts": [161], "limit_rows_unlike_gcc_clang": {"aggregate {int[2], X}": "ok|2|yes"}},
+      "stub_test": {"built": true, "warnings": {"C4702": 3}, "failed_asserts": [], "passes": 10, "fails": [], "last": "OK: injector stub"}
+     }
+    }
+   }
+  }
+ }
+}
