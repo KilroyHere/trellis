@@ -36,5 +36,6 @@ Compile-time wiring was measured at hand-wired speed (R1), while the containers 
 
 ## History
 
+- **2026-10-31, owner decision (plan D5):** the runtime engine ships in 1.0, so Phase 5 is part of the 1.0 scope.
 - **2026-10-30, plan draft 1:** drafted as ADR-02 in plan §4.
 - **2026-10-31, T0.8:** recorded in this file, unchanged. S6 recorded as deferred, with the reasons above.

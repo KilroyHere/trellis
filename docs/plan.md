@@ -1181,7 +1181,7 @@ These change the plan most. Each has a recommended default, so work can start wi
 | D2 | C++ baseline | C++20 | C++17: wider reach, but SFINAE diagnostics and no class-type template parameters, about +4 weeks |
 | D3 | License | Boost Software License 1.0: permissive, and needs no attribution in binaries, which suits header-only code | MIT (also fine); Apache-2.0 (patent grant, more ceremony) |
 | D4 | Main audience | Servers and applications: thread-safe default, scopes, plugins | Games or embedded: `singleton_inline`, `threading::none`, no exceptions by default |
-| D5 | Runtime engine in 1.0? | Yes, since plugins are a main reason to use a framework at all | Ship a static-only 1.0 around week 26 and add the runtime engine in 1.1 |
+| D5 | Runtime engine in 1.0? | Yes, since plugins are a main reason to use a framework at all (decided by the owner, 2026-10-31: yes) | Ship a static-only 1.0 around week 26 and add the runtime engine in 1.1 |
 | D6 | Default for lazy versus eager | Lazy and thread-safe by default; docs recommend eager for applications | Eager by default, as Chromium's practice suggests: simpler threading, slower startup for unused services |
 | D7 | Test framework | GoogleTest and gMock | Catch2 or doctest (faster builds, but the gMock examples still need GoogleTest) |
 | D8 | Team size | 2 engineers (about 28 weeks) | 1 engineer (about 44 weeks) |
