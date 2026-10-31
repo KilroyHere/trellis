@@ -9,7 +9,7 @@ Each page gives the cause, a minimal example, the fix and the related errors ([p
 | ID | Meaning | Status |
 |---|---|---|
 | [TRL-E001](TRL-E001.md) | No binding for an abstract type | Not yet emitted; planned in T1.6 |
-| [TRL-E002](TRL-E002.md) | Type not constructible: no viable constructor for the available bindings | Not yet emitted; planned in T1.6 |
+| [TRL-E002](TRL-E002.md) | Type not constructible: no viable constructor for the available bindings | Emitted by T1.2, for an explicit constructor declaration that matches no constructor; the general case is planned in T1.6 |
 | [TRL-E003](TRL-E003.md) | Duplicate binding for a key | Not yet emitted; planned in T1.4 and T1.6 |
 | [TRL-E004](TRL-E004.md) | Ambiguous constructor | Not yet emitted; planned in T1.3 and T1.6 |
 | [TRL-E005](TRL-E005.md) | Requested form incompatible with the lifetime | Not yet emitted; planned in T1.4 and T1.6 |

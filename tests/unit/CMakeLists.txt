@@ -23,7 +23,12 @@ set(trellis_per_mode_tests
   type_map_test.cpp
   type_name_test.cpp)
 
-trellis_unit_test_executable(trellis_unit_tests 20 smoke_test.cpp ${trellis_per_mode_tests})
+# Tests whose subject is the same in every language mode, compiled in C++20 only.
+set(trellis_cxx20_tests
+  ctor_traits_test.cpp
+  smoke_test.cpp)
+
+trellis_unit_test_executable(trellis_unit_tests 20 ${trellis_cxx20_tests} ${trellis_per_mode_tests})
 gtest_discover_tests(trellis_unit_tests DISCOVERY_MODE PRE_TEST PROPERTIES LABELS unit)
 
 # The meta toolkit without exceptions and RTTI (NFR-11). GoogleTest needs both, so this is a plain

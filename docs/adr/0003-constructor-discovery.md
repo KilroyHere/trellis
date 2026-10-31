@@ -15,7 +15,7 @@ Plan §7.2 sketched the placeholder with two `const` operators, `operator T()` a
 
 `trellis::ctor_traits<T>` resolves, in this order:
 
-1. **Explicit**, from any of three sources: a specialization `template<> struct trellis::ctor_traits<T> : trellis::ctor<Args...> {};`, a member alias `using trellis_ctor = trellis::ctor<Args...>;` (opt-in, intrusive), or the binding itself, `.with_ctor<Args...>()`. A `static_assert` checks `std::is_constructible_v<T, Args...>`, so a declaration can't lie. Its cost isn't measurable: −0.12 to +0.23 ms per class, within noise (S1 §3.4).
+1. **Explicit**, from any of three sources: a specialization `template<> struct trellis::ctor_traits<T> : trellis::ctor<Args...> {};`, a member alias `using trellis_ctor = trellis::ctor<Args...>;` (opt-in, intrusive), or the binding itself, `.with_ctor<Args...>()`. A `static_assert` checks the declaration the way the object will be built, so a declaration can't lie: an aggregate must brace-initialize from `Args...`, which rejects narrowing and allows brace elision, and any other type must satisfy `std::is_constructible_v<T, Args...>`, and is built with parentheses (amended in T1.2; History). Its cost isn't measurable: −0.12 to +0.23 ms per class, within noise (S1 §3.4).
 2. **Reflection (C++26):** the constructor marked `[[=di::inject]]`, or else the unique public, non-copy, non-move constructor with the most parameters, with the parameter types taken from `std::meta::parameters_of` (plan §7.2). Not prototyped, because S5 is deferred (Consequences).
 3. **Deduced (the C++20 default)**, as S1 recommends (S1 §4):
 
@@ -137,3 +137,4 @@ Other choices:
   - The operator set behaves as on GCC and Clang, in all 35 forms, and all six behaviours under "MSVC risk" hold.
   - One residual limit turned out compiler-dependent: cl counts an aggregate's array member as one field, where GCC and Clang count each element. Its wording changed here and in plan §7.2.
   - The MSVC risk section and the "Untested" list now point to the addendum.
+- **2026-10-31, T1.2 (explicit declarations):** the check of an explicit declaration follows the construction rule, not `is_constructible` alone. Aggregates are checked by brace-initialization, as they are built, so a declaration that narrows into an aggregate is rejected and one that relies on brace elision is accepted. Every other type is checked with `is_constructible` and built with parentheses, which also keeps `initializer_list` constructors from capturing a declaration. Plan §7.2 amended. Awaits the owner's confirmation, as a refinement of the accepted Decision.

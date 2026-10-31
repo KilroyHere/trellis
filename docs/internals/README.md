@@ -7,6 +7,7 @@ Notes for maintainers on how Trellis works inside, and why, written for the seco
 | Note | What it covers | Tests |
 |---|---|---|
 | [meta-toolkit.md](meta-toolkit.md) | `include/trellis/meta/`: flat pack expansions instead of folds, the per-list indexed set behind `contains_v`, `index_of_v` and `at_t`, the inheritance-based type map and its deduction-free lookups, `type_name` from function signatures, `fixed_string`, and the `result<T>` fallback | `tests/unit/{type_list,type_map,type_name,fixed_string,result,error_namespace,no_exceptions}_test.cpp`, `tests/compile_fail/meta/` |
+| [constructor-discovery.md](constructor-discovery.md) | The explicit strategy: `ctor<Args...>`, `ctor_traits<T>` and the member alias, why a specialization wins over the alias, the binding's hook, the check that a declaration can't lie (TRL-E002), and the "nothing declared" state that deduction takes over | `tests/unit/ctor_traits_test.cpp`, `tests/compile_fail/discovery/` |
 
 Plan §11 also asks for notes on the deduction tricks of spike S1 (T1.3), on memoization ([ADR-0014](../adr/0014-resolution-memoization-and-cycles.md)), on the storage layout (T1.5) and on the explain pass (T1.6).
 

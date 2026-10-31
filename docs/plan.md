@@ -717,7 +717,7 @@ auto injector = di::make_injector<di::options{
 
 - The primary `ctor_traits<T>` falls through to the next strategy.
 - Specializations, member aliases and `.with_ctor<Args...>()` give `ctor<Args...>`.
-- A `static_assert` checks `std::is_constructible_v<T, Args...>`, so an explicit declaration can't lie.
+- A `static_assert` checks the declaration the way the object will be built, so an explicit declaration can't lie: an aggregate must brace-initialize from `Args...` (`T{std::declval<Args>()...}`, so narrowing is rejected and brace elision allowed), and any other type must satisfy `std::is_constructible_v<T, Args...>` and is built with parentheses (amended by ADR-0003, 2026-10-31, T1.2).
 
 **Reflection strategy (C++26)**
 
