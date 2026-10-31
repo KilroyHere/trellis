@@ -19,7 +19,7 @@ Each file records one decision: its context, the decision itself, the alternativ
 | [0011](0011-type-identity-policy.md) | Type identity as a policy in the runtime engine | Accepted (plan baseline) | S3, S4; S6 (deferred) |
 | [0012](0012-threading-model.md) | Threading model | Accepted (owner, 2026-10-30) | **S4** |
 | [0013](0013-governance-and-releases.md) | Governance and release discipline | Accepted (plan baseline) | none |
-| [0014](0014-resolution-memoization-and-cycles.md) | Resolution: memoization, depth per hop and cycles in deduced mode | Accepted (owner, 2026-10-31) | **S2** |
+| [0014](0014-resolution-memoization-and-cycles.md) | Resolution: memoization, depth per hop and cycles in deduced mode | Accepted (owner, 2026-10-31); its MSVC amendment is provisional (T1.13) | **S2** |
 
 A spike in bold changed or settled the decision; the others confirmed it, or added consequences and open points.
 
@@ -27,7 +27,7 @@ A spike in bold changed or settled the decision; the others confirmed it, or add
 
 - **Accepted (owner, *date*):** the owner confirmed the decision, including the spike results it records (docs/PROGRESS.md, "Owner decisions").
 - **Accepted (plan baseline):** the decision as plan §4 states it; no spike changed it.
-- **Accepted (provisional, awaiting owner review):** a spike settled the decision, and the owner hasn't confirmed it yet. Work follows it as the default until then, and it stays under "Waiting for owner" in docs/PROGRESS.md. No ADR has this status at present.
+- **Accepted (provisional, awaiting owner review):** a spike settled the decision, and the owner hasn't confirmed it yet. Work follows it as the default until then, and it stays under "Waiting for owner" in docs/PROGRESS.md. At present only one amendment has this status: ADR-0014's, for MSVC before 19.50 (T1.13).
 
 ## Spikes
 

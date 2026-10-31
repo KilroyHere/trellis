@@ -226,3 +226,106 @@ The recursive search adds up to 17 nested instantiations per class on the resolu
 - **Explain pass.** The deleted twin already names the failing operator and `T` in the compiler's note. The explain pass should still report E005 with the parameter index, not a generic E002.
 - **`const shared_ptr<T>&` and `const T&` of unique objects.** Should these be allowed by holding the object in the placeholder until the constructor returns?
 - **Self-registration (§7.4, S6).** It can hook the operator bodies, since each knows the consumer, the request and the position.
+
+## Addendum: MSVC (2026-10-31, task T1.13)
+
+S1 couldn't test MSVC, and rated the risk medium (§5; ADR-0003, "MSVC risk"). Task T1.13 ran the spike's tests, unchanged, on the only MSVC this project can reach, GitHub's `windows-latest` runner, before T1.3 and T1.5 build on them.
+
+**Method.**
+
+- **Compilers.** cl 19.51.36260 (toolset 14.51.36231, Visual Studio 2026 18.11) is the runner's latest, which T1.13 asks about. cl 19.44.35229 (toolset 14.44.35207, Visual Studio 2022 17.14) comes from the same image: it is the newest compiler in the series that NFR-13's minimum, 19.38, belongs to. The image was `win25-vs2026` 20261021.278.1.
+- **Flags.** `/std:c++20 /permissive- /W4 /EHsc`, without `/WX`; warnings are counted instead.
+- **What runs.** `msvc.py`, next to `run.sh`, builds and runs `forms.cpp`, `limits.cpp`, `stub_test.cpp` and `compile_fail/*.cpp`, as `run.sh` does on GCC and Clang. It compares each of the 280 form cells (8 sets × 35 forms) with the committed GCC 14 and Clang 20 snapshot (`results/forms-gcc14.txt`, `results/forms-clang20.txt`).
+- **Fallbacks.** The two fallbacks, `min3` and `refq`, are among `forms.cpp`'s eight sets. `msvc.py` also builds `limits.cpp` and `stub_test.cpp` with each fallback patched into a copy of `deduce.hpp`, deleted twins included. Both patched copies pass on gcc-14 and clang-18.
+- **Runs.** `.github/workflows/msvc-probe.yml`. Every number below comes from [run 41235251688](https://github.com/KilroyHere/trellis/actions/runs/41235251688). The first run, [41234196060](https://github.com/KilroyHere/trellis/actions/runs/41234196060), gave the same results for the cells it covered, and led to the form-by-form build described under "`forms.cpp`" below. Results come back as check-run annotations (`gh api repos/{owner}/{repo}/check-runs/<job id>/annotations`). To reproduce them, run `gh workflow run msvc-probe.yml`.
+
+**Result: the recommended set behaves on MSVC exactly as on GCC 14 and Clang 20.** Both cl versions give the same result in every cell, so the table has one MSVC column. ✓ means the same operator, the same request and the same verdict as GCC 14 and Clang 20 (§3.2).
+
+| # | Parameter | Operator → request (GCC 14, Clang 20) | cl 19.51 and 19.44 |
+|---|---|---|---|
+| 1 | `T` | `T()` → `T` exact | ✓ |
+| 2 | `const T` (by value) | `T()` → `T` exact | ✓ |
+| 3 | `T&` | `T&()` → `T&` exact | ✓ |
+| 4 | `const T&` | `T&()` [T = const U] → `const T&` exact | ✓ |
+| 5 | `T&&` | `T()` → `T` (a) | ✓ |
+| 6 | `const T&&` | `T()` → `T` (a) | ✓ |
+| 7 | `T*` | `T()` → `T*` exact | ✓ |
+| 8 | `const T*` | `T()` → `const T*` exact | ✓ |
+| 9 | `T* const` | `T()` → `T*` exact | ✓ |
+| 10 | `unique_ptr<T>` | `T()` → exact | ✓ |
+| 11 | `unique_ptr<T>&&` | `T()` → `unique_ptr<T>` (a) | ✓ |
+| 12 | `shared_ptr<T>` | `T()` → exact | ✓ |
+| 13 | `const shared_ptr<T>&` | `T&()` → exact | ✓ |
+| 14 | `shared_ptr<const T>` | `T()` → exact | ✓ |
+| 15 | `weak_ptr<T>` | `T()` → exact | ✓ |
+| 16 | `function<int()>` | `T()` → exact | ✓ |
+| 17 | `function<unique_ptr<I>(int)>` (factory) | `T()` → exact | ✓ |
+| 18 | `span<T>` | `T()` → exact | ✓ |
+| 19 | `span<const T>` | `T()` → exact | ✓ |
+| 20 | `optional<T>` | ✗ ambiguous (c) | ✓ (b) |
+| 21 | `int` | `T()` → exact | ✓ |
+| 22 | `const int&` | `T&()` → exact | ✓ |
+| 23 | `string` | `T()` → exact | ✓ |
+| 24 | `string_view` | `T()` → exact | ✓ |
+| 25 | `vector<T>` | `T()` → exact | ✓ |
+| 26 | `I&` (abstract) | `T&()` → exact | ✓ |
+| 27 | `const I&` | `T&()` → exact | ✓ |
+| 28 | `I*` | `T()` → exact | ✓ |
+| 29 | `unique_ptr<I>` | `T()` → exact | ✓ |
+| 30 | `shared_ptr<I>` | `T()` → exact | ✓ |
+| 31 | `reference_wrapper<T>` | `T()` → exact | ✓ |
+| 32 | `lazy<T&>` (library wrapper stand-in) | `T()` → exact | ✓ |
+| 33 | `tuple<T>` | ✗ ambiguous (c) | ✓ (b) |
+| 34 | `any` | ✗ ambiguous (c) | ✓ (b) |
+| 35 | `variant<T, int>` | `T()` → exact | ✓ |
+
+(a) and (c) as in §3.2. (b) Not constructible, as on GCC and Clang. cl's error is C2665, "no overloaded function could convert all the argument types", where GCC and Clang say the conversion is ambiguous.
+
+**All eight sets.** On both cl versions, out of 35 cells per set:
+
+| Set | Cells equal to GCC 14 | Cells equal to Clang 20 |
+|---|---|---|
+| `min` | 35 | 35 |
+| `min3` | 35 | 35 |
+| `refq` | 35 | 35 |
+| `min_rr` | 30 | 35 |
+| `boost` | 30 | 35 |
+| `plan` | 32 | 35 |
+| `rref_first` | 29 | 35 |
+| `value` | 34 | 34, and 1 hard error |
+
+So MSVC equals Clang 20 in 279 of the 280 cells, and GCC 14 wherever GCC and Clang agree. In the 19 cells where they disagree (`boost`, `min_rr`, `plan` and `rref_first` on the rvalue-reference, `optional`, `tuple` and `const T&` forms, §3.3), MSVC sides with Clang. The 280th cell, `value` × `const I&`, is a hard error; see "`forms.cpp`" below.
+
+**The five behaviours** that ADR-0003's MSVC risk section and §5 name all hold, on both cl versions:
+
+| # | Behaviour | Evidence |
+|---|---|---|
+| 1 | The tie-break between a non-const and a const implicit object parameter, for conversion function templates on an rvalue | The 23 by-value forms (rows 1, 2, 7–10, 12, 14–19, 21, 23–25, 28–32 and 35) select `operator T()`. |
+| 2 | Lvalue-reference binding considers only lvalue-yielding conversion functions | Rows 3, 4, 13, 22, 26 and 27 select `operator T&()`. None binds a temporary from `operator T()`. |
+| 3 | `operator T&` deduces `T = const U` for a `const U&` target | Rows 4, 13, 22 and 27 report `const U&` exact, through `operator T&()`. |
+| 4 | A selected deleted conversion function makes `is_constructible` false, without falling through | In `limits.cpp`: `const X&` and `X*` of a unique `X`, no fallback to `C()` for `C(const X&)`, and `X&&` of a singleton. In `stub_test.cpp`: `HoldsClockRef` and `CopiesLogger` are refused, while the naive placeholder accepts both. Also the two TRL-E005 compile-fail cases. |
+| 5 | Constraints on conversion function templates | `not_self` excludes copy and move constructors (a class with copy, move and default constructors has arity 0; one with only a copy constructor is E002). The twins' `can_resolve` constraints pick the real or the deleted operator (behaviour 4's cases). |
+
+Point 6 of §5, `__is_constructible` honouring access, holds too: a private `C(X)` gives E002, and a private `C(X, Y)` beside a public `C(X)` gives arity 1.
+
+**`limits.cpp`, `stub_test.cpp`, the compile-fail cases and `forms.cpp`.**
+
+- **`limits.cpp` doesn't compile unchanged** on either cl version, because one of its 36 `static_assert`s fails: **an aggregate `{int a[2]; X x;}` has arity 2 on MSVC, 3 on GCC and Clang** (§3.5, the aggregates row).
+  - The other 35 hold. cl reports every failing `static_assert`, and with its assertions removed, `limits.cpp` prints the other 28 `LIMIT` rows exactly as GCC and Clang do.
+  - A small program in `msvc.py` shows why. cl initializes the whole array member from one placeholder, through `operator T&()` with `T = int[2]`, and the second placeholder initializes `x`. GCC and Clang elide the braces and take one placeholder per element. cl does reject `{arr, 3}` for an `int arr[2]` lvalue, so the cause is how cl treats a conversion function that yields an array reference, not a general extension that copies arrays.
+  - This is a residual limit ADR-0003 already lists ("aggregate array members, which brace elision overcounts"). Both counts end in an error, because neither an `int(&)[2]` request nor an `int` one is resolvable. Only the count differs, so T1.3's test for this limit should check the error, not the arity.
+- **`stub_test.cpp` builds and runs** on both: 10 PASS, and all 13 `static_assert`s hold. It has three C4702 warnings (unreachable code) at `injector_stub.hpp:166`: the `std::terminate()` after `create()`'s `if constexpr` chain is unreachable whenever the chain returns. Under `/WX` that would fail NFR-10, so T1.5's `create()` must not leave code after a returning branch.
+- **The compile-fail cases:** all 7 give the intended ID as the first and only error on both versions, in 9 lines each (7 to 11 on GCC and Clang).
+- **`forms.cpp` doesn't compile as a whole,** because one cell is a hard error.
+  - In set `value` (`operator T()` alone), for `const I&` with `I` abstract, cl's `is_constructible` reports true, and the construction then fails with C2259 ("cannot instantiate abstract class"). GCC and Clang report the cell not constructible.
+  - `min` never reaches this case. A reference parameter has only `operator T&()` as a candidate. A by-value request of an abstract type is unresolvable, so the operator `any_arg` selects for it is the deleted twin, which has no body to instantiate.
+  - `msvc.py` therefore builds `forms.cpp` form by form: each form with all 8 sets, from a copy of everything before `main`, and the failing form cell by cell. That gives the 279 other cells.
+- **Warnings under `/W4`:** none in `forms.cpp` on 19.51, and 4 on 19.44 (C4127, "conditional expression is constant", in the tracer). None in `limits.cpp`. In `stub_test.cpp`, the three C4702 above.
+
+**Fallbacks.** They aren't needed, because `min` matches. For the record, `min3` and `refq` also match GCC and Clang in all 35 forms on MSVC, and pass `stub_test.cpp`. With `limits.cpp` they stop at the same `int[2]` assertion, which doesn't depend on the operator set.
+
+**Conclusion.** The accepted operator set holds on MSVC 19.51 and 19.44, so ADR-0003's decision stands unchanged. For Phase 1:
+
+- T1.3: the aggregate-array count depends on the compiler (2 on MSVC, 3 on GCC and Clang), so the test checks the error, not the arity.
+- T1.5: keep code out of the path after a returning `if constexpr` branch in `create()`, or C4702 breaks `/WX`.
+- Not tested on MSVC: clang-cl, `/std:c++latest`, modules, and MSVC goldens for the error messages (the IDs do come first).
