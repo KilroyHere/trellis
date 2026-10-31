@@ -22,6 +22,10 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
 
 ## Waiting for owner
 
+- **Spike S2 (T0.7) recommendation**, the provisional default until confirmed:
+  - No cycle check on the normal resolution pass (plan §7.3 option 3). Deduced-mode cycles end in a fast hard compiler error, and the docs explain the messages.
+  - An opt-in `options{.cycle_check = true}` using a depth-bounded check (200 hops) plus a relaxed second pass, which gives exactly one TRL-E007. It costs 1.2–2.4× compile time at N=100, only when enabled.
+  - Option 1 (depth-bounded by default) is rejected: 1.2–3.5× slower, quadratic, and it caps graphs at about 250 hops on Clang.
 - **Still open:** D5, whether the runtime container ships in 1.0. Needed before T5.0.
 - **CI on a private repo:** Linux runs on every push; macOS and Windows run weekly or on demand to save Actions minutes. Making the repository public would allow the full matrix on every push.
 - **Stale branches on GitHub:** `wip/t0.1-scaffold`, `t0.2-ci` and `t0.10-goldens` can be deleted; their content is on `main`. The proxy here refuses branch deletion.
@@ -30,6 +34,26 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Add `tests/golden_manifest.txt` to the protected paths.
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev` so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
+
+## 2026-10-30: T0.7 spike S2, memoization and cycles (passed; recommendation awaits owner)
+
+- **What:** three strategies for the check pass on S1's stub, with identical creation code: memoization per (key, request form, consumer lifetime), a depth-bounded check, and path tracking. Measured with T0.3's generator, `run.py` and the equivalence oracle, on gcc-13 and clang-18.
+- **Scaling** (ratios against hand-wiring, time and memory):
+  - **Memoization:** 0.6–1.1× up to N=1000, meeting NFR-04 and NFR-05 everywhere.
+  - **Depth-bounded:** about N²/2 instantiations. It misses 1.2× from N=100, and clang runs out of memory at fan-in 10, N=250.
+  - **Path tracking:** exponential, out of memory from about N=50.
+- **NFR-09 (at least 200 hops):** confirmed only with a lean per-hop shape.
+  - The lean memo stub needs 3–4 instantiation levels per hop: 221–298 hops on gcc, 251 on clang.
+  - S1's stub as written reaches only 148/125 hops.
+  - Plan §8.1 C7 must budget the creation code as well as the check.
+  - In deduced mode, the real size limit is chain depth, not N.
+  - Clang's 256-operand fold limit is a hazard for any fold over a module's bindings (inferred, not tested).
+- **Cycles:**
+  - Under memoization a cycle gives a fast hard error, 2–6 errors in 20–217 lines, without the ID on the first line.
+  - The depth and path variants give exactly one TRL-E007; only path tracking names the cycle.
+- **Recommendation:** see "Waiting for owner" above. Path tracking stays limited to the explicit and reflection modes.
+- **Evidence:** `scripts/tasks.py verify T0.7` on main: `run.sh --quick` passed in 372 s.
+- **Not covered:** MSVC (NFR-09 risk rated high), fan-in 10 at N of 500 or more, and timing for the reference and mixed request forms (correctness was checked).
 
 ## 2026-10-30: T0.9 CI polish and T0.11 copyright notices (passed)
 

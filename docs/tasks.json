@@ -185,7 +185,7 @@
         "T0.4"
       ],
       "review": "owner",
-      "passes": false
+      "passes": true
     },
     {
       "id": "T0.8",
