@@ -1,6 +1,6 @@
 # ADR-0014: Resolution: memoization, depth per hop and cycles in deduced mode
 
-- **Status:** Accepted (owner, 2026-10-31). The MSVC amendment to items 2 and 3, for MSVC before 19.50, is provisional, awaiting owner review (T1.13, 2026-10-31).
+- **Status:** Accepted (owner, 2026-10-31). The MSVC amendment to items 2 and 3, for MSVC before 19.50 (an assumed boundary), is provisional, awaiting owner review (T1.13, 2026-10-31).
 - **Plan:** §7.3, §7.4 (E007), §8.1 C1, C5, C7; NFR-04, NFR-05, NFR-09; risks K1, K3. Plan [§4](../plan.md#4-architecture-decisions) has no ADR for this decision; this one is new.
 - **Spikes:** [S2 memoization and cycles](../spikes/S2-memoization-cycles.md), whose recommendation the owner accepted on 2026-10-31, and its MSVC addendum (T1.13).
 - **Amends:** plan §7.3 (the cycle option and the depth budget), §8.1 C7 and, provisionally, NFR-09.
@@ -34,15 +34,15 @@ Spike S2 measured three strategies on S1's injector stub, with identical creatio
      - GCC 13 and 14: `satisfaction of atomic constraint '…' depends on itself`, or `the value of '…' is not usable in a constant expression` for a class that depends on itself;
      - Clang 18 and 20: `substitution into constraint expression resulted in a non-constant expression`, or `satisfaction of constraint '…' depends on itself` for a cycle below the root;
      - then the root's own TRL-E002. Across S1's stub and the memoized stub, that is 2–6 errors, 20–217 lines and 3–24 KB, and the classes on the cycle appear only in the instantiation notes.
-   - **Opt-in: `options{.cycle_check = true}`** switches deduced mode to the depth-bounded check, for a debugging or CI build. It reports exactly one error, TRL-E007, on all four compilers, in 11–48 lines and 1–5 KB. MSVC 19.44 and 19.51 also report exactly one, but print their whole instantiation context: 824 lines and 62–63 KB at a bound of 100 hops (T1.13). It needs:
+   - **Opt-in: `options{.cycle_check = true}`** switches deduced mode to the depth-bounded check, for a debugging or CI build. It reports exactly one error, TRL-E007, on all four compilers, in 11–48 lines and 1–5 KB. MSVC 19.44 and 19.51 also report exactly one, but print their whole instantiation context, 8 lines per hop: 824 lines and 62–63 KB at a bound of 100 hops, 1,224 at 150 and 1,624 at 200 (T1.13). It needs:
      - **a relaxed second pass on failure,** which treats the failing nodes as resolvable without an error. If that pass succeeds, the cycle was the only cause, and `create()` adds nothing. Without it, Clang adds the root's E002, because it marks a class invalid after a failed `static_assert`;
      - **a bound of 200 hops,** NFR-09's own figure, which is below every limit a valid chain hits: Clang's check stops at 251 hops, GCC's creation code at 221 and MSVC 19.51's check at 245, so a chain that passes the check also compiles. The message says "a cycle, or a chain longer than 200 hops".
-     - **On MSVC before 19.50, a bound of 150 hops** (provisional, T1.13). The check stops there at 161 hops (cl 19.44), so with a bound of 200 a cycle would reach cl's recursion limit, C1202, before TRL-E007. The bound is NFR-09's figure for that compiler (item 3).
+     - **On MSVC before 19.50, an assumed boundary (item 3), a bound of 150 hops** (provisional, T1.13). The check stops there at 161 hops (cl 19.44). The four cycle cases confirm it on cl 19.44: a bound of 200 ends every case in the fatal C1202, without TRL-E007, while a bound of 150 gives exactly one TRL-E007. On cl 19.51 both bounds give exactly one TRL-E007. The bound is NFR-09's figure for that compiler (item 3).
 
      It costs 1.2–2.4× the compile time at N = 100, and 1.6–3.5× or out of memory at N = 250, only when enabled. It is a tool for finding a cycle, not a mode to build a large graph in.
    - **Path tracking only where the graph is known.** Naming the cycle needs the path, and a path-tracked check is exponential on graphs that share dependencies: 4.9–13.7× the compile time at N = 25, and out of memory under 4 GB from N = 20–50. The explicit and reflection modes keep §7.3's `consteval` depth-first search over dense indices, which finds the cycle without instantiating a path per node.
 
-3. **NFR-09 stays at ≥ 200 hops at the default limits, and §8.1 C7's budget covers the creation code as well as the check** (S2 §3.3, §4.3). On MSVC before 19.50 the figure is ≥ 150 hops (provisional, T1.13; see the MSVC bullet below). Levels per hop / the longest chain that compiles at the default limits:
+3. **NFR-09 stays at ≥ 200 hops at the default limits, and §8.1 C7's budget covers the creation code as well as the check** (S2 §3.3, §4.3). On MSVC before 19.50 the figure is ≥ 150 hops (provisional, T1.13; the boundary is assumed, as the MSVC bullet below explains). Levels per hop / the longest chain that compiles at the default limits:
 
    | Configuration | gcc-13, gcc-14 | clang-18, clang-20 | cl 19.51 (VS 2026) | cl 19.44 (VS 2022 17.14) |
    |---|---|---|---|---|
@@ -57,7 +57,8 @@ Spike S2 measured three strategies on S1's injector stub, with identical creatio
      - cl 19.51 (Visual Studio 2026) meets NFR-09: 245 hops at its default `/templateDepth` of 1,000, a switch that raises the limit as `-ftemplate-depth` does.
      - cl 19.44 (Visual Studio 2022 17.14) has a fixed recursion limit of about 500 levels and no switch, and reaches 161 hops in every configuration. Versions 19.38 to 19.43 weren't available, and presumably behave the same.
      - The check sets that limit, and it already has the lean shape. So NFR-09 is ≥ 200 hops on GCC, Clang and MSVC ≥ 19.50, and ≥ 150 hops on MSVC 19.38 to 19.4x, the rest of NFR-13's range. 150 leaves a margin below the 161 measured.
-     - The alternative is raising NFR-13's MSVC minimum to 19.50 (Alternatives).
+     - **The boundary at 19.50 is assumed, not measured.** 19.44 is the newest version measured without `/templateDepth`, and 19.51 the first measured with it. 19.50 is Visual Studio 2026's first toolset, and the runner image doesn't have it: it has 14.29, 14.44 and 14.51 (T1.13's third run).
+     - The alternative is raising NFR-13's MSVC minimum to 19.50, or to 19.51 until 19.50 is checked (Alternatives).
    - **CI gets a test:** a 200-hop chain in each request form, at the default limits, on every compiler; 150 hops on MSVC before 19.50, where CI tests one. CI's `windows-latest` runs cl 19.51.
    - **In deduced mode the real size limit is chain depth, not N.** The generated graphs pass at N = 1,000 because their depth-first stack is 35–66 hops, but a graph whose classes list their longest-chain dependency first would need 900–1,000. The documentation of deduced mode says so.
 
@@ -73,7 +74,7 @@ Spike S2 measured three strategies on S1's injector stub, with identical creatio
 - **Path tracking by default:** names the cycle, but runs out of memory from N = 20–50.
 - **Option 3 alone, without the opt-in:** a cycle in deduced mode would get only the compiler's messages until the user moves the graph to the explicit or reflection route.
 - **Warming the memo in binding order,** checking every binding's node in declaration order before the root: tried by hand, and it didn't help. The creation code still nests 3–4 levels per hop, and Clang refuses a fold over more than 256 bindings. Lifting NFR-09's limit would need the creation code instantiated in binding order as well, a possible Phase 1 experiment (S2 §5).
-- **Raising NFR-13's MSVC minimum to 19.50 (Visual Studio 2026), instead of qualifying NFR-09 for MSVC before 19.50** (T1.13). This keeps one figure, 200 hops, for every compiler, but drops Visual Studio 2022, which reached 161 hops (cl 19.44). The provisional amendment keeps Visual Studio 2022 supported, with a lower, documented chain limit. The owner chooses.
+- **Raising NFR-13's MSVC minimum to 19.50 (Visual Studio 2026), instead of qualifying NFR-09 for MSVC before 19.50** (T1.13). This keeps one figure, 200 hops, for every compiler, but drops Visual Studio 2022, which reached 161 hops (cl 19.44). It depends on the assumed boundary: 19.51 is the first version measured with `/templateDepth`, so 19.51 is the safe minimum until 19.50 is checked. The provisional amendment keeps Visual Studio 2022 supported, with a lower, documented chain limit. The owner chooses.
 
 ## Consequences
 
@@ -99,3 +100,4 @@ Spike S2 measured three strategies on S1's injector stub, with identical creatio
   - Items 2 and 3 are therefore amended for MSVC before 19.50: NFR-09 there is ≥ 150 hops, and so is the opt-in check's bound. This is provisional, awaiting the owner, who may choose instead to raise NFR-13's MSVC minimum to 19.50 (Alternatives). Plan NFR-09 and §7.3 are marked provisional.
   - Item 4 corrected: MSVC has `__is_constructible`; only `__is_same` needs the fallback.
   - The cycle results and the opt-in check's output size on MSVC added.
+  - After review, a third run tested the cycle check at bounds of 150 and 200 hops. On cl 19.44, 150 gives TRL-E007 and 200 ends in C1202; on cl 19.51 both give TRL-E007. The boundary at 19.50 is marked as assumed: the runner has no 14.50 toolset, so only 19.44 and 19.51 were measured.

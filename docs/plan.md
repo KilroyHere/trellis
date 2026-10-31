@@ -186,7 +186,7 @@ The baselines come from the research harness and are quoted as GCC / Clang where
 | NFR-06 | Stripped binary size of the scenario | ≤ hand-wired + 8 KB | Hand-wired 18.7 KB; Boost.DI 22.8 KB; Kangaru 35 KB |
 | NFR-07 | Missing binding | Compile error on GCC, Clang and MSVC without `-Werror`; the first error line names the error ID; the same diagnostic names the type (amended by ADR-0006, 2026-10-30); ≤ 40 lines of output on GCC and Clang | Fruit 5–10 KB; qlibs/di up to 30 KB; Boost.DI on GCC fails only at link time |
 | NFR-08 | Runtime container: resolve the scenario root, warm | ≤ 2× the static injector, i.e. faster than Fruit | Fruit 102 ns; dingo 273–326; Hypodermic 598–657 |
-| NFR-09 | Longest dependency chain at default compiler limits | ≥ 200 hops; ≥ 150 on MSVC before 19.50 (amended by ADR-0014, 2026-10-31, provisional) | dingo about 52 |
+| NFR-09 | Longest dependency chain at default compiler limits | ≥ 200 hops; ≥ 150 on MSVC before 19.50, an assumed boundary (amended by ADR-0014, 2026-10-31, provisional) | dingo about 52 |
 | NFR-10 | Warnings | 0 under `-Wall -Wextra -Wpedantic -Wshadow -Wconversion` (GCC/Clang) and `/W4` (MSVC) | Kangaru 3 |
 | NFR-11 | `-fno-exceptions` and `-fno-rtti` | Both engines build and pass the tests in both modes | — |
 | NFR-12 | Maintainability | Core headers ≤ 6,000 lines, every metaprogramming trick commented and tested | Hypodermic's headers total 4,854 lines |
@@ -763,7 +763,7 @@ struct any_arg {                                   // the resolving placeholder 
   - Variadic constructors.
   - Overloads with the same arity.
   - Defaulted parameters, which get injected. This is documented, and the explicit route avoids it.
-- **Residual limits** (amended by ADR-0003, 2026-10-30), which discovery can't detect, so they are documented and point to the explicit route: same-arity overloads next to a shorter constructor, which is then chosen silently; constructor templates whose constraints the probe satisfies; aggregate array members, which brace elision overcounts; and private, deleted and absent constructors, which look the same.
+- **Residual limits** (amended by ADR-0003, 2026-10-30), which discovery can't detect, so they are documented and point to the explicit route: same-arity overloads next to a shorter constructor, which is then chosen silently; constructor templates whose constraints the probe satisfies; aggregate array members, whose count depends on the compiler (GCC and Clang elide the braces and count each element, cl counts the array as one field: T1.13); and private, deleted and absent constructors, which look the same.
 
 ### 7.3 Resolution and memoization
 
@@ -778,7 +778,7 @@ struct any_arg {                                   // the resolving placeholder 
 2. **Opt-in checking.** Keep option 1 behind `options{.cycle_check = true}`, used for CI builds and when debugging a cryptic recursion error.
 3. **Rely on full-validation builds.** Rely on explicit or reflection mode in a test build (`di::testing::validate`). Document that a cycle in deduced mode produces the compiler's recursion error, and list the signatures to look for.
 
-**Chosen option** (amended by ADR-0014, 2026-10-31): option 3 by default, option 2 as the opt-in, and option 1 rejected. S2 measured option 1 at 1.20–2.41× the hand-wired compile time at N = 100, growing quadratically, and out of memory at N = 250 on Clang with fan-in 10, while memoization stayed at 0.62–1.10× up to N = 1,000. Under memoization a cycle never reaches a recursion limit: the compiler stops with a prompt hard error where the recursion re-enters a node (2–6 errors), and the error catalog documents those messages. The opt-in check is bounded at 200 hops (150 on MSVC before 19.50; amended by ADR-0014, 2026-10-31, provisional) and adds a relaxed second pass on failure, so it reports exactly one TRL-E007; it costs 1.2–2.4× at N = 100, only when enabled. Path tracking, which names the cycle, stays in the explicit and reflection modes; in deduced mode it ran out of memory from N = 20–50.
+**Chosen option** (amended by ADR-0014, 2026-10-31): option 3 by default, option 2 as the opt-in, and option 1 rejected. S2 measured option 1 at 1.20–2.41× the hand-wired compile time at N = 100, growing quadratically, and out of memory at N = 250 on Clang with fan-in 10, while memoization stayed at 0.62–1.10× up to N = 1,000. Under memoization a cycle never reaches a recursion limit: the compiler stops with a prompt hard error where the recursion re-enters a node (2–6 errors), and the error catalog documents those messages. The opt-in check is bounded at 200 hops (150 on MSVC before 19.50, an assumed boundary; amended by ADR-0014, 2026-10-31, provisional) and adds a relaxed second pass on failure, so it reports exactly one TRL-E007; it costs 1.2–2.4× at N = 100, only when enabled. Path tracking, which names the cycle, stays in the explicit and reflection modes; in deduced mode it ran out of memory from N = 20–50.
 
 ### 7.4 What is validated where
 
@@ -994,7 +994,7 @@ Start from the research harness (`experiments/`): the scenario program, `gen_sca
 | Axis | Values |
 |---|---|
 | OS | Ubuntu 24.04, Ubuntu 22.04, macOS 14 and 15, Windows Server 2022 and 2025 |
-| Compilers | GCC 12, 13, 14, 15, 16; Clang 16, 18, 20, 21, plus trunk nightly; Apple Clang 15 and 16; latest MSVC 19.4x; clang-cl |
+| Compilers | GCC 12, 13, 14, 15, 16; Clang 16, 18, 20, 21, plus trunk nightly; Apple Clang 15 and 16; latest MSVC (19.51 on `windows-latest`, Visual Studio 2026, in October 2026); clang-cl |
 | Standard libraries | libstdc++, libc++, MS STL |
 | Language modes | C++20, C++23, C++26; GCC 16 with `-freflection`; the clang-p2996 fork nightly |
 | Flags | Default; `-fno-exceptions`; `-fno-rtti`; `-O0` and `-O2`; ASan and UBSan; TSan |

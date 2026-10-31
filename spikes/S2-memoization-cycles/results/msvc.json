@@ -1,5 +1,5 @@
 {
- "about": "What cl reported for spike S2 in GitHub Actions runs 41235251688 and (the cycle check at bounds 150 and 200) the one after it (T1.13), per cl version (major.minor). msvc.py compares every run with the record of its cl version, or with the newest record, and fails when anything differs, so a green run means MSVC's behaviour is unchanged. See docs/spikes/S2-memoization-cycles.md, Addendum: MSVC.",
+ "about": "What cl reported for spike S2 in GitHub Actions run 41235251688, and for the cycle check at bounds 150 and 200 in run 41239761408 (T1.13), per cl version (major.minor). msvc.py compares every run with the record of its cl version, or with the newest record, and fails when anything differs, so a green run means MSVC's behaviour is unchanged. See docs/spikes/S2-memoization-cycles.md, Addendum: MSVC.",
  "versions": {
   "19.44": {
    "builtins": {"__is_constructible": true, "__is_same": false},
