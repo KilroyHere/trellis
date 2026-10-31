@@ -112,7 +112,7 @@ Other choices:
 
 - **Explicit declarations everywhere:** remove every limit above, but lose the zero-intrusion default (ADR-0007).
 - **A recursive arity search:** costs about the same as the flat chain (within ±20%), but nests up to 17 instantiations per class on the resolution path, against NFR-09; the flat chain adds one. **Probing every arity with a fold** is 6–41% slower than stopping at the first hit.
-- **A lower `max_ctor_arity`:** the failed probes above the arity dominate discovery. A maximum of 8 costs 46–51% of 16, and Boost.DI's default of 10 would cut a typical 4-parameter class from 13 probes to 7. 16 stays until Phase 1's benchmark (T1.9) shows whether it matters against NFR-04 and NFR-05.
+- **A lower `max_ctor_arity`:** the failed probes above the arity dominate discovery. A maximum of 8 costs 46–51% of 16, and Boost.DI's default of 10 would cut a typical 4-parameter class from 13 probes to 7. 16 stays until task T1.11 measures whether it matters against NFR-04 and NFR-05, using T1.9's benchmarks.
 
 ## Consequences
 

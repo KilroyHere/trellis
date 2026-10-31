@@ -74,7 +74,7 @@ Spike S2 measured three strategies on S1's injector stub, with identical creatio
 - **Deduced mode is size-limited by chain depth** (item 3), which its documentation must state.
 - **MSVC risk** (S2 §5, untested): high for NFR-09, medium for cycles. MSVC has no `-ftemplate-depth`; its template recursion limit is fixed (error C1202) and reported to be lower than GCC's and Clang's. A chain test on MSVC in CI should come first in Phase 1, together with S1's tests. How MSVC reports a re-entered constraint satisfaction is unknown, so the catalog needs an MSVC entry. `__is_same` may be missing there, and `std::is_same_v` is the fallback.
 - **Not measured** (S2 §5): request forms other than `shared_ptr` were checked for correctness but not timed; graphs where one class has consumers of different lifetimes; aggregates, scoped lifetimes, factories and `lazy`; Apple Clang; option 2 at N = 1,000, which can't compile there at the default limits; and fan-in 10 at N of 500 or more.
-- **Work this creates:** Phase 2 implements `cycle_check` and the error catalog's E007 page (plan §12.2: "E007 cycles (per S2)"). No task carries the 200-hop chain test or the MSVC chain test yet.
+- **Work this creates:** Phase 2 implements `cycle_check` and the error catalog's E007 page (plan §12.2: "E007 cycles (per S2)"). Task T1.11 carries the 200-hop chain test and the MSVC chain test.
 
 ## History
 
