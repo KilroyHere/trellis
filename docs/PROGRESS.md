@@ -12,6 +12,13 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - **Golden normalization approved.** S3's rules plus `/` path separators, which also fixes the Windows self-test. This is task T0.10, which may regenerate the sample golden through `tools/golden.py --update`.
   - **Copyright holder: Aryan Patel.** Task T0.11 adds `Copyright (c) 2026 Aryan Patel` above every SPDX line.
   - **Phase order: diagnostics (plan Phase 4) before binding features (plan Phase 3).** Applies when T3.0 and T4.0 are expanded: expand and implement Phase 4's tasks before Phase 3's.
+- **2026-10-31**, answered in the session:
+  - **Spike S2 accepted:** no cycle check on the normal pass, and an opt-in depth-bounded `cycle_check` that gives exactly one TRL-E007. Recorded in ADR-0014.
+  - **`scripts/tasks.py amend` approved** for owner-approved corrections. Each one is logged in `docs/task-amendments.md`, with the old and new value, the reason and the approval. Used for:
+    - T0.8's verify command, whose grep check inverted on GNU grep 3.5 and later;
+    - T1.6's NFR-07 wording;
+    - T4.0 now depends on T2.0 and T3.0 on T4.0, implementing the phase order. When T4.0 expands Phase 4, the last Phase 4 task should become T3.0's dependency, through another amendment.
+  - **Scope of the 2026-10-30 acceptance:** read as covering every recommendation in the S1 and S4 reports, including R004 detection in all builds, retry on throw, both teardown-ordering rules, and T&& treated as T. Say so if any of these should be revisited.
 - **Defaults taken from plan §16**, unchanged so far:
   - D2: C++20 baseline.
   - D3: Boost Software License 1.0.
@@ -22,10 +29,6 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
 
 ## Waiting for owner
 
-- **Spike S2 (T0.7) recommendation**, the provisional default until confirmed:
-  - No cycle check on the normal resolution pass (plan §7.3 option 3). Deduced-mode cycles end in a fast hard compiler error, and the docs explain the messages.
-  - An opt-in `options{.cycle_check = true}` using a depth-bounded check (200 hops) plus a relaxed second pass, which gives exactly one TRL-E007. It costs 1.2–2.4× compile time at N=100, only when enabled.
-  - Option 1 (depth-bounded by default) is rejected: 1.2–3.5× slower, quadratic, and it caps graphs at about 250 hops on Clang.
 - **Still open:** D5, whether the runtime container ships in 1.0. Needed before T5.0.
 - **CI on a private repo:** Linux runs on every push; macOS and Windows run weekly or on demand to save Actions minutes. Making the repository public would allow the full matrix on every push.
 - **Stale branches on GitHub:** `wip/t0.1-scaffold`, `t0.2-ci` and `t0.10-goldens` can be deleted; their content is on `main`. The proxy here refuses branch deletion.

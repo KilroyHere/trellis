@@ -203,7 +203,7 @@
       ],
       "verify": [
         "test $(ls docs/adr/*.md | wc -l) -ge 13",
-        "! grep -L 'Status' docs/adr/*.md"
+        "test -z \"$(grep -L Status docs/adr/*.md)\""
       ],
       "depends_on": [
         "T0.4",
@@ -372,7 +372,7 @@
         "Error types exist for E001-E005, E009, E010 and E012. Exactly one static_assert fires per root cause, with no cascading errors.",
         "A minimal explain pass reports the path from the root.",
         "Every ID has a compile-fail test, and there are golden tests for gcc-13, gcc-14, clang-18 and clang-20.",
-        "NFR-07 holds: the first error line names the type and the ID, and output stays at or under 40 lines on GCC and Clang."
+        "NFR-07 holds, as amended by ADR-0006: the first error line names the error ID, the same diagnostic names the type, and output stays at or under 40 lines on GCC and Clang."
       ],
       "verify": [
         "scripts/check-full.sh",
@@ -526,7 +526,7 @@
         "scripts/tasks.py list --phase 3"
       ],
       "depends_on": [
-        "T2.0"
+        "T4.0"
       ],
       "review": "owner",
       "passes": false
@@ -547,7 +547,7 @@
         "scripts/tasks.py list --phase 4"
       ],
       "depends_on": [
-        "T3.0"
+        "T2.0"
       ],
       "review": "owner",
       "passes": false
@@ -710,6 +710,32 @@
         "T0.10"
       ],
       "passes": true
+    },
+    {
+      "id": "T1.11",
+      "phase": 1,
+      "title": "Chain-depth and arity budgets",
+      "description": "The checks the ADRs call for and no other task covers: the deepest dependency chain the static engine compiles at default compiler limits (NFR-09, ADR-0014), including MSVC in CI, and a check of max_ctor_arity against the NFR-04 and NFR-05 budgets (ADR-0003).",
+      "plan_refs": [
+        "NFR-09",
+        "§8.1 C7",
+        "ADR-0003",
+        "ADR-0014"
+      ],
+      "acceptance": [
+        "A generated chain test proves the static engine compiles a 200-hop dependency chain at each compiler's default template depth on gcc-13, gcc-14, clang-18 and clang-20, and records the deepest passing chain per compiler.",
+        "The same chain test runs on MSVC in platforms.yml, and the result is recorded.",
+        "max_ctor_arity's default is measured against NFR-04 and NFR-05 at N=100, then kept or changed, with the numbers recorded."
+      ],
+      "verify": [
+        "ctest --preset clang-18-debug -R chain_depth",
+        "ctest --preset gcc-13-debug -R chain_depth"
+      ],
+      "depends_on": [
+        "T1.5",
+        "T1.9"
+      ],
+      "passes": false
     }
   ]
 }

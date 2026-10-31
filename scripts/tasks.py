@@ -7,11 +7,16 @@
   scripts/tasks.py verify ID         run the task's verify commands, keep the evidence
   scripts/tasks.py pass ID           mark a task passing (needs a fresh, green verify)
   scripts/tasks.py add FILE.json     append tasks (a JSON list of task objects)
+  scripts/tasks.py amend ID FIELD VALUE_JSON --reason TEXT --approved-by TEXT
+                                     correct a task field, with the owner's approval
 
-Tasks are never removed or reworded; only `passes` changes. This script is the
-supported way to change the file (a hook blocks direct edits). `pass` refuses
+Tasks are never removed, and only `passes` changes in normal work. This script is
+the supported way to change the file (a hook blocks direct edits). `pass` refuses
 unless `verify` succeeded on exactly the current working tree, so the evidence
-always matches what gets committed.
+always matches what gets committed. `amend` exists for owner-approved
+corrections only: it records every change, with the old and new value, the
+reason and the approval, in docs/task-amendments.md, and an amended task must be
+verified and passed again.
 """
 import argparse
 import datetime
@@ -181,6 +186,76 @@ def add(data, path):
     return 0
 
 
+AMENDMENTS = ROOT / "docs" / "task-amendments.md"
+AMENDABLE = ("title", "description", "plan_refs", "interfaces", "acceptance", "verify",
+             "depends_on", "review", "phase")
+LIST_FIELDS = ("plan_refs", "interfaces", "acceptance", "verify", "depends_on")
+
+
+def has_cycle(tasks):
+    """True if depends_on edges form a cycle (depth-first search with colours)."""
+    deps = {t["id"]: t["depends_on"] for t in tasks}
+    state = {}
+
+    def visit(task_id):
+        state[task_id] = "open"
+        for dep in deps.get(task_id, []):
+            if state.get(dep) == "open" or (dep not in state and visit(dep)):
+                return True
+        state[task_id] = "done"
+        return False
+
+    return any(task_id not in state and visit(task_id) for task_id in deps)
+
+
+def amend(data, task_id, field, value_json, reason, approved_by):
+    tasks = data["tasks"]
+    task = find(tasks, task_id)
+    if field not in AMENDABLE:
+        sys.exit(f"'{field}' can't be amended; amendable fields: {', '.join(AMENDABLE)}")
+    if not reason.strip() or not approved_by.strip():
+        sys.exit("--reason and --approved-by must both be non-empty")
+    try:
+        value = json.loads(value_json)
+    except ValueError as error:
+        sys.exit(f"VALUE_JSON is not valid JSON: {error}")
+    if field in LIST_FIELDS:
+        if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+            sys.exit(f"{field} must be a JSON list of strings")
+    elif field == "phase":
+        if not isinstance(value, int) or value < 0:
+            sys.exit("phase must be a non-negative integer")
+    elif not isinstance(value, str):
+        sys.exit(f"{field} must be a JSON string")
+    if field == "depends_on":
+        known = {t["id"] for t in tasks}
+        unknown = [dep for dep in value if dep not in known]
+        if unknown or task_id in value:
+            sys.exit(f"bad depends_on: unknown {unknown}" if unknown else "a task can't depend on itself")
+    old = task.get(field)
+    if old == value:
+        sys.exit(f"{task_id}.{field} already has that value")
+    task[field] = value
+    if field == "depends_on" and has_cycle(tasks):
+        sys.exit("that change would create a dependency cycle")
+    was_passing = bool(task.get("passes"))
+    task["passes"] = False
+    save(data)
+    stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    if not AMENDMENTS.exists():
+        AMENDMENTS.write_text("# Task amendments\n\nOwner-approved corrections to docs/tasks.json, "
+                              "recorded by `scripts/tasks.py amend`. Newest last.\n")
+    with AMENDMENTS.open("a") as log:
+        log.write(f"\n## {stamp}: {task_id}.{field}\n\n"
+                  f"- **Reason:** {reason.strip()}\n"
+                  f"- **Approved by:** {approved_by.strip()}\n"
+                  f"- **Old:** `{json.dumps(old, ensure_ascii=False)}`\n"
+                  f"- **New:** `{json.dumps(value, ensure_ascii=False)}`\n")
+    note = " It was passing and must be verified and passed again." if was_passing else ""
+    print(f"{task_id}.{field} amended and recorded in docs/task-amendments.md.{note}")
+    return 0
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -190,6 +265,12 @@ def main(argv=None):
     sub.add_parser("verify").add_argument("id")
     sub.add_parser("pass").add_argument("id")
     sub.add_parser("add").add_argument("file")
+    amend_parser = sub.add_parser("amend")
+    amend_parser.add_argument("id")
+    amend_parser.add_argument("field")
+    amend_parser.add_argument("value_json")
+    amend_parser.add_argument("--reason", required=True)
+    amend_parser.add_argument("--approved-by", required=True)
     args = parser.parse_args(argv)
 
     data = load()
@@ -217,6 +298,8 @@ def main(argv=None):
         return verify(find(tasks, args.id))
     if args.cmd == "pass":
         return mark_passing(data, find(tasks, args.id))
+    if args.cmd == "amend":
+        return amend(data, args.id, args.field, args.value_json, args.reason, args.approved_by)
     return add(data, args.file)
 
 
