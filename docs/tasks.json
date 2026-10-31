@@ -244,7 +244,7 @@
         "T0.1",
         "T0.8"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "T1.2",

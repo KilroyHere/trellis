@@ -35,6 +35,7 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - (a) keep NFR-13's minimum, 19.38, and use a 150-hop bound on MSVC before 19.50: the provisional text, measured to give exactly one TRL-E007 on cl 19.44;
   - (b) raise NFR-13's MSVC minimum to 19.51. 19.45 to 19.50 can't be measured on GitHub's image, so 19.50 is only an assumed boundary.
   Not blocking until the cycle check lands in Phase 2.
+- **Error IDs for misuse asserts (T1.1, T1.2).** Some static_asserts report misuse of Trellis's own vocabulary rather than a wiring mistake, and carry no TRL ID, because plan §7.8 lists none for them: a `type_list` or `type_map` given a non-list, an out-of-range index, a missing key, and a `trellis_ctor` alias that doesn't name a `ctor<...>`. ADR-0006 says every mistake Trellis reports has a stable ID. Recommendation: give an ID (the next free numbers after TRL-E012) to misuse a user can make through the public API, such as the malformed alias, and leave the internal meta-toolkit guards without IDs. Not blocking.
 - **The ADR set (T0.8)** is owner-reviewable: `docs/adr/README.md` indexes ADR-0001 to ADR-0014 with their statuses.
 - **CI on a private repo:** Linux runs on every push; macOS and Windows run weekly or on demand to save Actions minutes. Making the repository public would allow the full matrix on every push.
 - **Stale branches on GitHub:** `wip/t0.1-scaffold`, `t0.2-ci`, `t0.9-ci-polish`, `t0.10-goldens` and `t1.13-msvc-probe` can be deleted; their content is on `main`. The proxy here refuses branch deletion.
@@ -43,6 +44,37 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Add `tests/golden_manifest.txt` to the protected paths.
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev` so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
+
+## 2026-10-31: T1.1 meta toolkit (passed)
+
+- **What changed** (squashed as 3c25110): `include/trellis/meta/` holds `type_list`, `type_map`, `fixed_string`, `type_name` and `result`. config.hpp gains five macros. There are unit tests on every local preset, 8 compile-fail tests, doc comments, `docs/internals/meta-toolkit.md` and CHANGELOG lines. The techniques:
+  - `at<I>` uses `__type_pack_element`, otherwise indexed bases.
+  - `index_of` uses one non-template overload per element.
+  - `contains` uses `std::is_base_of` on a per-list set.
+  - `type_map` lookup uses one non-template overload per entry, with no deduction.
+  - Duplicates are found by unambiguous conversion.
+  - `type_name` reads `__PRETTY_FUNCTION__`/`__FUNCSIG__`.
+  - `result<T>` is `std::expected<T, failure>` or a fallback.
+- **Design changes, recorded in the plan and ADRs:**
+  - **No folds over long packs.** Clang rejects a fold over more than 256 operands (measured: a fatal error at 257; GCC has no limit). The toolkit uses flat braced-list pack expansions. Plan §7.1 and §8.1 C3 and ADR-0010 are amended, and CLAUDE.md's compile-time rule is updated to match. This resolves the `[NEEDS CLARIFICATION]` raised because the acceptance text asked for fold expressions.
+  - **`trellis::failure`.** The runtime error value was first called `trellis::error`, which collides with the owner-decided compile-error namespace `trellis::error` (ADR-0006) because `v1` is inline. T1.4 caught it. It is renamed `trellis::failure`, with plan §7.1, ADR-0006 and ADR-0009 updated, and a test guards against the clash.
+  - **Non-asserting lookups for T1.4.** `detail::lookup_or_t` and `detail::contains_key_v` were added at T1.4's request.
+- **Review:** failed once, on three bugs:
+  - unqualified calls let argument-dependent lookup instantiate every key, value and element. A poison type broke lookups, and lookups cost 1.5×;
+  - GCC 13 and 14 matched `X&` keys against `X&&` bases when deducing, which would have caused false duplicate errors on GCC only;
+  - the fallback `result` could end up valueless, and `error()` was then UB.
+  
+  All three were fixed with tests. Timings at 1,000 queries × 1,000 types, before → after: `contains_v` clang-18 6.10 s → 0.37 s, gcc-13 4.74 s → 0.22 s; `index_of_v` clang-18 8.36 s → 2.98 s; `lookup_t` 2.63 s → 2.33 s. The recheck passed. The reviewer reran every probe on gcc-13, gcc-14, clang-18 and clang-20, and checked 153 cv/ref/function/array key pairs and 71 extra asserts, with no wrong answer. It couldn't reproduce the Clang second error after a duplicate-key assertion, so that limit's comment may be stale. MSVC risk: `positions` with a repeated type relies on an ambiguous call between identical using-declared overloads, so the platforms workflow should run once T1.2 and T1.4 land.
+- **Evidence:** `scripts/tasks.py verify T1.1` on main: `[PASS] scripts/check-full.sh (1197.6 s)`, `check-full: 10 of 10 presets passed, 0 failed`, `T1.1: all verify commands passed`. Earlier, `scripts/init.sh` on main: `clang-18-debug: 136 tests: 125 passed, 11 skipped`.
+- **[NEEDS CLARIFICATION]**
+  - `result<T&>` is rejected.
+  - `make_unexpected` was added because `std::unexpected` is C++23-only. Every translation unit must see the same `TRELLIS_HAS_EXPECTED`; mixing is an ODR violation, now documented.
+  - The fallback has no `value()`.
+  - `display_string_of` is deferred to the C++26 backend.
+- **Known limits:** on Clang only, a lookup in a map that already failed its duplicate-key assertion adds a second error. T1.4 reports TRL-E003 before it builds such a map. `->` on a temporary fallback `result` isn't a constant expression on GCC.
+- **Follow-ups:**
+  - ADR-0011 and Phase 5: Clang prints local classes without their enclosing function and puts file paths into lambda names, and GCC prints namespace-scope lambdas as `<lambda()>`. Either can give two types the same name-based `type_key` (recorded in meta-toolkit.md).
+  - Misuse asserts (`type_list`/`type_map` misuse) carry no TRL ID; see "Waiting for owner".
 
 ## 2026-10-31: T1.13 early MSVC check of discovery and chain depth (passed)
 

@@ -29,3 +29,4 @@ Fruit's runtime injection errors call `exit(1)`, which a caller can't catch (R8)
 
 - **2026-10-30, plan draft 1:** drafted as ADR-09 in plan §4.
 - **2026-10-31, T0.8:** recorded in this file, unchanged; the open question about R004 without exceptions added.
+- **2026-10-31, T1.1:** the Decision names `result<T>`'s error type, `trellis::failure`, because `trellis::error` is the compile-error namespace (ADR-0006).
