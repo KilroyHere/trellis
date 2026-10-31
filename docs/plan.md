@@ -184,7 +184,7 @@ The baselines come from the research harness and are quoted as GCC / Clang where
 | NFR-04 | Compile time for a generated 100-component graph | ≤ 1.3× hand-wired; linear growth to 1,000 components, ≤ 1.5× there | Hand-wired 5.5 / 4.2 s; Boost.DI 6.8 / 6.3; Fruit 18.1 / 16.3 |
 | NFR-05 | Peak compiler memory at 100 components | ≤ 1.5× hand-wired; no blow-ups that depend on how bindings are laid out | Hand-wired 363 / 232 MB; Boost.DI 487 / 341; Fruit flat layout ran out of memory at 25 |
 | NFR-06 | Stripped binary size of the scenario | ≤ hand-wired + 8 KB | Hand-wired 18.7 KB; Boost.DI 22.8 KB; Kangaru 35 KB |
-| NFR-07 | Missing binding | Compile error on GCC, Clang and MSVC without `-Werror`; the first error line names the type and the error ID; ≤ 40 lines of output on GCC and Clang | Fruit 5–10 KB; qlibs/di up to 30 KB; Boost.DI on GCC fails only at link time |
+| NFR-07 | Missing binding | Compile error on GCC, Clang and MSVC without `-Werror`; the first error line names the error ID; the same diagnostic names the type (amended by ADR-0006, 2026-10-30); ≤ 40 lines of output on GCC and Clang | Fruit 5–10 KB; qlibs/di up to 30 KB; Boost.DI on GCC fails only at link time |
 | NFR-08 | Runtime container: resolve the scenario root, warm | ≤ 2× the static injector, i.e. faster than Fruit | Fruit 102 ns; dingo 273–326; Hypodermic 598–657 |
 | NFR-09 | Longest dependency chain at default compiler limits | ≥ 200 hops | dingo about 52 |
 | NFR-10 | Warnings | 0 under `-Wall -Wextra -Wpedantic -Wshadow -Wconversion` (GCC/Clang) and `/W4` (MSVC) | Kangaru 3 |
@@ -210,6 +210,8 @@ The baselines come from the research harness and are quoted as GCC / Clang where
 ## 4. Architecture decisions
 
 These are written as short architecture decision records (ADRs) and will move into `docs/adr/` in the new repository. "Confirm in S*n*" means a phase-0 spike must confirm the decision before Phase 1 depends on it.
+
+> **Now in [`docs/adr/`](adr/README.md)** (T0.8, 2026-10-31): ADR-0001 to ADR-0013 are the records below, with the spike results folded in, and ADR-0014 adds §7.3's decision. Where they differ from this section, the files there take precedence.
 
 ### ADR-01: C++20 baseline; C++23 and C++26 used when available
 
@@ -485,6 +487,8 @@ None of the domain classes includes Trellis. Deleting the `di::bind<Service>` li
 | `std::weak_ptr<T>` | ✗ | ✓ | ✗ | ✓ | ✗ | ✓ | ✗ |
 | `di::lazy<…>` / `di::provider<…>` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 
+**Rvalue-reference parameters** (amended by ADR-0003, 2026-10-30). A parameter of type `X&&` or `const X&&` is the request `X`, allowed and rejected exactly as `X` is: `T&&` asks for a fresh `T` that the consumer owns, and `std::unique_ptr<T>&&` for a `std::unique_ptr<T>`. Deduced discovery can't tell `T&&` from `T` on any compiler (spike S1). The rule holds in every discovery mode, so a class wires the same way whichever mode discovers it.
+
 **The captive-dependency rule (E006).**
 
 - A binding with lifetime L may hold a dependency with lifetime L′ through a sharing form (`T&`, `T*`, `shared_ptr`, `weak_ptr`) only if L′ lives at least as long as L.
@@ -588,7 +592,7 @@ class Worker {
 ```
 
 - **Deferred edges.** `lazy` and `provider` edges are not followed during cycle analysis, so `A(lazy<B&>)` with `B(A&)` is legal.
-- **Re-entry.** If `A`'s constructor dereferences the lazy `B`, it re-enters `A`'s own construction. That is caught at run time as error R004, in debug builds and under `threading::safe`.
+- **Re-entry.** If `A`'s constructor dereferences the lazy `B`, it re-enters `A`'s own construction. That is caught at run time as error R004, in all builds and under every threading mode (amended by ADR-0012, 2026-10-30; the draft said debug builds and `threading::safe`).
 
 ### 6.9 Modules and composition roots
 
@@ -724,24 +728,34 @@ auto injector = di::make_injector<di::options{
 
 **Deduced strategy (C++20 default)**
 
-The trick (sketch):
+The trick, as spike S1 chose it (amended by ADR-0003, 2026-10-30). It replaces the draft sketch, whose two `const` operators S1 found ambiguous for every by-value parameter:
 
 ```cpp
-template <class Ctx, class Consumer, lifetime L>
-struct any_arg {                                   // placeholder argument
-  Ctx* ctx;
-  template <class T>
-    requires (!std::same_as<std::remove_cvref_t<T>, Consumer>) && resolvable<Ctx, T, L>
-  operator T() const { return ctx->template make<T, L>(); }
-  template <class T>
-    requires (!std::same_as<std::remove_cvref_t<T>, Consumer>) && resolvable<Ctx, T&, L>
-  operator T&() const { return ctx->template make<T&, L>(); }
+template <class Consumer, class T>
+concept not_self = !std::same_as<std::remove_cvref_t<T>, Consumer>;  // drops copy/move ctors
+
+template <class Consumer, class Ctx>
+struct any_arg {                                   // the resolving placeholder argument
+  Ctx& ctx;
+  template <class T> requires not_self<Consumer, T> && can_resolve<Ctx, T>
+  operator T() { return ctx.template resolve<T>(); }               // non-const: value forms
+  template <class T> requires not_self<Consumer, T> && (!can_resolve<Ctx, T>)
+  operator T() = delete;                                            // deleted twin
+  template <class T> requires not_self<Consumer, T> && can_resolve<Ctx, T&>
+  operator T&() const { return ctx.template resolve<T&>(); }        // const: T& and const T&
+  template <class T> requires not_self<Consumer, T> && (!can_resolve<Ctx, T&>)
+  operator T&() const = delete;                                     // deleted twin
 };
-// arity = largest N <= max_ctor_arity with
-// std::is_constructible_v<Impl, any_arg<...> x N>
+// Discovery runs first, with probe_arg<Consumer>: the same two shapes, without can_resolve.
+// arity = largest N <= max_ctor_arity (default 16) such that
+//         std::is_constructible_v<Impl, probe_arg x N>,
+// found by a flat, top-down if constexpr chain and memoized per class. Resolution then uses
+// any_arg at exactly that arity, so an unresolvable parameter can't select a shorter constructor.
 ```
 
-- **The exact set of conversion operators** must give exactly one match for each parameter form, without ambiguity, on all three compilers. Forms to cover: `T`, `T&`, `const T&`, `T&&`, pointers, smart pointers, `const shared_ptr<T>&`, `std::function`, `std::span` and `std::optional`. Spike S1 builds this table across compilers, and the results go into `docs/internals/deduction.md`. Boost.DI's published approach is the starting point.
+- **Why this set** (amended by ADR-0003, 2026-10-30). A by-value parameter selects the non-const `operator T()`: the placeholder is an rvalue, and a non-const object parameter ranks better than a const one. `T&` and `const T&` can only use the lvalue-yielding `operator T&()`, with `T` deduced as `const U` for a `const U&`. The deleted twins keep an unresolvable request from falling back to the other operator, which would bind a temporary to a `const X&` of a unique `X`, or copy a singleton requested by value. S1's prototype keys `can_resolve` on the request alone; Trellis also keys it on the consumer's lifetime, as [§7.3](#73-resolution-and-memoization)'s memoization key requires.
+- **Forms** (amended by ADR-0003, 2026-10-30). S1 tested 35 parameter forms on gcc-13, gcc-14, clang-18, clang-20 and clang-18 with libc++, and 29 are deduced exactly. `T&&`, `const T&&` and `unique_ptr<T>&&` are reported as their by-value forms, which [§6.3](#63-the-request-form-compatibility-table) makes the rule. `std::optional<T>`, `std::tuple<T>` and `std::any` are ambiguous on every compiler, because their unconstrained converting constructors accept the placeholder; they need the explicit route, and Trellis's own wrapper types must not have such constructors. The table goes into `docs/internals/deduction.md`. MSVC is untested; ADR-0003 names the fallback operator sets.
+- **Workarounds in `config.hpp`** (amended by ADR-0003, 2026-10-30). On GCC < 14 the probe also declares `operator T&&() const`, because gcc-13 mis-selects `operator T&()` for rvalue-reference parameters. A `#pragma GCC diagnostic` push and ignore around construction silences GCC's `-Wconversion` warning about the object-parameter tie-break.
 - **Copy and move constructors** are excluded by the constraint that the conversion's target is not `Consumer`.
 - **Aggregates** are probed with braces only when the type has no user-declared constructor. Configuration structs are normally bound as values anyway.
 - **Known limits, each with a compile-fail test and an error that points to the explicit route:**
@@ -749,19 +763,22 @@ struct any_arg {                                   // placeholder argument
   - Variadic constructors.
   - Overloads with the same arity.
   - Defaulted parameters, which get injected. This is documented, and the explicit route avoids it.
+- **Residual limits** (amended by ADR-0003, 2026-10-30), which discovery can't detect, so they are documented and point to the explicit route: same-arity overloads next to a shorter constructor, which is then chosen silently; constructor templates whose constraints the probe satisfies; aggregate array members, which brace elision overcounts; and private, deleted and absent constructors, which look the same.
 
 ### 7.3 Resolution and memoization
 
 - **Memoization key:** (key, request form, consumer lifetime). Each triple is evaluated once through a concept or a class-template instantiation, and compilers cache both.
 - **Not in the key:** the path or the depth, on the normal pass. This is the qlibs/di lesson (R9): a path in the type multiplies instantiations by the number of paths, which grows exponentially in graphs with many shared dependencies.
 - **The path is built only by the explain pass**, which runs only after a failure and follows only the first failing edge ([§7.8](#78-diagnostics-engine)), so it costs O(depth × arity).
-- **Instantiation depth budget:** at most 4 levels per hop (NFR-09). The S2 spike measures it with `-ftemplate-depth` sweeps on chains of 50–500.
+- **Instantiation depth budget:** at most 4 levels per hop (NFR-09). The S2 spike measures it with `-ftemplate-depth` sweeps on chains of 50–500. The budget covers the creation code as well as the check (amended by ADR-0014, 2026-10-30; provisional): S2 measured 2 (GCC) or 4 (Clang) levels per hop for the check and 3–4 for the creation code, and 221–298 hops on GCC and 251 on Clang at the default limits, with a lean per-hop shape.
 
 **Cycles in deduced mode are the main open design problem.** In explicit and reflection modes the graph is known, so a `consteval` depth-first search over dense type indices reports E007 with the full cycle. In deduced mode, parameter types are discovered only by instantiating conversion operators, so a cycle makes the compiler hit its own recursion error ("satisfaction of constraint ... depends on itself" or an instantiation-depth limit) before the library can report one. Spike S2 compares three options:
 
 1. **Depth-bounded resolution.** Add a depth counter to the key, only while a cycle check is enabled. Cost is roughly O(nodes × distinct depths); the spike measures it at N = 100 and 1,000 with fan-in 3 and 10. Make it the default if it costs ≤ 1.2×.
 2. **Opt-in checking.** Keep option 1 behind `options{.cycle_check = true}`, used for CI builds and when debugging a cryptic recursion error.
 3. **Rely on full-validation builds.** Rely on explicit or reflection mode in a test build (`di::testing::validate`). Document that a cycle in deduced mode produces the compiler's recursion error, and list the signatures to look for.
+
+**Chosen option** (amended by ADR-0014, 2026-10-30; provisional, awaiting owner review): option 3 by default, option 2 as the opt-in, and option 1 rejected. S2 measured option 1 at 1.20–2.41× the hand-wired compile time at N = 100, growing quadratically, and out of memory at N = 250 on Clang with fan-in 10, while memoization stayed at 0.62–1.10× up to N = 1,000. Under memoization a cycle never reaches a recursion limit: the compiler stops with a prompt hard error where the recursion re-enters a node (2–6 errors), and the error catalog documents those messages. The opt-in check is bounded at 200 hops and adds a relaxed second pass on failure, so it reports exactly one TRL-E007; it costs 1.2–2.4× at N = 100, only when enabled. Path tracking, which names the cycle, stays in the explicit and reflection modes; in deduced mode it ran out of memory from N = 20–50.
 
 ### 7.4 What is validated where
 
@@ -787,6 +804,8 @@ The runtime engine needs dependency lists for classes discovered by deduction. S
 - **Injector layout:** `std::tuple<slot<B>...>`, with slots only for bindings the injector owns; a teardown stack; and the options.
 - **`slot<B>`** holds `std::shared_ptr<Impl>`, or `std::optional<Impl>` for inline storage, plus its initialization state.
 - **Teardown stack:** a `std::array` of `{destroy function, object}` pairs. Its capacity is the number of owned bindings, known at compile time, so it needs no heap. Each slot pushes itself when constructed, and the injector's destructor pops in reverse, so teardown runs in reverse order of construction for each injector.
+  - **Ordering rules** (amended by ADR-0005, 2026-10-30). A slot pushes its entry after its constructor succeeds and before it publishes `ready`. A dependency is ready before its dependent's constructor runs, so its entry always lands below its dependents', even when different threads build them. Under `threading::safe` the counter is an `atomic<size_t>` with relaxed `fetch_add`. Failed attempts push nothing, so the capacity can't overflow.
+  - The stack is unwound before the slots' storage is destroyed: it is declared after the slots, or `~injector` unwinds it (amended by ADR-0005, 2026-10-30).
 - **Eager mode:** `make_injector` constructs every singleton in dependency order. If a constructor throws, everything already built is torn down in reverse order and the exception propagates, so `make_injector` gives the strong guarantee.
 - **Scopes:** `scope<Tag, Parent>` holds slots for bindings scoped to `Tag`, plus its seeds and its own teardown stack, and refers to its parent.
   - Injectors and scopes are non-movable, because factories and lazies hold pointers into them.
@@ -798,8 +817,9 @@ The runtime engine needs dependency lists for classes discovered by deduction. S
 
 - **`threading::safe`:**
   - Each lazy slot has a small atomic state, `empty → constructing → ready`.
-  - A slow path waits using a per-injector mutex and condition variable, or uses `std::call_once` per slot, whichever S4 shows is smaller and faster.
-  - Nested construction of different slots is fine. Re-entering the same slot can only happen through a lazy dereference inside a constructor, which reports R004 in debug builds.
+  - **The slow path** (amended by ADR-0012, 2026-10-30; this settles the draft's choice between a per-injector mutex and `std::call_once`). The first thread moves the state from `empty` to `constructing` with a compare-exchange and constructs. Others re-read the state up to 128 times with a CPU pause, then set a waiter bit and block in `std::atomic::wait` on the state byte. The constructing thread publishes with an exchange, and calls `notify_all` only if the waiter bit was set. Where `__cpp_lib_atomic_wait` is missing, waiters use a per-injector mutex and condition variable instead. `std::call_once` is rejected: on libstdc++ it is 6–10× slower warm, it can't report R004, and its retry after a throw hangs under TSan with libstdc++.
+  - If the constructor throws, the slot returns to `empty`, waiters wake, and the next caller retries (amended by ADR-0012, 2026-10-30).
+  - Nested construction of different slots is fine. Re-entering the same slot can only happen through a lazy dereference inside a constructor, which reports R004 in all builds: each thread keeps a stack of the slots it is constructing and checks it before waiting (amended by ADR-0012, 2026-10-30; the draft said debug builds).
 - **`threading::none`:** plain state flags.
 - **`eager`:** after `make_injector` returns, every access is a plain read.
 - **Runtime container:** after `build()` its tables are immutable, and its singleton slots use the same mechanism. The builder is single-threaded.
@@ -836,9 +856,11 @@ The runtime engine needs dependency lists for classes discovered by deduction. S
 **C++20 rendering**
 
 - `create<T>()` checks the memoized analysis. On failure, the branch for the failing graph instantiates exactly one `static_assert(trellis::error::E001<IRepository, request<std::shared_ptr<IRepository>>, path<App, Service>>::reported);` and nothing else.
-- GCC, Clang and MSVC all print the condition's template arguments, which carry the path, so the type names appear on the first lines.
+- What each compiler prints (amended by ADR-0006, 2026-10-30; the draft said all three print the condition's template arguments on the first lines). Clang puts the condition, with the type, the request and the path, on the first error line. GCC puts the assertion's literal on the error line and the condition in the attached note. MSVC is expected to print only the literal (untested), so the type would appear only in its "see reference" notes. The literal therefore carries the ID: `"TRL-E001: no binding for an abstract type"`.
 
 **C++26 rendering** (`__cpp_static_assert >= 202306L`, P2741R3)
+
+Also used in C++20 and C++23 modes on GCC 14 and Clang 20 or later, where P2741 works as an extension; `config.hpp` gates it on compiler versions rather than on the feature-test macro alone (amended by ADR-0006, 2026-10-30).
 
 The message is built at compile time in a `fixed_string` buffer:
 
@@ -910,7 +932,7 @@ error: static assertion failed: trellis [TRL-E001]: no binding for abstract type
 | C4 | Flatten modules once; no fluent type accumulation | Fruit's flat-component blow-up (ADR-10) |
 | C5 | Short, flat type names: `binding<K, Impl, L>`, not stacks of nested policies | Symbol length drives compiler memory and debug-info size |
 | C6 | Instantiate creation code only for roots that are actually requested | Unused bindings cost only their binding type |
-| C7 | ≤ 4 instantiation levels per hop | NFR-09; dingo's 52-link limit |
+| C7 | ≤ 4 instantiation levels per hop, counting the creation code as well as the check (amended by ADR-0014, 2026-10-30; provisional) | NFR-09; dingo's 52-link limit. S2: the creation code nests 3–4 levels per hop and limits GCC's chains |
 | C8 | Single-TU wiring pattern; optional explicit instantiation of `create<Root>` (P2) | R20; incremental builds |
 | C9 | Profile every release with `-ftime-trace` and ClangBuildAnalyzer; keep a top-10 list of the costliest templates | Catches regressions early |
 
@@ -1046,6 +1068,8 @@ Each spike is a throwaway branch with a one- or two-page write-up and a decision
 | S6 Runtime dependency recording | Self-registration versus a dry run for deduced classes, including across shared libraries | §7.4, Phase 5 | A working prototype plus a plugin test |
 
 ### 12.2 Phases
+
+**Order of Phases 3 and 4** (amended by owner decision, 2026-10-30): diagnostics come before binding features, so Phase 4's tasks are expanded and implemented before Phase 3's. The table keeps the original numbers and weeks.
 
 | Phase | Weeks | Main tasks | Exit criteria |
 |---|---|---|---|
