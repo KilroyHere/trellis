@@ -21,12 +21,12 @@ Every compiler NFR-13 lists supports C++20, including Ubuntu 24.04's defaults, G
 - **How the macros are defined** (T0.1):
   - a library feature relies on its `__cpp_lib_*` macro alone, because a standard library defines it only in modes where the feature is usable;
   - a core-language feature also requires the language mode it was standardized in. Clang 20 defines `__cpp_static_assert` as 202306L and `__cpp_pack_indexing` in C++20 mode, then warns that both are C++26 extensions, and `-Werror` turns the warnings into errors.
-- **One deliberate exception,** decided in ADR-0006 from spike S3: user-generated `static_assert` messages (P2741) are also used in C++20 and C++23 modes on GCC 14 and Clang 20 or later, where they work as an extension. That gate tests compiler versions, and the extension warning is silenced around the one assertion that uses it.
+- **One deliberate exception,** decided in ADR-0006 from spike S3: user-generated `static_assert` messages (P2741) are also used in C++20 and C++23 modes on GCC 14 or later and Clang 20 or later, where they work as an extension. That gate tests compiler versions, and the extension warning is silenced around the one assertion that uses it.
 - **Compiler workarounds also live in `config.hpp`,** each behind a named `TRELLIS_` macro with a comment and a test. The spikes call for:
   - the gcc-13 probe operator and the GCC `-Wconversion` pragma pair (ADR-0003);
   - the P2741 gate (ADR-0006);
   - `TRELLIS_HAS_ATOMIC_WAIT`, `TRELLIS_CPU_RELAX()` and a no-inline attribute (ADR-0012);
-  - fallbacks for the `__is_constructible` and `__is_same` builtins on MSVC (ADR-0014, provisional).
+  - fallbacks for the `__is_constructible` and `__is_same` builtins on MSVC (ADR-0014).
 
 ## Alternatives
 

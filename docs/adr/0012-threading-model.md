@@ -3,7 +3,7 @@
 - **Status:** Accepted (owner, 2026-10-30)
 - **Plan:** [§4](../plan.md#4-architecture-decisions) ADR-12; §6.8, §7.6, §7.7; §16 D6; R18; risk K10
 - **Spikes:** [S4 storage and threading](../spikes/S4-storage-threading.md), whose recommendation the owner accepted.
-- **Amends:** plan §6.8 and §7.6 (the slot design, the retry after a throw, and R004 in all builds).
+- **Amends:** plan §6.8 and §7.6 (the slot design, the retry after a throw, and R004 in all builds), and §7.7 (R004 as the static engine's one runtime failure path).
 
 ## Context
 
@@ -106,3 +106,4 @@ It measured sizes, speed with Google Benchmark, the include cost, semantics in s
 - **2026-10-30, spike S4 (T0.6):** recommended C+spin with the mutex fallback, rejected `call_once`, kept the retry, and moved R004 detection to all builds.
 - **2026-10-30, owner:** accepted S4's recommendation: atomic state-machine slots using `atomic::wait`, with a mutex fallback, and `std::call_once` rejected (docs/PROGRESS.md, "Owner decisions").
 - **2026-10-31, T0.8:** recorded in this file. Plan §6.8 and §7.6 amended.
+- **2026-10-31, T0.8 review:** plan §7.7 amended too, because R004 in every build contradicted its statement that the static engine has no failure path at run time.

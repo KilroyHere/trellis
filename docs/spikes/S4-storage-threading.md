@@ -1,5 +1,7 @@
 # Spike S4: storage and threading
 
+> **Decision:** accepted by the owner on 2026-10-30; recorded in [ADR-0012](../adr/0012-threading-model.md) and [ADR-0005](../adr/0005-state-and-storage.md). The status below is as the spike left it.
+
 Task T0.6, 2026-10-30. **Status: recommendation waiting for owner sign-off.** It decides ADR-12 and
 plan §7.6 and confirms ADR-05 and §7.5.
 

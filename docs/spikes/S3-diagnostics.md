@@ -1,5 +1,7 @@
 # Spike S3: diagnostics rendering
 
+> **Decision:** accepted by the owner on 2026-10-30, with NFR-07 reworded; recorded in [ADR-0006](../adr/0006-diagnostics-contract.md), which leaves the error vocabulary's namespace open for T1.6. The sign-off note below is as the spike left it.
+
 Task T0.5. Code, logs and generated tables are in `spikes/S3-diagnostics/`. `bash spikes/S3-diagnostics/run.sh` rebuilds every number here; it writes `spikes/S3-diagnostics/results.md` (all 240 matrix cells and every check) and exits non-zero if a check fails. **The recommendation waits for the owner's sign-off.**
 
 ## 1. Question

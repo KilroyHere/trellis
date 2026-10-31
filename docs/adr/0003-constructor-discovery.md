@@ -123,7 +123,7 @@ Other choices:
 - **Open questions for Phase 1** (S1 §5):
   - The explain pass should report E005 with the parameter index rather than a generic E002 (ADR-0006).
   - Whether `const shared_ptr<T>&` and `const T&` parameters of unique objects should be allowed, with the placeholder holding the object until the constructor returns (ADR-0004).
-- **Spike S5 is deferred.** It would prototype reflection-based discovery, annotations and namespace scanning (§7.10), and needs GCC 16 (`-std=c++26 -freflection`) or Bloomberg's clang-p2996 fork. Ubuntu 24.04's archives carry GCC 10 to 14 and Clang 14 to 20 only (checked with `apt-cache` on 2026-10-31), and the network here blocks Compiler Explorer, so neither toolchain is reachable from this environment. The reflection strategy stays as planned until T6.0 schedules S5 for Phase 6, or CI gains such a toolchain.
+- **Spike S5 is deferred.** It would prototype reflection-based discovery, annotations and namespace scanning (§7.10), and needs GCC 16 (`-std=c++26 -freflection`) or Bloomberg's clang-p2996 fork. Ubuntu 24.04's archives carry GCC 9 to 14 and Clang 14 to 20 only (checked with `apt-cache` on 2026-10-31), and the network here blocks Compiler Explorer, so neither toolchain is reachable from this environment. The reflection strategy stays as planned until T6.0 schedules S5 for Phase 6, or CI gains such a toolchain.
 
 ## History
 

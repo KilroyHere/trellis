@@ -1,5 +1,7 @@
 # Spike S2: memoization and cycles
 
+> **Decision:** accepted by the owner on 2026-10-31; recorded in [ADR-0014](../adr/0014-resolution-memoization-and-cycles.md). The status line below is as the spike left it.
+
 Status: **waiting for owner sign-off** (task T0.7). Code: `spikes/S2-memoization-cycles/`. Reproduce every number with `bash spikes/S2-memoization-cycles/run.sh --large` from the repository root. It takes about an hour on the 4-vCPU container; `--quick` takes about six minutes and is the verify command. It exits non-zero if an expectation below stops holding. Outputs go to `out/`, which is ignored by version control. `results/` holds a committed snapshot of the final full run, which was stopped twice to adjust the plan and resumed, keeping the records already measured.
 
 ## 1. Question

@@ -754,7 +754,7 @@ struct any_arg {                                   // the resolving placeholder 
 ```
 
 - **Why this set** (amended by ADR-0003, 2026-10-30). A by-value parameter selects the non-const `operator T()`: the placeholder is an rvalue, and a non-const object parameter ranks better than a const one. `T&` and `const T&` can only use the lvalue-yielding `operator T&()`, with `T` deduced as `const U` for a `const U&`. The deleted twins keep an unresolvable request from falling back to the other operator, which would bind a temporary to a `const X&` of a unique `X`, or copy a singleton requested by value. S1's prototype keys `can_resolve` on the request alone; Trellis also keys it on the consumer's lifetime, as [§7.3](#73-resolution-and-memoization)'s memoization key requires.
-- **Forms** (amended by ADR-0003, 2026-10-30). S1 tested 35 parameter forms on gcc-13, gcc-14, clang-18, clang-20 and clang-18 with libc++, and 29 are deduced exactly. `T&&`, `const T&&` and `unique_ptr<T>&&` are reported as their by-value forms, which [§6.3](#63-the-request-form-compatibility-table) makes the rule. `std::optional<T>`, `std::tuple<T>` and `std::any` are ambiguous on every compiler, because their unconstrained converting constructors accept the placeholder; they need the explicit route, and Trellis's own wrapper types must not have such constructors. The table goes into `docs/internals/deduction.md`. MSVC is untested; ADR-0003 names the fallback operator sets.
+- **Forms** (amended by ADR-0003, 2026-10-30). S1 tested 35 parameter forms on gcc-13, gcc-14, clang-18, clang-20 and clang-18 with libc++. 29 are deduced exactly everywhere except gcc-13, which deduces 28 and needs the workaround below. `T&&`, `const T&&` and `unique_ptr<T>&&` are reported as their by-value forms, which [§6.3](#63-the-request-form-compatibility-table) makes the rule. `std::optional<T>`, `std::tuple<T>` and `std::any` are ambiguous on every compiler, because their unconstrained converting constructors accept the placeholder; they need the explicit route, and Trellis's own wrapper types must not have such constructors. The table goes into `docs/internals/deduction.md`. MSVC is untested; ADR-0003 names the fallback operator sets.
 - **Workarounds in `config.hpp`** (amended by ADR-0003, 2026-10-30). On GCC < 14 the probe also declares `operator T&&() const`, because gcc-13 mis-selects `operator T&()` for rvalue-reference parameters. A `#pragma GCC diagnostic` push and ignore around construction silences GCC's `-Wconversion` warning about the object-parameter tie-break.
 - **Copy and move constructors** are excluded by the constraint that the conversion's target is not `Consumer`.
 - **Aggregates** are probed with braces only when the type has no user-declared constructor. Configuration structs are normally bound as values anyway.
@@ -770,7 +770,7 @@ struct any_arg {                                   // the resolving placeholder 
 - **Memoization key:** (key, request form, consumer lifetime). Each triple is evaluated once through a concept or a class-template instantiation, and compilers cache both.
 - **Not in the key:** the path or the depth, on the normal pass. This is the qlibs/di lesson (R9): a path in the type multiplies instantiations by the number of paths, which grows exponentially in graphs with many shared dependencies.
 - **The path is built only by the explain pass**, which runs only after a failure and follows only the first failing edge ([§7.8](#78-diagnostics-engine)), so it costs O(depth × arity).
-- **Instantiation depth budget:** at most 4 levels per hop (NFR-09). The S2 spike measures it with `-ftemplate-depth` sweeps on chains of 50–500. The budget covers the creation code as well as the check (amended by ADR-0014, 2026-10-30; provisional): S2 measured 2 (GCC) or 4 (Clang) levels per hop for the check and 3–4 for the creation code, and 221–298 hops on GCC and 251 on Clang at the default limits, with a lean per-hop shape.
+- **Instantiation depth budget:** at most 4 levels per hop (NFR-09). The S2 spike measures it with `-ftemplate-depth` sweeps on chains of 50–500. The budget covers the creation code as well as the check (amended by ADR-0014, 2026-10-31): S2 measured 2 (GCC) or 4 (Clang) levels per hop for the check and 3–4 for the creation code, and 221–298 hops on GCC and 251 on Clang at the default limits, with a lean per-hop shape.
 
 **Cycles in deduced mode are the main open design problem.** In explicit and reflection modes the graph is known, so a `consteval` depth-first search over dense type indices reports E007 with the full cycle. In deduced mode, parameter types are discovered only by instantiating conversion operators, so a cycle makes the compiler hit its own recursion error ("satisfaction of constraint ... depends on itself" or an instantiation-depth limit) before the library can report one. Spike S2 compares three options:
 
@@ -778,7 +778,7 @@ struct any_arg {                                   // the resolving placeholder 
 2. **Opt-in checking.** Keep option 1 behind `options{.cycle_check = true}`, used for CI builds and when debugging a cryptic recursion error.
 3. **Rely on full-validation builds.** Rely on explicit or reflection mode in a test build (`di::testing::validate`). Document that a cycle in deduced mode produces the compiler's recursion error, and list the signatures to look for.
 
-**Chosen option** (amended by ADR-0014, 2026-10-30; provisional, awaiting owner review): option 3 by default, option 2 as the opt-in, and option 1 rejected. S2 measured option 1 at 1.20–2.41× the hand-wired compile time at N = 100, growing quadratically, and out of memory at N = 250 on Clang with fan-in 10, while memoization stayed at 0.62–1.10× up to N = 1,000. Under memoization a cycle never reaches a recursion limit: the compiler stops with a prompt hard error where the recursion re-enters a node (2–6 errors), and the error catalog documents those messages. The opt-in check is bounded at 200 hops and adds a relaxed second pass on failure, so it reports exactly one TRL-E007; it costs 1.2–2.4× at N = 100, only when enabled. Path tracking, which names the cycle, stays in the explicit and reflection modes; in deduced mode it ran out of memory from N = 20–50.
+**Chosen option** (amended by ADR-0014, 2026-10-31): option 3 by default, option 2 as the opt-in, and option 1 rejected. S2 measured option 1 at 1.20–2.41× the hand-wired compile time at N = 100, growing quadratically, and out of memory at N = 250 on Clang with fan-in 10, while memoization stayed at 0.62–1.10× up to N = 1,000. Under memoization a cycle never reaches a recursion limit: the compiler stops with a prompt hard error where the recursion re-enters a node (2–6 errors), and the error catalog documents those messages. The opt-in check is bounded at 200 hops and adds a relaxed second pass on failure, so it reports exactly one TRL-E007; it costs 1.2–2.4× at N = 100, only when enabled. Path tracking, which names the cycle, stays in the explicit and reflection modes; in deduced mode it ran out of memory from N = 20–50.
 
 ### 7.4 What is validated where
 
@@ -802,9 +802,9 @@ The runtime engine needs dependency lists for classes discovered by deduction. S
 ### 7.5 Storage, lifetimes and teardown
 
 - **Injector layout:** `std::tuple<slot<B>...>`, with slots only for bindings the injector owns; a teardown stack; and the options.
-- **`slot<B>`** holds `std::shared_ptr<Impl>`, or `std::optional<Impl>` for inline storage, plus its initialization state.
+- **`slot<B>`** holds `std::shared_ptr<Impl>`, or, for inline storage, the object in aligned raw bytes, plus its one-byte initialization state, which also serves as the inline object's engaged flag (amended by ADR-0005, 2026-10-30; the draft said `std::optional<Impl>`). An inline slot costs `sizeof(Impl)` plus 1 byte, rounded up to `alignof(Impl)`: 2, 16 and 65 bytes for objects of 1, 8 and 64 bytes.
 - **Teardown stack:** a `std::array` of `{destroy function, object}` pairs. Its capacity is the number of owned bindings, known at compile time, so it needs no heap. Each slot pushes itself when constructed, and the injector's destructor pops in reverse, so teardown runs in reverse order of construction for each injector.
-  - **Ordering rules** (amended by ADR-0005, 2026-10-30). A slot pushes its entry after its constructor succeeds and before it publishes `ready`. A dependency is ready before its dependent's constructor runs, so its entry always lands below its dependents', even when different threads build them. Under `threading::safe` the counter is an `atomic<size_t>` with relaxed `fetch_add`. Failed attempts push nothing, so the capacity can't overflow.
+  - **Ordering rules** (amended by ADR-0005, 2026-10-30). A slot pushes its entry after its constructor succeeds and before it publishes `ready`. A direct dependency is ready before its dependent's constructor runs, so its entry always lands below its dependents', even when different threads build them. Under `threading::safe` the counter is an `atomic<size_t>` with relaxed `fetch_add`. Failed attempts push nothing, so the capacity can't overflow.
   - The stack is unwound before the slots' storage is destroyed: it is declared after the slots, or `~injector` unwinds it (amended by ADR-0005, 2026-10-30).
 - **Eager mode:** `make_injector` constructs every singleton in dependency order. If a constructor throws, everything already built is torn down in reverse order and the exception propagates, so `make_injector` gives the strong guarantee.
 - **Scopes:** `scope<Tag, Parent>` holds slots for bindings scoped to `Tag`, plus its seeds and its own teardown stack, and refers to its parent.
@@ -830,7 +830,7 @@ The runtime engine needs dependency lists for classes discovered by deduction. S
 - **Exceptions from constructors:**
   - `create<T>()` gives the basic guarantee: singletons already built stay valid, and any unique objects built for the failed request are destroyed.
   - `make_injector` in eager mode gives the strong guarantee.
-- **With `-fno-exceptions`:** the static engine is unaffected, because it has no failure path at run time. The runtime engine's `get` uses the handler from ADR-09.
+- **With `-fno-exceptions`:** the static engine is unaffected, because it has no failure path at run time, except R004 (re-entrant construction through a lazy), whose reporting under `-fno-exceptions` is an open point (amended by ADR-0012, 2026-10-30). The runtime engine's `get` uses the handler from ADR-09.
 - **No RTTI in the static engine.** The runtime engine needs RTTI only for the `type_key::rtti` policy, and never uses `dynamic_cast`.
 
 ### 7.8 Diagnostics engine
@@ -855,12 +855,12 @@ The runtime engine needs dependency lists for classes discovered by deduction. S
 
 **C++20 rendering**
 
-- `create<T>()` checks the memoized analysis. On failure, the branch for the failing graph instantiates exactly one `static_assert(trellis::error::E001<IRepository, request<std::shared_ptr<IRepository>>, path<App, Service>>::reported);` and nothing else.
-- What each compiler prints (amended by ADR-0006, 2026-10-30; the draft said all three print the condition's template arguments on the first lines). Clang puts the condition, with the type, the request and the path, on the first error line. GCC puts the assertion's literal on the error line and the condition in the attached note. MSVC is expected to print only the literal (untested), so the type would appear only in its "see reference" notes. The literal therefore carries the ID: `"TRL-E001: no binding for an abstract type"`.
+- `create<T>()` checks the memoized analysis. On failure, the branch for the failing graph instantiates exactly one `static_assert(trellis::error::E001<IRepository, request<std::shared_ptr<IRepository>>, path<App, Service>>::reported, "TRL-E001: no binding for an abstract type");` and nothing else (amended by ADR-0006, 2026-10-30: the literal was added).
+- What each compiler prints (amended by ADR-0006, 2026-10-30; the draft said all three print the condition's template arguments on the first lines). Clang puts the condition, with the type, the request and the path, on the first error line. GCC puts the assertion's literal on the error line and the condition in the attached note. MSVC is expected to print only the literal (untested), so the type would appear only in its "see reference" notes. That is why the literal carries the ID.
 
 **C++26 rendering** (`__cpp_static_assert >= 202306L`, P2741R3)
 
-Also used in C++20 and C++23 modes on GCC 14 and Clang 20 or later, where P2741 works as an extension; `config.hpp` gates it on compiler versions rather than on the feature-test macro alone (amended by ADR-0006, 2026-10-30).
+Also used in C++20 and C++23 modes on GCC 14 or later and Clang 20 or later, where P2741 works as an extension; `config.hpp` gates it on compiler versions rather than on the feature-test macro alone (amended by ADR-0006, 2026-10-30).
 
 The message is built at compile time in a `fixed_string` buffer:
 
@@ -932,7 +932,7 @@ error: static assertion failed: trellis [TRL-E001]: no binding for abstract type
 | C4 | Flatten modules once; no fluent type accumulation | Fruit's flat-component blow-up (ADR-10) |
 | C5 | Short, flat type names: `binding<K, Impl, L>`, not stacks of nested policies | Symbol length drives compiler memory and debug-info size |
 | C6 | Instantiate creation code only for roots that are actually requested | Unused bindings cost only their binding type |
-| C7 | ≤ 4 instantiation levels per hop, counting the creation code as well as the check (amended by ADR-0014, 2026-10-30; provisional) | NFR-09; dingo's 52-link limit. S2: the creation code nests 3–4 levels per hop and limits GCC's chains |
+| C7 | ≤ 4 instantiation levels per hop, counting the creation code as well as the check (amended by ADR-0014, 2026-10-31) | NFR-09; dingo's 52-link limit. S2: the creation code nests 3–4 levels per hop and limits GCC's chains |
 | C8 | Single-TU wiring pattern; optional explicit instantiation of `create<Root>` (P2) | R20; incremental builds |
 | C9 | Profile every release with `-ftime-trace` and ClangBuildAnalyzer; keep a top-10 list of the costliest templates | Catches regressions early |
 

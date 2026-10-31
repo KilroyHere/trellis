@@ -3,7 +3,7 @@
 - **Status:** Accepted (owner, 2026-10-30)
 - **Plan:** [§4](../plan.md#4-architecture-decisions) ADR-06; §3.2 NFR-07; §7.8; R3, R4
 - **Spikes:** [S3 diagnostics rendering](../spikes/S3-diagnostics.md), whose recommendation the owner accepted with NFR-07 reworded. S1 and S2 add findings about deduced mode.
-- **Amends:** plan §3.2 (NFR-07) and §7.8 (what each compiler prints; when the C++26 message is used).
+- **Amends:** plan §3.2 (NFR-07) and §7.8 (the example's literal; what each compiler prints; when the C++26 message is used).
 
 ## Context
 
@@ -23,13 +23,12 @@ Spike S3 built a mock pipeline that follows plan §7.3 and §7.8, and compared n
    - the creation code of a failing graph is never instantiated, so nothing cascades;
    - the `[[noreturn]]` call stands in for a return value, so it needs no value of `T`, which may be abstract or a reference, and it stops GCC's `-Wreturn-type`;
    - there is one `static_assert` per error kind, each in its own `if constexpr` branch with its own literal, written inline in `create`; a helper function or a macro adds 1–3 lines of "required from" or "in expansion of macro" on GCC;
-   - the error vocabulary (`error::E00x`, `request`, `path`) lives outside `inline namespace v1`, because GCC spells inline namespaces out (`trellis::v1::unique`) and Clang hides them;
    - the injector's type stays short, so GCC's instantiation banner stays one line (S3 §3.2; ADR-0010).
 
    Measured on all four compilers: 1 error, 0 warnings and 7–12 lines, under 1 KB at depth 3 and under 1.9 KB at depth 100 (S3 §3.1, §3.6).
 3. **C++20 rendering** (S3 §4.2): `static_assert(error::E00x<T, request<R>, path<...>>::reported, "TRL-E00x: <summary>")`. Clang puts the condition, with the type, the request and the path, on the first error line. GCC puts the literal, which carries the ID, on the error line, and the condition in the attached note. So both parts carry information.
 4. **C++26 rendering** (S3 §4.3): a P2741 message of four lines: the ID and the type; the requested form, the consumer and the parameter; the path; the fix. It is built at compile time into a `fixed_string` of exactly the right size, with one pass that counts characters and one that fills them in (S3 §3.5).
-   - It is used when `__cpp_static_assert >= 202306L` in C++26 mode, **and also in C++20 and C++23 modes on GCC 14 and Clang 20 or later,** where it works as an extension. GCC 13 and Clang 18 reject it there, and Clang 19 wasn't tested, so it stays off for them.
+   - It is used when `__cpp_static_assert >= 202306L` in C++26 mode, **and also in C++20 and C++23 modes on GCC 14 or later and Clang 20 or later,** where it works as an extension. GCC 13 and Clang 18 reject it there, and Clang 19 wasn't tested, so it stays off for them.
    - `TRELLIS_HAS_STATIC_ASSERT_MESSAGE` in `config.hpp` gates it on compiler versions and `__cplusplus`, not on feature-test macros alone: clang-20 defines `__cpp_deleted_function` at `-std=c++20` and then warns when the feature is used. `#pragma GCC diagnostic ignored "-Wc++26-extensions"` surrounds the one assertion.
    - This puts the type on the first error line for gcc-14 and clang-20 in C++20 mode too.
 5. **The explain pass** (S3 §3.5) runs only after a failure. It reads the memoized result of each parameter on the failing path, descends into the first failing one with the path extended and the 1-based parameter index, and classifies the deepest failure into an ID.
@@ -65,7 +64,8 @@ Renderings S3 measured (S3 §3.2, §4.4). Lines are for E001 three hops deep, on
 - **T1.6 implements this** for E001–E005, E009, E010 and E012 in C++20 form. `TRELLIS_HAS_STATIC_ASSERT_MESSAGE` currently requires C++26 mode (T0.1), and T1.6 extends it with the compiler-version gate in item 4. That answers T0.1's open question about messages before C++26. T1.6's acceptance text predates the rewording of NFR-07; under the reworded target, gcc-13 in C++20 mode meets it through the attached note.
 - **Errors are reported once per failing `create<>` root,** not once per root cause across roots: two roots that fail on the same missing binding give two errors (S3 §5).
 - **Deduced mode limits the explain pass.** The pass needs each class's parameter list, which deduced mode can't enumerate (S2 §5). There it can name the consumer whose construction failed, but not the parameter; the deleted twin names the request in the compiler's note (S1 §3.1). S1 §5 asks that it still report E005 with the parameter index rather than a generic E002; T1.6 works out how.
-- **A dependency cycle in deduced mode is an exception to "one error per root cause"** under the provisional ADR-0014: by default it ends in the compiler's own 2–6 errors, which the error catalog documents, and `options{.cycle_check = true}` gives exactly one TRL-E007.
+- **Open for T1.6: where the error vocabulary lives.** S3 recommends keeping `error::E00x`, `request` and `path` outside `inline namespace v1`, because GCC spells inline namespaces out (`trellis::v1::unique`) and Clang hides them, so the names come out shorter and the same on both (S3 §3.2, §4.2). That conflicts with the project's rule that everything lives in namespace `trellis` with `inline namespace v1` (CLAUDE.md), and with plan §7.5, where the inline namespace lets two major versions coexist without breaking the one-definition rule. This ADR doesn't decide it. S3's measurements in item 2 kept the vocabulary outside `v1`; inside it, GCC's output gains `v1::` in each qualified name.
+- **A dependency cycle in deduced mode is an exception to "one error per root cause"** under ADR-0014: by default it ends in the compiler's own 2–6 errors, which the error catalog documents, and `options{.cycle_check = true}` gives exactly one TRL-E007.
 - **A C++26 build costs a roughly fixed 0.3–0.4 s more** than a C++20 one at both depths, mostly from the language mode and its headers rather than from rendering the message (S3 §3.5).
 - **Diagnostics come earlier:** the owner ordered Phase 4 (diagnostics) before Phase 3 (binding features) (plan §12.2), so the full catalog, the C++26 messages, path elision, golden tests on every compiler and the usability check follow Phase 2.
 - **Not prototyped** (S3 §5): E002, E003, E006, E007 and cycles, and more than two lifetimes. GCC 15's SARIF output (`-fdiagnostics-add-output`) may suit golden tests better than text; it wasn't available.
@@ -76,3 +76,4 @@ Renderings S3 measured (S3 §3.2, §4.4). Lines are for E001 three hops deep, on
 - **2026-10-30, spike S3 (T0.5):** recommended the mechanism and renderings above, the compiler-version gate for P2741 messages and a rewording of NFR-07.
 - **2026-10-30, owner:** accepted S3's rendering and reworded NFR-07, and approved the golden normalization, which T0.10 implemented the same day (docs/PROGRESS.md, "Owner decisions").
 - **2026-10-31, T0.8:** recorded in this file. Plan §3.2 (NFR-07) and §7.8 amended.
+- **2026-10-31, T0.8 review:** keeping the error vocabulary outside `inline namespace v1` moved from the Decision to an open point for T1.6, because it conflicts with the project's namespace rule (CLAUDE.md, plan §7.5). The example in plan §7.8 gained its literal.

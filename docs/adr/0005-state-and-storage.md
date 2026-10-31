@@ -3,7 +3,7 @@
 - **Status:** Accepted (owner, 2026-10-30)
 - **Plan:** [§4](../plan.md#4-architecture-decisions) ADR-05; §6.2, §7.5, §7.7; FR-02, FR-13
 - **Spikes:** [S4 storage and threading](../spikes/S4-storage-threading.md), whose recommendation the owner accepted. S4 confirmed this ADR and added two teardown rules.
-- **Amends:** plan §7.5 (the teardown ordering rules).
+- **Amends:** plan §7.5 (the inline slot layout and the teardown ordering rules).
 
 ## Context
 
@@ -15,7 +15,7 @@ Boost.DI's singletons are function-local statics shared by every injector in the
 2. **`singleton` storage is `std::shared_ptr<Impl>`, held by the injector,** so a `shared_ptr<T>` request returns real shared ownership. The slot is 24 bytes in every slot design S4 measured, because of padding (S4 §3.1), and costs one allocation per singleton. A `shared_ptr` the caller holds outlives the injector's teardown; then the object dies and `weak_ptr`s expire (S4 §3.4).
 3. **`singleton_inline` stores the object inside the injector,** with no heap allocation. S4's slot keeps it in aligned raw bytes, and the slot's one-byte state serves as its engaged flag, so a slot costs `sizeof(T)` plus 1 byte, rounded up to `alignof(T)`: 2 bytes for a 1-byte `T`, 16 for 8 bytes, 65 for 64 bytes (S4 §3.1). A `shared_ptr<T>` request is a compile error (E005).
 4. **The teardown stack** is a `std::array` of `{destroy function, object}` pairs plus a counter. Its capacity is the number of owned bindings, known at compile time, so it needs no heap. It costs 16 bytes per owned slot plus an 8-byte counter: `teardown_stack<100>` is 1,608 bytes. Teardown runs in reverse order of construction for each injector and scope, and two rules make that hold (S4 §4):
-   1. **Push after construction succeeds and before publishing `ready`.** A dependency is ready before its dependent's constructor runs, so its entry always lands below its dependents', even when different threads build them: cache coherence orders the two `fetch_add`s. The counter is an `atomic<size_t>` with relaxed `fetch_add` under `threading::safe`, and a plain `size_t` under `threading::none`. Failed attempts push nothing, so the capacity can never overflow.
+   1. **Push after construction succeeds and before publishing `ready`.** A direct dependency is ready before its dependent's constructor runs, so its entry always lands below its dependents', even when different threads build them: cache coherence orders the two `fetch_add`s. The counter is an `atomic<size_t>` with relaxed `fetch_add` under `threading::safe`, and a plain `size_t` under `threading::none`. Failed attempts push nothing, so the capacity can never overflow.
    2. **Unwind before the slots' storage is destroyed:** declare the stack after the slots, or unwind it in `~injector`.
 5. **Exception guarantees** (§7.7), as S4 tested them (S4 §3.4):
    - `create<T>()` gives the basic guarantee: dependencies built during a failed attempt stay built and registered. In `E(F, G)` where `G` throws, `F` stays built, `E` and `G` are retried later, and teardown runs `E, G, F, H`.
@@ -32,7 +32,7 @@ Boost.DI's singletons are function-local statics shared by every injector in the
 
 - **A `shared_ptr<T>` request costs atomic reference counting:** about 16 ns, 60 times a reference request, and 54–70 ns amortized when 8 threads share one singleton (S4 §3.2). The docs should steer hot paths to `T&`.
 - The default costs one heap allocation per singleton; embedded users opt into inline storage.
-- Plan §7.5 describes inline storage as `std::optional<Impl>`. S4's raw storage, with the state byte as the engaged flag, is what gives the sizes above.
+- **Teardown follows construction order, not the dependency graph.** A lazy or provider dependency that is first built after its dependent lands above it on the stack, so it is destroyed first.
 - **The thread-local frame stack that detects R004** (ADR-0012) is the one piece of state outside injector and scope objects. It holds only pointers to the slots its thread is constructing right now and is empty whenever no construction is running, so it shares nothing between injectors.
 - **A possible P2 optimization** (S4 §4): 2-byte slot indices with a static table of destroy functions per injector type, 2N + 8 bytes instead of 16N + 8.
 - The documented precondition stands (§6.3): objects that hold an injector's singletons by reference must not outlive it, and holding them by `shared_ptr` is the way to outlive it.
@@ -44,3 +44,4 @@ Boost.DI's singletons are function-local statics shared by every injector in the
 - **2026-10-30, spike S4 (T0.6):** confirmed both storage policies and the teardown stack, added the two ordering rules, and rejected `std::atomic<std::shared_ptr>` storage.
 - **2026-10-30, owner:** accepted S4's recommendation (docs/PROGRESS.md, "Owner decisions").
 - **2026-10-31, T0.8:** recorded in this file. Plan §7.5 amended with the ordering rules.
+- **2026-10-31, T0.8 review:** plan §7.5's slot text amended to match item 3 (the draft said `std::optional<Impl>`). Item 4's first rule now speaks of direct dependencies, because a lazy or provider dependency can be built after its dependent.

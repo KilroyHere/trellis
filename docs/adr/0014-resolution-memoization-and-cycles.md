@@ -1,9 +1,9 @@
 # ADR-0014: Resolution: memoization, depth per hop and cycles in deduced mode
 
-- **Status:** Accepted (provisional, awaiting owner review)
+- **Status:** Accepted (owner, 2026-10-31)
 - **Plan:** §7.3, §7.4 (E007), §8.1 C1, C5, C7; NFR-04, NFR-05, NFR-09; risks K1, K3. Plan [§4](../plan.md#4-architecture-decisions) has no ADR for this decision; this one is new.
-- **Spikes:** [S2 memoization and cycles](../spikes/S2-memoization-cycles.md). The owner hasn't confirmed S2's recommendation yet. Until then it is the default that work follows, and it is listed under "Waiting for owner" in docs/PROGRESS.md.
-- **Amends:** plan §7.3 (the cycle option and the depth budget) and §8.1 C7, each marked provisional.
+- **Spikes:** [S2 memoization and cycles](../spikes/S2-memoization-cycles.md), whose recommendation the owner accepted on 2026-10-31.
+- **Amends:** plan §7.3 (the cycle option and the depth budget) and §8.1 C7.
 
 ## Context
 
@@ -59,7 +59,7 @@ Spike S2 measured three strategies on S1's injector stub, with identical creatio
    - failure passes (the relaxed pass, and ADR-0006's explain pass) run only on failure, in the same `if constexpr` chain in `create()`;
    - the hop uses the builtins `__is_constructible`, and `__is_same` for path tracking, where the `std` traits would instantiate class templates; both get `config.hpp` fallbacks for MSVC;
    - the injector names a binding map rather than taking the binding list (ADR-0010, open point);
-   - no fold over all of a module's bindings, because Clang limits folds to 256 operands (ADR-0010).
+   - no single fold over more than 256 operands, which is Clang's limit (ADR-0010; inferred for binding lists, untested).
 
 ## Alternatives
 
@@ -75,10 +75,11 @@ Spike S2 measured three strategies on S1's injector stub, with identical creatio
 - **MSVC risk** (S2 §5, untested): high for NFR-09, medium for cycles. MSVC has no `-ftemplate-depth`; its template recursion limit is fixed (error C1202) and reported to be lower than GCC's and Clang's. A chain test on MSVC in CI should come first in Phase 1, together with S1's tests. How MSVC reports a re-entered constraint satisfaction is unknown, so the catalog needs an MSVC entry. `__is_same` may be missing there, and `std::is_same_v` is the fallback.
 - **Not measured** (S2 §5): request forms other than `shared_ptr` were checked for correctness but not timed; graphs where one class has consumers of different lifetimes; aggregates, scoped lifetimes, factories and `lazy`; Apple Clang; option 2 at N = 1,000, which can't compile there at the default limits; and fan-in 10 at N of 500 or more.
 - **Work this creates:** Phase 2 implements `cycle_check` and the error catalog's E007 page (plan §12.2: "E007 cycles (per S2)"). No task carries the 200-hop chain test or the MSVC chain test yet.
-- **If the owner rejects this ADR,** plan §7.3's three options are open again; the measurements above still stand.
 
 ## History
 
 - **2026-10-30, plan draft 1:** §7.3 posed the three options and named spike S2 to choose between them.
-- **2026-10-30, spike S2 (T0.7):** measured the strategies and recommended this decision (S2 §4). It waits for the owner (docs/PROGRESS.md, "Waiting for owner").
-- **2026-10-31, T0.8:** recorded as this new ADR rather than inside ADR-0003, because it concerns resolution rather than discovery, and its status differs from ADR-0003's. Plan §7.3 and §8.1 C7 amended, each marked provisional.
+- **2026-10-30, spike S2 (T0.7):** measured the strategies and recommended this decision (S2 §4), which then waited for the owner (docs/PROGRESS.md, "Waiting for owner").
+- **2026-10-31, T0.8:** recorded as this new ADR rather than inside ADR-0003, because it concerns resolution rather than discovery, and its status then differed from ADR-0003's. Plan §7.3 and §8.1 C7 amended, each marked provisional.
+- **2026-10-31, owner:** accepted S2's recommendation: no cycle check on the normal pass, plus the opt-in, depth-bounded `cycle_check`.
+- **2026-10-31, T0.8 review:** status set to Accepted (owner, 2026-10-31). The plan markers in §7.3 and §8.1 C7 now carry that date and no longer say provisional.

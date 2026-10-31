@@ -2,7 +2,7 @@
 
 - **Status:** Accepted (plan baseline)
 - **Plan:** [§4](../plan.md#4-architecture-decisions) ADR-04; §6.2, §6.3; FR-02, FR-03, FR-04
-- **Spikes:** none changed it. S1, S2 and S4 confirmed parts of it. S1's rule that `T&&` is the request `T` is recorded in [ADR-0003](0003-constructor-discovery.md) and amends §6.3.
+- **Spikes:** S1, S2 and S4 confirmed parts of it without changing it. S1 also led to a new rule about how a parameter's spelling maps to a request form, `T&&` as the request `T`. [ADR-0003](0003-constructor-discovery.md) decides that rule and adds a note to §6.3; this ADR's lifetimes and table are unchanged.
 
 ## Context
 
@@ -21,7 +21,8 @@ What the spikes confirmed:
 - **Deduced mode enforces the table without fallbacks.** S1's deleted twins make a request the binding can't satisfy ill-formed, instead of letting overload resolution pick another form. E005 for a reference to a unique binding, and for a singleton requested by value, each give the ID as the first and only error on five configurations (S1 §3.1, §3.5).
 - **The consumer's lifetime belongs in the memoization key,** because the captive rule depends on it (S2 §2; ADR-0014).
 - **Inline storage rejects `shared_ptr<T>` requests at compile time** (S4 §3.4; ADR-0005).
-- **`T&&` and `const T&&` parameters are the request `T`** (ADR-0003; the note in §6.3).
+
+A related rule from ADR-0003: a parameter of type `X&&` or `const X&&` is the request `X` (the note in §6.3). It says how a parameter's spelling maps to a form; the forms, the lifetimes and the table above are unchanged.
 
 ## Alternatives
 
@@ -38,3 +39,4 @@ What the spikes confirmed:
 
 - **2026-10-30, plan draft 1:** drafted as ADR-04 in plan §4.
 - **2026-10-31, T0.8:** recorded in this file, unchanged. §6.3 gained ADR-0003's note on `T&&` parameters.
+- **2026-10-31, T0.8 review:** the Spikes line and the list of spike findings made consistent: the `T&&` rule belongs to ADR-0003 and leaves this ADR's lifetimes and table unchanged.

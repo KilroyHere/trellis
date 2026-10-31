@@ -22,7 +22,7 @@ Fruit's runtime injection errors call `exit(1)`, which a caller can't catch (R8)
 
 ## Consequences
 
-- **R004 is a new runtime error in the static engine.** Plan §7.7 expected the static engine to have no failure path at run time with `-fno-exceptions`. Re-entrant construction through a lazy is now detected in every build (ADR-0012), and S4's prototype reports it by throwing `TRL-R004`. How it is reported without exceptions is open; this ADR's handler is the obvious channel. It is decided when `lazy` and `provider` arrive in Phase 2.
+- **R004 is a new runtime error in the static engine.** Plan §7.7 said the static engine has no failure path at run time with `-fno-exceptions`; it now names R004 as the exception (amended by ADR-0012). Re-entrant construction through a lazy is detected in every build (ADR-0012), and S4's prototype reports it by throwing `TRL-R004`. How it is reported without exceptions is open; this ADR's handler is the obvious channel. It is decided when `lazy` and `provider` arrive in Phase 2.
 - Runtime messages reuse the compile-time type names of plan §7.1 (`type_name<T>()`), which S3 showed are constant expressions on GCC and Clang, including with libc++ (S3 §3.4).
 
 ## History

@@ -22,12 +22,13 @@ A chain like `.bind().bind().bind()`, where each call returns a new type holding
 ## Consequences
 
 - **Open point: the injector's type should name a module, not list the bindings.**
-  - S2 recommends, provisionally (ADR-0014), that the injector take a named binding map, such as `struct app : trellis::module<...> {}`. Taking the binding list as `injector<Bindings...>` would put all N bindings into the name of every node and every creation-code symbol (S2 §2, §4.4; not measured).
+  - S2's recommendation, which the owner accepted on 2026-10-31 (ADR-0014), has the injector take a named binding map, such as `struct app : trellis::module<...> {}`. Taking the binding list as `injector<Bindings...>` would put all N bindings into the name of every node and every creation-code symbol (S2 §2, §4.4; not measured).
   - S3 measured the diagnostic side: with the injector parameterized by module names, GCC's "In instantiation of ... [with R = App; Module = app_module]" banner stays one short line instead of listing every binding (S3 §3.2).
   - `make_injector(xs...)` deduces its pack, so the API of §6.1 and §6.9 needs a way to give the result a short name. That is for T1.4 and the API review.
-- **No fold over all of a module's bindings:** Clang limits fold expressions to 256 operands (`-fbracket-depth=256`). S2 hit the limit with a fold over a 257-element path and infers it for binding lists, untested (S2 §3.3). The inheritance-based map doesn't fold, and checks over the whole binding list must not fold either.
+- **No single fold over more than 256 operands** (inferred, untested): Clang limits a fold expression to 256 operands (`-fbracket-depth=256`). S2 hit the limit with a fold over a 257-element path and infers that folds over binding lists hit it too, without testing that (S2 §3.3). Folds stay the default tool (§7.1, §8.1 C3), but a check over a module with more than 256 bindings must split its fold or avoid one. The inheritance-based map doesn't fold.
 
 ## History
 
 - **2026-10-30, plan draft 1:** drafted as ADR-10 in plan §4.
 - **2026-10-31, T0.8:** recorded in this file, unchanged; S2's and S3's findings on type names and the fold limit added as consequences.
+- **2026-10-31, T0.8 review:** the fold consequence narrowed to "no single fold over more than 256 operands" and marked inferred and untested, consistent with plan §7.1 and §8.1 C3. S2's recommendation is now owner-accepted.

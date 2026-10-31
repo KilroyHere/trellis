@@ -1,5 +1,7 @@
 # Spike S1: deduced constructor discovery
 
+> **Decision:** accepted by the owner on 2026-10-30; recorded in [ADR-0003](../adr/0003-constructor-discovery.md). The status line below is as the spike left it.
+
 Status: **waiting for owner sign-off** (task T0.4). Code: `spikes/S1-deduced-discovery/`. Reproduce every number with `bash spikes/S1-deduced-discovery/run.sh` from the repository root; it exits non-zero if any expectation below stops holding. Its outputs go to `out/`, which is ignored by version control. `results/` holds a committed snapshot of the final run: tables, program outputs and the first error line of every failing cell.
 
 ## 1. Question
