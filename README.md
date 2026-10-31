@@ -71,7 +71,7 @@ error: static assertion failed: trellis [TRL-E001]: no binding for abstract type
   fix: add di::bind<IRepository>.to<YourImplementation>() (docs: errors/TRL-E001)
 ```
 
-Each error ID has a page in [`docs/errors/`](docs/errors/README.md).
+Each error ID gets a page in [`docs/errors/`](docs/errors/README.md) when the library first reports it.
 
 ## Repository map
 

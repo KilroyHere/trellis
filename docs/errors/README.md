@@ -39,7 +39,10 @@ They follow [ADR-0009](../adr/0009-runtime-error-model.md): `get<T>()` throws a 
 |---|---|---|
 | [TRL-E000](TRL-E000.md) | Placeholder for the tooling's own tests | Test-only |
 
-The fixtures of the runner self-test in `tests/tools/compile_fail_fixtures/` also contain ID-like strings: `TRL-E001`, `TRL-E999` and the malformed `TRL-E0012`. They test how `tools/compile_fail.py` matches IDs. They are inputs of tooling tests, not diagnostics, so they have no pages of their own.
+Some tests also contain ID-like strings as inputs, not diagnostics, so they have no pages of their own:
+
+- the fixtures of the runner self-test in `tests/tools/compile_fail_fixtures/`: `TRL-E001`, `TRL-E999` and the malformed `TRL-E0012`. They test how `tools/compile_fail.py` matches IDs;
+- `tests/unit/fixed_string_test.cpp`, which builds the text `trellis [TRL-E001]` to test compile-time message assembly.
 
 ## Status values
 

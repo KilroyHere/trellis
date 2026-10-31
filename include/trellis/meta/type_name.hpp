@@ -162,7 +162,7 @@ inline constexpr auto type_name_storage = make_type_name<T>();
 /// @code
 /// namespace app { struct service {}; }
 /// static_assert(trellis::type_name<app::service>() == "app::service");
-/// std::printf("%s\n", trellis::type_name<app::service>().data());
+/// void print() { std::printf("%s\n", trellis::type_name<app::service>().data()); }
 /// @endcode
 template <class T>
 [[nodiscard]] constexpr std::string_view type_name() noexcept {

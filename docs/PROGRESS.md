@@ -45,6 +45,22 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev` so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
 
+## 2026-10-31: T1.12 documentation scaffold (passed)
+
+- **What changed:** landed in pieces. 729e43c added the error catalog: `docs/errors/README.md` (every ID of plan §7.8, with meaning, link and status), `_template.md`, `TRL-E000.md`, and `tools/error_catalog.py` as the ctest `tools.error_catalog` with its selftest. 617c3be added `CHANGELOG.md` (Keep a Changelog) and `docs/internals/README.md`, the notes index and the doc-comment convention. bb5ac78 fixed a stale plan link and ADR-0002's D5 status. T1.1 (3c25110) supplied the first internals note, `meta-toolkit.md`, the convention applied to its headers, and its CHANGELOG lines.
+- **Review:** passed. All 17 catalog meanings match plan §7.8; all 24 doc-comment blocks have the four parts; every test the meta-toolkit note cites exists, and its Clang fold failure reproduces. Non-blocking findings, fixed on landing:
+  - the check missed an ID right after a C escape (`"...\nTRL-E013"`); fixed, with a selftest case;
+  - the CHANGELOG claimed `std::expected` in every C++23 build (clang-18 with libstdc++ gets the fallback) and MSVC and Apple Clang results for T1.1's headers, which have never been built there;
+  - the README claimed every ID already has a page;
+  - the `type_name` doc example mixed namespace and block scope;
+  - the catalog's list of ID-like test strings missed `tests/unit/fixed_string_test.cpp`;
+  - ADR-0002's History wasn't oldest first.
+- **Evidence:** `scripts/tasks.py verify T1.12`: `[PASS] scripts/check-fast.sh (54.7 s)`, the three files exist, `T1.12: all verify commands passed`. The error catalog's selftest passes with 12 tests after the fix.
+- **[NEEDS CLARIFICATION]:** "pages exist for the IDs used in include/ or tests/" is read as IDs used as diagnostics. ID-like strings that are test inputs (the runner's fixtures, the `fixed_string` test) get no pages, and the catalog lists them.
+- **Follow-ups:**
+  - A page linked only inside an HTML comment or a code fence counts as linked; harmless for now.
+  - Dispatch `platforms.yml` (MSVC and Apple Clang) once T1.2 and T1.4 land, since T1.1's MSVC risk (identical using-declared overloads for repeated types) is untested there.
+
 ## 2026-10-31: T1.1 meta toolkit (passed)
 
 - **What changed** (squashed as 3c25110): `include/trellis/meta/` holds `type_list`, `type_map`, `fixed_string`, `type_name` and `result`. config.hpp gains five macros. There are unit tests on every local preset, 8 compile-fail tests, doc comments, `docs/internals/meta-toolkit.md` and CHANGELOG lines. The techniques:

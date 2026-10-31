@@ -36,7 +36,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 # Anything shaped like an error ID: TRL-, a capital letter, digits, and nothing word-like or "-"
 # on either side, so that TRL-E001 is found in "trellis [TRL-E001]:" but TRL-E0xx isn't an ID.
-ID_LIKE = re.compile(r"(?<![\w-])TRL-[A-Z]\d+(?![\w-])")
+# An escape such as \n or \t right before the ID counts as a boundary too, as in "...\nTRL-E001".
+ID_LIKE = re.compile(r"(?:(?<![\w-])|(?<=\\[abfnrtv]))TRL-[A-Z]\d+(?![\w-])")
 ERROR_ID = re.compile(r"TRL-[ER]\d{3}")  # the shape tools/compile_fail.py accepts for expect-id
 PLACEHOLDER = "TRL-E000"
 # The index's link to a page: ](TRL-E001.md), also as ](./TRL-E001.md) or with an #anchor.

@@ -79,6 +79,14 @@ class ErrorCatalogCheckTest(unittest.TestCase):
         }, pages=["TRL-E001"]), "include/trellis/create.hpp:3: TRL-E013 has no page",
             "docs/errors/TRL-E013.md")
 
+    def test_an_id_right_after_an_escape_needs_a_page_too(self):
+        # A C escape such as \n or \t ends in a letter, so a plain word-boundary check misses the ID.
+        self.assert_fails(run_check({
+            "include/trellis/create.hpp": 'static_assert(false, "context\\nTRL-E013: x");\n'
+                                          'inline constexpr const char* note = "\\tTRL-R006";\n',
+        }, pages=["TRL-E001"]), "include/trellis/create.hpp:1: TRL-E013 has no page",
+            "include/trellis/create.hpp:2: TRL-R006 has no page")
+
     def test_an_id_in_a_doc_comment_needs_a_page_too(self):
         self.assert_fails(run_check({
             "include/trellis/scope.hpp": "/// @par Errors\n/// - `TRL-E011`: outside its scope.\n",
