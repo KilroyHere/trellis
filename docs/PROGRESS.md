@@ -35,6 +35,7 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - (a) keep NFR-13's minimum, 19.38, and use a 150-hop bound on MSVC before 19.50: the provisional text, measured to give exactly one TRL-E007 on cl 19.44;
   - (b) raise NFR-13's MSVC minimum to 19.51. 19.45 to 19.50 can't be measured on GitHub's image, so 19.50 is only an assumed boundary.
   Not blocking until the cycle check lands in Phase 2.
+- **Construction rule for explicit declarations (T1.2, ADR-0003, amended).** An aggregate is checked and built with braces, which rejects narrowing and allows brace elision; every other type is checked with `is_constructible` and built with parentheses. This refines the accepted ADR-0003, which said `is_constructible` for every type. Confirm it, or say otherwise before T1.5 builds on it.
 - **Error IDs for misuse asserts (T1.1, T1.2).** Some static_asserts report misuse of Trellis's own vocabulary rather than a wiring mistake, and carry no TRL ID, because plan §7.8 lists none for them: a `type_list` or `type_map` given a non-list, an out-of-range index, a missing key, and a `trellis_ctor` alias that doesn't name a `ctor<...>`. ADR-0006 says every mistake Trellis reports has a stable ID. Recommendation: give an ID (the next free numbers after TRL-E012) to misuse a user can make through the public API, such as the malformed alias, and leave the internal meta-toolkit guards without IDs. Not blocking.
 - **The ADR set (T0.8)** is owner-reviewable: `docs/adr/README.md` indexes ADR-0001 to ADR-0014 with their statuses.
 - **CI on a private repo:** Linux runs on every push; macOS and Windows run weekly or on demand to save Actions minutes. Making the repository public would allow the full matrix on every push.
@@ -44,6 +45,29 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Add `tests/golden_manifest.txt` to the protected paths.
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev` so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
+
+## 2026-10-31: T1.2 explicit constructor declaration (passed)
+
+- **What changed** (squashed as 69d1f08): `include/trellis/discovery/ctor_traits.hpp` and `include/trellis/diagnostics/errors.hpp`.
+  - **Declaring:** `trellis::ctor<Args...>` lists the constructor's parameters. A class declares it with a specialization of `trellis::ctor_traits<T>` or a public member alias `using trellis_ctor = trellis::ctor<...>`, and the specialization wins. cv-qualifiers are stripped.
+  - **The primary template** derives from `detail::no_ctor_declared` when nothing is declared; T1.3 takes over from there.
+  - **The `.with_ctor` hook:** `detail::declared_ctor_t<T, BindingCtor>` and `explicit_ctor_t`; a binding's declaration wins. `ctor_matches_v` answers without asserting.
+  - **The check:** a declaration that matches no constructor is exactly one TRL-E002 (`trellis::error::E002`).
+  - Tests: unit tests, 11 compile-fail tests and `docs/errors/TRL-E002.md`. Docs: `docs/internals/constructor-discovery.md` and a CHANGELOG line.
+- **Design change (plan §7.2, ADR-0003, amended):** the check follows the construction rule. Aggregates are checked, and will be built, by brace-initialization: narrowing is rejected and brace elision allowed. Every other type is checked with `is_constructible` and built with parentheses, so an `initializer_list` constructor never captures a declaration. T1.5 must build objects this way. Awaits the owner (see "Waiting for owner").
+- **Review:** failed twice, and the third check passed.
+  - Round 1: Clang added a second error each time a lying declaration was used again, because it marks a class whose static_assert failed as invalid. The fix: the check is a constexpr function read through `decltype`, and every lying form has a used-twice test. Also: the inherited member alias was undocumented, `const X` lost a specialization, and the check accepted narrowing into aggregates.
+  - Round 2: the brace rule changed an accepted decision without amending it. Plan §7.2 and ADR-0003 were amended on landing.
+  - The reviewer's 20 failing probes each give exactly one error on gcc-13, gcc-14, clang-18 and clang-20, in 9–15 lines.
+- **Evidence:** `scripts/tasks.py verify T1.2` on main: `[PASS] scripts/check-full.sh (545.8 s)`, `check-full: 10 of 10 presets passed, 0 failed`, `T1.2: all verify commands passed`.
+- **[NEEDS CLARIFICATION]**
+  - A binding's `.with_ctor` beats both type-level sources; the plan doesn't rank them.
+  - TRL-E002 is used for a lying declaration; the plan names no ID.
+  - A derived class inherits its base's `trellis_ctor` alias, since C++20 can't tell an inherited member type from the class's own. This is documented and pinned by tests.
+  - The malformed-alias assert has no ID (see "Waiting for owner").
+- **Follow-ups:**
+  - T1.6: the protected compile-fail tests drive `detail::explicit_ctor_t`, so keep it reporting if the assert moves into `create<T>()`.
+  - T1.5: an abstract class with an alias gives E002 where the plan says E001.
 
 ## 2026-10-31: T1.12 documentation scaffold (passed)
 
