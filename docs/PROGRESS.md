@@ -29,6 +29,8 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
 
 ## Waiting for owner
 
+- **Error vocabulary namespace (ADR-0006, open point):** S3 recommends putting the error types outside `inline namespace v1`, so GCC doesn't print `v1::` in diagnostics. That conflicts with CLAUDE.md's rule and the versioning promise in plan §7.5. Both are owner-level, so decide before T1.6. Options: an exception for `trellis::error`, or keep v1 and accept the longer GCC output.
+- **The ADR set (T0.8)** is owner-reviewable: `docs/adr/README.md` indexes ADR-0001 to ADR-0014 with their statuses.
 - **Still open:** D5, whether the runtime container ships in 1.0. Needed before T5.0.
 - **CI on a private repo:** Linux runs on every push; macOS and Windows run weekly or on demand to save Actions minutes. Making the repository public would allow the full matrix on every push.
 - **Stale branches on GitHub:** `wip/t0.1-scaffold`, `t0.2-ci` and `t0.10-goldens` can be deleted; their content is on `main`. The proxy here refuses branch deletion.
@@ -37,6 +39,27 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Add `tests/golden_manifest.txt` to the protected paths.
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev` so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
+
+## 2026-10-31: T0.8 architecture decision records (passed). Phase 0 complete
+
+- **What changed:** `docs/adr/0001` to `0014`, plus `docs/adr/README.md`.
+  - Each ADR has Status, Context, Decision, Alternatives, Consequences and History sections.
+  - **Statuses:** 0003, 0005, 0006, 0012 and 0014 are owner-accepted (S1, S4, S3, S4 and S2). The rest are the plan baseline.
+  - S5 (reflection: no GCC 16 or clang-p2996 package for Ubuntu 24.04) and S6 (belongs to Phase 5) are recorded as deferred.
+- **Plan amendments,** each marked "(amended by ADR-00xx, date)":
+  - §3.2 NFR-07; §6.3 `T&&`; §6.8 R004 in all builds; §7.2 operator set; §7.3 cycle handling; §7.5 raw-byte slots and teardown rules; §7.6 slot design; §7.7 the R004 exception; §7.8; §8.1 C7.
+  - §12.2 phase order, from the owner's decision; and a §4 pointer to the ADRs.
+- **Review:** the independent review failed once, on two plan contradictions: §7.7 versus the R004 rule, and §7.5 versus ADR-0005's layout. The recheck passed. Every spike number and status was checked against the reports.
+- **Evidence:** `scripts/tasks.py verify T0.8`: 15 files under `docs/adr/`, each ADR with exactly one Status line. The verify command was corrected first, by an owner-approved amendment.
+- **Follow-ups:** the open points recorded in the ADRs:
+  - R004 reporting under `-fno-exceptions`;
+  - a short injector type name when `make_injector` deduces its pack;
+  - the namespace question (above);
+  - T1.6 adding the compiler-version gate to `TRELLIS_HAS_STATIC_ASSERT_MESSAGE`.
+- **Phase 0 summary:**
+  - All 11 tasks pass: scaffold, CI, benchmark harness with equivalence oracle, four spikes, ADRs, CI polish, golden normalization and copyright.
+  - CI is green on Linux. Windows and macOS are green on their last dispatched runs.
+  - Next: Phase 1 (v0.1, the core static injector), starting with T1.1.
 
 ## 2026-10-30: T0.7 spike S2, memoization and cycles (passed; recommendation awaits owner)
 
