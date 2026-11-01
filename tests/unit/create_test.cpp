@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -983,5 +984,72 @@ static_assert(check_agrees<holds_shared>() && check_agrees<holds_unique_by_refer
 static_assert(check_agrees<consumer>() && check_agrees<aggregate>() && check_agrees<unique_part>());
 static_assert(check_agrees<std::unique_ptr<holds_shared>>() && check_agrees<unique_part&>());
 static_assert(check_agrees<singleton_part&>() && check_agrees<std::shared_ptr<needs_shared>>());
+
+// ---- members whose request fails: no brace elision --------------------------------------------
+
+// An aggregate's node is checked with parentheses (static/resolve.hpp; config.hpp,
+// TRELLIS_AGGREGATE_CHECKS_WITH_BRACES), so a member whose request fails fails the aggregate. With
+// braces, Clang took the deleted twin that the member's request selects for no conversion, elided
+// braces into the member, an aggregate, and built it from its own members' requests: a member that
+// deduction refuses (TRL-E004) or a singleton held by value without .allow_copy() (TRL-E005) was
+// built anyway. GCC never elided there. A member whose request resolves is built as its own
+// request, through its own deduction.
+struct elision_leaf {};
+struct optional_member {  // std::optional ends the deduced members: TRL-E004
+  elision_leaf leaf;
+  std::optional<int> count;
+};
+struct holds_optional_member {
+  optional_member member;
+};
+struct singleton_aggregate {
+  singleton_part& shared;
+};
+struct holds_singleton_aggregate {  // by value, without .allow_copy(): TRL-E005
+  singleton_aggregate member;
+};
+struct fine_member {
+  singleton_part& shared;
+};
+struct holds_fine_member {
+  fine_member member;
+};
+using elision_injector = decltype(make_injector(bind<singleton_part>.in(trellis::singleton),
+                                                bind<singleton_aggregate>.in(trellis::singleton)));
+using elision_context = trellis::detail::context<elision_injector, trellis::unique_t>;
+template <class R>
+using elision_node_t = typename trellis::detail::plan<elision_injector, R>::node;
+template <class R>
+constexpr bool elision_agrees() {
+  using node = elision_node_t<R>;
+  if constexpr (deduced_kind<node> == 2) {
+    return elision_context::can_resolve<R> == trellis::detail::node_v<node> &&
+           trellis::detail::node_v<node> ==
+               trellis::detail::deduced_constructible_v<
+                   R, trellis::detail::deduction<R>::arity,
+                   trellis::detail::context<elision_injector, trellis::unique_t>>;
+  } else {
+    return elision_context::can_resolve<R> == trellis::detail::node_v<node>;
+  }
+}
+static_assert(trellis::detail::deduction<optional_member>::status ==
+              trellis::detail::deduction_status::undeducible_member);
+static_assert(deduced_kind<elision_node_t<holds_optional_member>> == 2);
+static_assert(deduced_kind<elision_node_t<holds_singleton_aggregate>> == 2);
+static_assert(deduced_kind<elision_node_t<holds_fine_member>> == 2);
+static_assert(!elision_context::can_resolve<optional_member>);
+static_assert(!elision_context::can_resolve<holds_optional_member>);
+static_assert(!elision_context::can_resolve<singleton_aggregate>);
+static_assert(elision_context::can_resolve<singleton_aggregate&>);
+static_assert(!elision_context::can_resolve<holds_singleton_aggregate>);
+static_assert(elision_context::can_resolve<holds_fine_member>);
+static_assert(elision_agrees<holds_optional_member>() && elision_agrees<optional_member>());
+static_assert(elision_agrees<holds_singleton_aggregate>() && elision_agrees<holds_fine_member>());
+
+TEST_F(Create, AnAggregateMemberIsBuiltAsItsOwnRequest) {
+  auto injector = make_injector(bind<singleton_part>.in(trellis::singleton));
+  const holds_fine_member built = injector.create<holds_fine_member>();
+  EXPECT_EQ(&built.member.shared, &injector.create<singleton_part&>());
+}
 
 }  // namespace

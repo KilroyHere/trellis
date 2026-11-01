@@ -293,9 +293,19 @@ inline constexpr bool node_v<always_node> = true;
 template <class Impl, class Ctx, std::size_t... Is>
 inline constexpr bool node_v<deduced_node<Impl, Ctx, std::index_sequence<Is...>, false>> =
     TRELLIS_IS_CONSTRUCTIBLE(Impl, repeat_t<Is, any_arg<Impl, Ctx>>...);
+// An aggregate's node is checked with parentheses, which never elide braces, except on MSVC
+// (TRELLIS_AGGREGATE_CHECKS_WITH_BRACES, config.hpp): with braces, Clang treats the deleted twin
+// that a member's failing request selects as no conversion, elides braces into the member if it is
+// an aggregate, and builds it from its own members' requests, where GCC reports the member's
+// failure. The creation code keeps braces: once every member's request resolves, they initialize
+// each member directly, as the parentheses did.
 template <class Impl, class Ctx, std::size_t... Is>
 inline constexpr bool node_v<deduced_node<Impl, Ctx, std::index_sequence<Is...>, true>> =
+#if TRELLIS_AGGREGATE_CHECKS_WITH_BRACES
     requires { Impl{std::declval<repeat_t<Is, any_arg<Impl, Ctx>>>()...}; };
+#else
+    TRELLIS_IS_CONSTRUCTIBLE(Impl, repeat_t<Is, any_arg<Impl, Ctx>>...);
+#endif
 // A declared constructor: every declared request resolves. A flat expansion and a scan rather
 // than a fold, as a declaration may list any number of parameters (plan §8.1 C3).
 template <class Impl, class Ctx, bool Aggregate, class... Args>
@@ -442,7 +452,11 @@ template <class Injector, class Lifetime, slot_access Access>
 template <class R, class Impl, class Ctx, std::size_t... Is>
 constexpr bool context<Injector, Lifetime, Access>::can_resolve<
     R, deduced_node<Impl, Ctx, std::index_sequence<Is...>, true>> =
+#if TRELLIS_AGGREGATE_CHECKS_WITH_BRACES
     requires { Impl{std::declval<repeat_t<Is, any_arg<Impl, Ctx>>>()...}; };
+#else
+    TRELLIS_IS_CONSTRUCTIBLE(Impl, repeat_t<Is, any_arg<Impl, Ctx>>...);
+#endif
 
 // ---- building a class -------------------------------------------------------------------------
 
