@@ -97,9 +97,8 @@ inline constexpr std::size_t effective_max_ctor_arity =
 // duplicate_error<Duplicate>: the TRL-E003 error types for the key that Duplicate, a
 // first_duplicate<...>, found bound twice: by two bindings, or by two overrides. Members of a
 // class template, not aliases local to the function that raises them: cl names a type made from
-// such a local alias by the alias, and takes it for one entity in every specialization of the
-// function, so its note named make_injector::error instead of the type (platforms run
-// 41332426822). GCC and Clang print the same type either way.
+// such a local alias by the alias, so its note named make_injector::error instead of the type
+// (platforms run 41332426822). GCC and Clang print the same type either way.
 template <class Duplicate>
 struct duplicate_error {
   using bindings = trellis::error::E003<typename Duplicate::key, typename Duplicate::first_binding,

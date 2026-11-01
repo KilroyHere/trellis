@@ -180,10 +180,11 @@ struct override_target<type_list<Bindings...>, Override> {
   static constexpr bool found =
       detail::first_true({TRELLIS_IS_SAME(typename binding_traits<std::remove_cv_t<Bindings>>::key,
                                           key)...}) < sizeof...(Bindings);
-  // A member, not an alias local to report_override_target: cl takes such a local alias, as a
-  // template argument, for one entity in every specialization of the function, so it raised the
-  // first override's TRL-E009 and dropped the next, and named the error report_override_target::
-  // error (platforms run 41332426822). GCC and Clang print the same type either way.
+  // A member, not an alias local to report_override_target: cl names a type made from such a
+  // local alias by the alias, so its note named the error report_override_target::error instead
+  // of the type (platforms run 41332426822). GCC and Clang print the same type either way. Still
+  // open on cl: of two overrides with nothing to replace, it reports only the first TRL-E009
+  // (tests/compile_fail/override/e009_one_error_per_override.cpp, platforms run 41352149959).
   using error = trellis::error::E009<key, Override>;
 };
 template <class Bindings, class Override>

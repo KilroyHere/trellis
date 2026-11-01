@@ -106,8 +106,9 @@ struct from_layout_t {
 // On MSVC, binding_store names a primary template over the stored bindings, stored_bindings: cl
 // applies TRELLIS_EMPTY_BASES in full only to a primary template, and gave the partial
 // specialization below a byte for each empty binding after the second (config.hpp,
-// TRELLIS_STORES_ARE_PRIMARY_TEMPLATES). Every use passes std::index_sequence_for, so the
-// stored bindings come in index order, and the J-th base is binding J.
+// TRELLIS_STORES_ARE_PRIMARY_TEMPLATES). Every use passes std::index_sequence_for, which
+// binding_store_of checks, so the stored bindings come in index order, and the J-th base is
+// binding J.
 template <class... Stored>
 struct TRELLIS_EMPTY_BASES stored_bindings : Stored... {
   stored_bindings() = default;
@@ -127,6 +128,11 @@ template <class Indices, class... Bindings>
 struct binding_store_of;
 template <std::size_t... J, class... Bindings>
 struct binding_store_of<std::index_sequence<J...>, Bindings...> {
+  // stored_bindings' from_layout_t constructor gives its N-th base Layout::extract<N>, which is
+  // binding J only when J is N: the indices must be 0, 1, ... in order.
+  static_assert(TRELLIS_IS_SAME(std::index_sequence<J...>, std::index_sequence_for<Bindings...>),
+                "trellis: binding_store<Indices, Bindings...>: Indices must be "
+                "std::index_sequence_for<Bindings...>");
   using type = stored_bindings<stored_binding<J, Bindings>...>;
 };
 template <class Indices, class... Bindings>
