@@ -83,7 +83,9 @@ class override_binding;
 /// with this one (plan §6.10).
 ///
 /// @tparam Key The key whose binding the override replaces.
-/// @tparam Impl The class to construct: `Key`, or a class publicly derived from it.
+/// @tparam Impl The class to construct: `Key`, or a class publicly derived from it; after
+///              `.with_ctor<Args...>()`, that class with the declared constructor, as for
+///              `trellis::binding`.
 /// @tparam Lifetime The lifetime: `trellis::unique_t`, `trellis::singleton_t` or
 ///                  `trellis::singleton_inline_t`.
 /// @tparam AllowCopy Whether a shared object may be requested by value, as a copy.
@@ -183,6 +185,29 @@ class override_binding<binding<Key, Impl, Lifetime, AllowCopy>> {
   /// @endcode
   [[nodiscard]] constexpr auto allow_copy() const noexcept {
     return override_binding::wrap(binding_.allow_copy());
+  }
+
+  /// @brief Declares the constructor that the injector calls for the class the override builds:
+  ///        the one that takes `Args...`.
+  ///
+  /// @tparam Args The constructor's parameter types, as the constructor spells them.
+  /// @return The override with the declaration.
+  ///
+  /// @par Constraints
+  /// - As for `bind<I>.with_ctor<Args...>()`: the override declares no constructor yet; otherwise
+  ///   compilation fails with a static_assert naming `.with_ctor<Args...>()`.
+  ///
+  /// @par Errors
+  /// None itself. A declaration that matches no constructor of the class is `TRL-E002`, raised by
+  /// `create<T>()`, as for `bind<I>.with_ctor<Args...>()`.
+  ///
+  /// @par Example
+  /// @code
+  /// auto store = trellis::override<IRepository>.to<MemoryRepository>().with_ctor<>();
+  /// @endcode
+  template <class... Args>
+  [[nodiscard]] constexpr auto with_ctor() const noexcept {
+    return override_binding::wrap(binding_.template with_ctor<Args...>());
   }
 
   /// @brief Overrides the key with an object that the caller owns, by reference: a test double
@@ -339,7 +364,8 @@ class override_binding<binding<Key, Impl, Lifetime, AllowCopy>> {
 ///        copy, made by `.to_value()`.
 ///
 /// It wraps the binding that the same chain on `trellis::bind<K>` makes. As that binding, it has
-/// only `.allow_copy()` left to chain.
+/// only `.allow_copy()` left to chain, and a `.with_ctor<Args...>()` that rejects the step with
+/// the binding's static_assert: the injector builds nothing for it.
 ///
 /// @tparam Key The key whose binding the override replaces.
 /// @tparam Object The type of the object the binding holds: `Key`, `const Key`, or for a value,
@@ -404,6 +430,53 @@ class override_binding<binding<Key, Object, Lifetime, AllowCopy>> {
     return override_binding::wrap(std::move(binding_).allow_copy());
   }
 
+  // The report is the wrapped binding's own, detail::reject_ctor_declaration<wrapped, Args...>,
+  // so the misuse is one error with bind<I>'s message, also next to the same misuse on the binding.
+  /// @brief Rejects a constructor declaration: the override holds an object, so the injector
+  ///        builds nothing, as for the binding it wraps.
+  ///
+  /// @return The same override, unchanged.
+  ///
+  /// @par Constraints
+  /// - Never valid: compilation fails with `bind<I>`'s static_assert naming
+  ///   `.with_ctor<Args...>()`, once per binding type and declaration, whichever overload is
+  ///   called.
+  ///
+  /// @par Errors
+  /// None.
+  ///
+  /// @par Example
+  /// @code
+  /// // trellis::override<IClock>.to_ref(clock).with_ctor<int>();  // error: builds nothing
+  /// @endcode
+  template <class... Args>
+  [[nodiscard]] constexpr const override_binding& with_ctor() const& noexcept {
+    detail::reject_ctor_declaration<wrapped, Args...>();
+    return *this;
+  }
+  /// @brief Rejects a constructor declaration, as the overload above does; returns the override
+  ///        as an rvalue, so that a move-only value is moved along, not copied.
+  ///
+  /// @return The same override, unchanged.
+  ///
+  /// @par Constraints
+  /// - Never valid: compilation fails with `bind<I>`'s static_assert naming
+  ///   `.with_ctor<Args...>()`, once per binding type and declaration, whichever overload is
+  ///   called.
+  ///
+  /// @par Errors
+  /// None.
+  ///
+  /// @par Example
+  /// @code
+  /// // trellis::override<Config>.to_value(Config{}).with_ctor<int>();  // error: builds nothing
+  /// @endcode
+  template <class... Args>
+  [[nodiscard]] constexpr override_binding&& with_ctor() && noexcept {
+    detail::reject_ctor_declaration<wrapped, Args...>();
+    return std::move(*this);
+  }
+
  private:
   template <class>
   friend class override_binding;
@@ -430,11 +503,11 @@ class override_binding<binding<Key, Object, Lifetime, AllowCopy>> {
 ///        other arguments of `trellis::make_injector` provide (plan §6.10).
 ///
 /// It has `trellis::bind<K>`'s vocabulary, with the same checks: chain `.to<C>()`,
-/// `.in(lifetime)` and `.allow_copy()`, or `.to_ref(x)`, `.to_ptr(p)`, `.to_value(v)` and
-/// `.to_shared(sp)`, then pass it to `trellis::make_injector`. It replaces the binding of `K`
-/// wherever it is among the other arguments, inside modules and named modules included, and keeps
-/// that binding's place, so the rest of the wiring is unchanged. Each test's injector owns its
-/// own singletons, so an override in one test never reaches another.
+/// `.in(lifetime)`, `.allow_copy()` and `.with_ctor<Args...>()`, or `.to_ref(x)`, `.to_ptr(p)`,
+/// `.to_value(v)` and `.to_shared(sp)`, then pass it to `trellis::make_injector`. It replaces the
+/// binding of `K` wherever it is among the other arguments, inside modules and named modules
+/// included, and keeps that binding's place, so the rest of the wiring is unchanged. Each test's
+/// injector owns its own singletons, so an override in one test never reaches another.
 ///
 /// @tparam K The key whose binding to replace, as the binding names it: `override<const K>`
 ///           replaces nothing, as no binding has that key.

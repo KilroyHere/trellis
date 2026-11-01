@@ -8,7 +8,7 @@
 // user lists the constructor's parameter types as a trellis::ctor<Args...>, in one of three
 // places, and the first that applies wins:
 //
-//   1. the binding:         bind<I>.to<C>().with_ctor<Args...>()  (not in the binding DSL yet)
+//   1. the binding:         bind<I>.to<C>().with_ctor<Args...>()  (dsl/bind.hpp, T1.15)
 //   2. a specialization:    template <> struct trellis::ctor_traits<C> : trellis::ctor<Args...> {};
 //   3. a member alias in C: using trellis_ctor = trellis::ctor<Args...>;
 //
@@ -224,9 +224,9 @@ struct declared_ctor<T, no_ctor_declared> {
 
 // declared_ctor_t<T, BindingCtor>: declared_ctor's type for T without its cv-qualifiers, so that
 // const X finds the declaration written for X, specialization included. BindingCtor, here and in
-// explicit_ctor_t below, is where a binding plugs in: the binding DSL (T1.4) passes the
-// ctor<Args...> of .with_ctor<Args...>(), and a binding without one leaves the default,
-// no_ctor_declared.
+// explicit_ctor_t below, is where a binding plugs in: the static engine passes the ctor<Args...>
+// of the binding's .with_ctor<Args...>() (dsl/bind.hpp, impl_ctor_t; static/resolve.hpp,
+// served_binding), and a binding without one leaves the default, no_ctor_declared.
 template <class T, class BindingCtor = no_ctor_declared>
 using declared_ctor_t = typename declared_ctor<std::remove_cv_t<T>, BindingCtor>::type;
 

@@ -11,7 +11,8 @@
 // instantiates any of this, and no type of the normal pass holds a path (ADR-0014 item 1). It
 // starts at the root request and follows the first failing request down, one class at a time:
 //
-// - At a class with a declared constructor, ctor<Args...>, it reads the memoized check of each
+// - At a class with a declared constructor, ctor<Args...>, whether its binding declares it
+//   (.with_ctor<Args...>()) or the class does, it reads the memoized check of each
 //   parameter, Ctx::can_resolve<Args>, and continues with the first that fails. These steps are
 //   class templates (explain_stop), which finish before anything is reported, so they print no
 //   instantiation note: a chain of declared classes costs the error nothing.
@@ -115,10 +116,13 @@ struct own_report<Injector, R, failure::copy> {
   using scope = Injector;
 };
 // Discovery's report is unique to the class and the bound, not to the injector (scope void), as
-// discovery raises it itself (discover, explicit_ctor_t).
+// discovery raises it itself (discover, explicit_ctor_t). It is about the declaration that
+// applies: the binding's .with_ctor<Args...>() if it has one (served_binding's binding_ctor),
+// which TRL-E002 then names, else the class's own declaration, or deduction.
 template <class Injector, class R>
 struct own_report<Injector, R, failure::discovery>
-    : discovery_report<std::remove_cv_t<typename plan<Injector, R>::impl>, no_ctor_declared,
+    : discovery_report<std::remove_cv_t<typename plan<Injector, R>::impl>,
+                       typename plan<Injector, R>::served::binding_ctor,
                        plan<Injector, R>::max_arity> {
   using scope = void;
 };

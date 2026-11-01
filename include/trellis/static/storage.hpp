@@ -343,7 +343,7 @@ class shared_storage {
   [[nodiscard]] Result share() const noexcept {
     using element = typename Result::element_type;
     const std::shared_ptr<void>& held_pointer = held();
-    element* const object = static_cast<T*>(held_pointer.get());
+    auto* const object = static_cast<T*>(held_pointer.get());  // converts to element* below
     if constexpr (TRELLIS_IS_SAME(Result, std::shared_ptr<element>)) {
       return Result(held_pointer, object);
     } else {
@@ -628,16 +628,17 @@ inline constexpr bool owns_object<binding<Key, Impl, singleton_inline_t, AllowCo
 // so the empty holders of one store are distinct types, and GCC and Clang lay all of them out at
 // offset 0, taking no space (the Itanium C++ ABI). MSVC gives each empty base after the first a
 // byte unless the class is declared __declspec(empty_bases), which slot_store is, through
-// TRELLIS_EMPTY_BASES (config.hpp; untested locally).
+// TRELLIS_EMPTY_BASES (config.hpp; untested locally). The slot holds the class the binding builds,
+// impl_class_t<Impl>, which is Impl unless the binding declares a constructor (dsl/bind.hpp).
 template <std::size_t J, class Binding, threading Mode>
 struct slot_holder {};
 template <std::size_t J, class Key, class Impl, bool AllowCopy, threading Mode>
 struct slot_holder<J, binding<Key, Impl, singleton_t, AllowCopy>, Mode> {
-  object_slot<shared_storage<Impl>, Mode> cell;
+  object_slot<shared_storage<impl_class_t<Impl>>, Mode> cell;
 };
 template <std::size_t J, class Key, class Impl, bool AllowCopy, threading Mode>
 struct slot_holder<J, binding<Key, Impl, singleton_inline_t, AllowCopy>, Mode> {
-  object_slot<inline_storage<Impl>, Mode> cell;
+  object_slot<inline_storage<impl_class_t<Impl>>, Mode> cell;
 };
 
 // slot_store: one holder per binding, as indexed bases, like the binding store of dsl/module.hpp,

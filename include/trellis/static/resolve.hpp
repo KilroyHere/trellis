@@ -34,7 +34,9 @@
 // Deduced classes are checked and built with the resolving placeholder any_arg<Impl, Ctx>
 // (discovery/deduced.hpp), whose conversion operators ask Ctx::can_resolve<T> and call
 // ctx.resolve<T>(): Ctx is the context of the class being built, so its lifetime is its
-// parameters' consumer lifetime. Declared classes resolve their declared parameter types.
+// parameters' consumer lifetime. Declared classes resolve their declared parameter types, from the
+// declaration that applies: the binding's .with_ctor<Args...>() (served_binding's binding_ctor),
+// else the class's own (discovery/ctor_traits.hpp).
 #ifndef TRELLIS_STATIC_RESOLVE_HPP
 #define TRELLIS_STATIC_RESOLVE_HPP
 
@@ -82,7 +84,11 @@ inline constexpr binding_kind kind_of<value_t> = binding_kind::value;
 // served_binding<Found>: what resolution needs to know about the binding that the binding map
 // found for a key (binding_for_t): stored_binding<J, B>, or unbound<Key> for a key without one.
 // impl is the class to build, or the type of the object the binding holds (const for a const
-// external object). owned says whether the object lives in one of the injector's slots.
+// external object). binding_ctor is the constructor that the binding declares with
+// .with_ctor<Args...>(), discovery's BindingCtor (discovery/ctor_traits.hpp): a ctor<Args...>, or
+// no_ctor_declared, which leaves the class to its own declaration or to deduction. Both come out
+// of the binding's Impl (dsl/bind.hpp, impl_parts). owned says whether the object lives in one of
+// the injector's slots.
 template <class Found>
 struct served_binding;
 template <std::size_t J, class Key, class Impl, class Lifetime, bool AllowCopy>
@@ -90,7 +96,8 @@ struct served_binding<stored_binding<J, binding<Key, Impl, Lifetime, AllowCopy>>
   static constexpr bool bound = true;
   static constexpr std::size_t position = J;
   using binding_type = binding<Key, Impl, Lifetime, AllowCopy>;
-  using impl = Impl;
+  using impl = impl_class_t<Impl>;
+  using binding_ctor = impl_ctor_t<Impl>;
   using lifetime = Lifetime;
   static constexpr binding_kind kind = kind_of<Lifetime>;
   static constexpr bool owned = owns_object<binding_type>;
@@ -101,6 +108,7 @@ struct served_binding<unbound<Key>> {
   static constexpr std::size_t position = 0;
   using binding_type = void;
   using impl = Key;
+  using binding_ctor = no_ctor_declared;
   using lifetime = unique_t;  // implicitly unique (ADR-0004)
   static constexpr binding_kind kind = binding_kind::constructed;
   static constexpr bool owned = false;
@@ -153,10 +161,11 @@ declared_node_for(ctor<Args...> /*declared*/) noexcept {
 }
 
 // The node of a class Impl that the injector builds and whose constructor discovery finds (the
-// caller checked discoverable_v): its declaration if it has one, else its deduced arity.
-template <class Impl, class Ctx, std::size_t MaxArity>
+// caller checked discoverable_v): the declaration that applies, its binding's (BindingCtor) or its
+// own, if there is one, else its deduced arity.
+template <class Impl, class Ctx, std::size_t MaxArity, class BindingCtor>
 constexpr auto construction_node() noexcept {
-  using declared = typename declared_ctor<Impl, no_ctor_declared>::type;
+  using declared = typename declared_ctor<Impl, BindingCtor>::type;
   if constexpr (TRELLIS_IS_SAME(declared, no_ctor_declared)) {
     return deduced_node<Impl, Ctx, std::make_index_sequence<deduction<Impl, MaxArity>::arity>,
                         std::is_aggregate_v<Impl>>{};
@@ -232,13 +241,14 @@ constexpr auto select_node() noexcept {
     return never_node<failure::discovery>{};  // discovery reports the incomplete class
   } else if constexpr (std::is_abstract_v<impl>) {
     return never_node<failure::no_implementation>{};
-  } else if constexpr (!discoverable_v<impl, no_ctor_declared, Plan::max_arity>) {
+  } else if constexpr (!discoverable_v<impl, typename served::binding_ctor, Plan::max_arity>) {
     return never_node<failure::discovery>{};
   } else if constexpr (form == request_form::value &&
                        !detail::value_buildable<key, impl, served::owned>()) {
     return never_node<failure::copy>{};
   } else {
-    return detail::construction_node<impl, typename Plan::next, Plan::max_arity>();
+    return detail::construction_node<impl, typename Plan::next, Plan::max_arity,
+                                     typename served::binding_ctor>();
   }
 }
 
@@ -513,25 +523,10 @@ struct build<declared_node<Impl, Ctx, false, Args...>, Access> {
   }
 };
 
-template <class Impl, class Ctx, slot_access Access, class... Args>
-struct build<declared_node<Impl, Ctx, true, Args...>, Access> {
-  using own = with_access_t<Ctx, Access>;
-  static Impl value([[maybe_unused]] own& ctx) { return Impl{ctx.template resolve<Args>()...}; }
-  static Impl* fresh([[maybe_unused]] own& ctx) {
-    return new Impl{ctx.template resolve<Args>()...};
-  }
-  template <class Element>
-  static std::shared_ptr<Element> share([[maybe_unused]] own& ctx) {
-    auto emplace = [&](std::byte* where) { ::new (where) Impl{ctx.template resolve<Args>()...}; };
-    return detail::make_shared_object<Impl, Element>(emplace);
-  }
-  template <class Cell>
-  static teardown_entry make_in(typename Cell::state_type& state, void* injector) {
-    [[maybe_unused]] own ctx{*static_cast<typename Ctx::injector_type*>(injector)};
-    auto emplace = [&](std::byte* where) { ::new (where) Impl{ctx.template resolve<Args>()...}; };
-    return Cell::make_with(state, emplace);
-  }
-};
+// The declared aggregate's build<declared_node<Impl, Ctx, true, Args...>, Access> is in
+// static/declared_aggregate.hpp, included at the end of this file: its declaration may list fewer
+// members than the aggregate has, which GCC and Clang warn about, and in one build that header
+// has to be a system header (TRELLIS_MODULE_SYSTEM_HEADER, config.hpp).
 
 TRELLIS_PLACEHOLDER_CONVERSIONS_END
 
@@ -572,5 +567,8 @@ void build_eagerly(Injector& owner, type_list<Bindings...> /*bindings*/) {
 // and nodes above; including it last lets either header be included first
 // (diagnostics/explain.hpp includes this one).
 #include <trellis/diagnostics/explain.hpp>  // IWYU pragma: keep
+// The creation code of a declared aggregate, which needs build and declared_node above, in a
+// header of its own (static/declared_aggregate.hpp).
+#include <trellis/static/declared_aggregate.hpp>  // IWYU pragma: keep
 
 #endif  // TRELLIS_STATIC_RESOLVE_HPP

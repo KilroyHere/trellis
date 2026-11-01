@@ -13,6 +13,8 @@
 //   .to_ref(x), .to_ptr(p)   binding<I, I, external_t>, or <I, const I, ...> for a const object
 //   .to_shared(sp)           binding<I, I, shared_external_t>, or <I, const I, ...>
 //   .to_value(v)             binding<I, V, value_t>, where V is v's type: I or derived from I
+//   .with_ctor<A...>()       binding<I, detail::declared_impl<C, ctor<A...>>, ...>: C's constructor
+//                            declared, in C's place (see declared_impl)
 //
 // The external, shared and value bindings hold their object (a pointer, a std::shared_ptr or the
 // value), so a binding is a value that a module carries to the injector. The others are empty.
@@ -20,6 +22,7 @@
 #define TRELLIS_DSL_BIND_HPP
 
 #include <trellis/config.hpp>
+#include <trellis/discovery/ctor_traits.hpp>
 #include <trellis/dsl/lifetimes.hpp>
 #include <trellis/dsl/request_forms.hpp>
 
@@ -52,6 +55,51 @@ inline constexpr bool is_object_of =
 // The type an external or shared binding of Key to a T gives access to: Key, const if T is.
 template <class Key, class T>
 using bound_object_t = std::conditional_t<std::is_const_v<T>, const Key, Key>;
+
+// declared_impl<C, Ctor>: the Impl of a binding that declares, with .with_ctor<Args...>(), the
+// constructor of the class C that it builds; Ctor is that ctor<Args...>. The declaration rides in
+// the implementation's place, so that every binding stays binding<Key, Impl, Lifetime, AllowCopy>
+// and a binding without one keeps its type and its spelling exactly: a fifth template parameter,
+// even a defaulted one or an empty pack, changes how Clang prints every binding type (it then
+// spells out arguments it elides now), and with it the errors that name a binding (TRL-E003,
+// TRL-E009). impl_parts reads it back; nothing else looks inside, and nothing makes an object
+// of it.
+template <class C, class Ctor>
+struct declared_impl {};
+
+// impl_parts<Impl>: what a binding's Impl stands for: `type`, the class the injector builds, or
+// the type of the object that an external, shared or value binding holds; and `declared`, the
+// constructor that the binding declares, which the static engine passes to discovery as its
+// BindingCtor (discovery/ctor_traits.hpp, declared_ctor): a ctor<Args...>, or no_ctor_declared.
+template <class Impl>
+struct impl_parts {
+  using type = Impl;
+  using declared = no_ctor_declared;
+};
+template <class C, class Ctor>
+struct impl_parts<declared_impl<C, Ctor>> {
+  using type = C;
+  using declared = Ctor;
+};
+template <class Impl>
+using impl_class_t = typename impl_parts<Impl>::type;
+template <class Impl>
+using impl_ctor_t = typename impl_parts<Impl>::declared;
+
+// reject_ctor_declaration<Binding, Args...>(): the one error for .with_ctor<Args...>() on a
+// binding that holds its object, made by .to_ref(), .to_ptr(), .to_shared() or .to_value(): the
+// injector builds nothing for it, so there is no constructor to declare. Such a binding's step
+// calls it, the value binding's from both of its overloads, so that the misuse is one
+// static_assert per binding type and declaration however it is written; and it is a function,
+// which a failed assertion leaves valid, unlike a class template, which Clang would mark invalid
+// and report again at every use (tests/compile_fail/dsl/with_ctor_on_*.cpp).
+template <class Binding, class... Args>
+constexpr void reject_ctor_declaration() noexcept {
+  static_assert(always_false<Binding, Args...>,
+                "trellis: .with_ctor<Args...>(): the binding holds an object it was given, by "
+                ".to_ref(), .to_ptr(), .to_shared() or .to_value(), so the injector builds nothing "
+                "and calls no constructor");
+}
 
 // binding_traits<B>: the parts of a binding type, so that the bindings themselves expose no
 // members but their chain functions. The primary template means "not a binding".
@@ -95,10 +143,13 @@ constexpr auto checked_key() noexcept {
 /// `trellis::bind<I>` is the binding of `I` to itself, unique. Each function below returns a new
 /// binding with one part changed; nothing accumulates in the type (ADR-0010). Pass bindings to
 /// `trellis::make_module` or `trellis::make_injector`. The objects are constructed in Phase 1 by
-/// `create<T>()` (T1.5), with constructors discovered as plan §7.2 describes.
+/// `create<T>()` (T1.5), with constructors discovered as plan §7.2 describes, or with the one
+/// that `.with_ctor<Args...>()` declares.
 ///
 /// @tparam Key The key: the type that consumers request, qualifiers included.
-/// @tparam Impl The class to construct: `Key`, or a class publicly derived from it.
+/// @tparam Impl The class to construct: `Key`, or a class publicly derived from it. After
+///              `.with_ctor<Args...>()`, `detail::declared_impl<C, ctor<Args...>>`, which names
+///              that class `C` with the constructor declared for it.
 /// @tparam Lifetime The lifetime.
 /// @tparam AllowCopy Whether a shared object may be requested by value, as a copy.
 ///
@@ -129,9 +180,13 @@ class binding {
   // .to_ptr(), .to_value() and .to_shared() take the place of .to<C>() and .in().
   static constexpr bool untouched =
       TRELLIS_IS_SAME(Impl, Key) && TRELLIS_IS_SAME(Lifetime, unique_t);
-  // Whether .to<C>() may still name an implementation. A variable, not the macro itself, in the
+  // Whether .to<C>() may still name an implementation: the class the binding builds is the key,
+  // with or without a declared constructor. A variable, not the macro itself, in the
   // static_assert: GCC would report the error inside the macro and add its expansion notes.
-  static constexpr bool no_implementation_yet = TRELLIS_IS_SAME(Impl, Key);
+  static constexpr bool no_implementation_yet = TRELLIS_IS_SAME(detail::impl_class_t<Impl>, Key);
+  // Whether .with_ctor<Args...>() may still declare a constructor.
+  static constexpr bool no_declaration_yet =
+      TRELLIS_IS_SAME(detail::impl_ctor_t<Impl>, detail::no_ctor_declared);
 
  public:
   /// @brief Makes the binding, checking its key: `trellis::bind<I>` makes one this way.
@@ -171,7 +226,8 @@ class binding {
   /// - The binding doesn't name an implementation other than the key yet: after
   ///   `.to<C>()`, another `.to<D>()` is an error. (`.to<I>()` on `bind<I>` changes nothing.)
   ///
-  /// Otherwise compilation fails with a static_assert naming `bind<I>.to<C>()`.
+  /// Otherwise compilation fails with a static_assert naming `bind<I>.to<C>()`. A constructor
+  /// that `.with_ctor<Args...>()` declared before this step is then declared for `C`.
   ///
   /// @par Errors
   /// None.
@@ -190,10 +246,14 @@ class binding {
       static_assert(detail::is_implementation_of<C, Key>,
                     "trellis: bind<I>.to<C>(): C must be I, or a class publicly derived from I, "
                     "without const or volatile");
-      if constexpr (no_implementation_yet && detail::is_implementation_of<C, Key>) {
+      if constexpr (!no_implementation_yet || !detail::is_implementation_of<C, Key>) {
+        return *this;  // after the static_assert, so that nothing else is reported
+      } else if constexpr (no_declaration_yet) {
         return binding<Key, C, Lifetime, AllowCopy>{};
       } else {
-        return *this;  // after the static_assert, so that nothing else is reported
+        // The declaration was made before .to<C>(): it is for the class the binding builds, C.
+        return binding<Key, detail::declared_impl<C, detail::impl_ctor_t<Impl>>, Lifetime,
+                       AllowCopy>{};
       }
     }
   }
@@ -228,6 +288,58 @@ class binding {
         return binding<Key, Impl, L, AllowCopy>{};
       } else {
         return *this;
+      }
+    }
+  }
+
+  /// @brief Declares the constructor that the injector calls for the class the binding builds:
+  ///        the one that takes `Args...`.
+  ///
+  /// The declaration concerns this binding only, and wins over what the class declares for
+  /// itself, a `trellis::ctor_traits` specialization or a member alias `trellis_ctor`, and over
+  /// deduction (plan §7.2, ADR-0003). It is for the class the binding builds, whether `.to<C>()`
+  /// comes before it or after it, and it combines with `.in(lifetime)` and `.allow_copy()` in
+  /// any order. Each declared parameter is a request, served as the request-form table says (plan
+  /// §6.3); a parameter of type `X&&` or `const X&&` is the request `X` (ADR-0003). Bindings that
+  /// hold an object, made by `.to_ref()`, `.to_ptr()`, `.to_shared()` and `.to_value()`, build
+  /// nothing and reject the step.
+  ///
+  /// @tparam Args The constructor's parameter types, as the constructor spells them, such as
+  ///              `const Config&` or `std::unique_ptr<IClock>`; none for the default constructor.
+  /// @return The binding with the declaration.
+  ///
+  /// @par Constraints
+  /// - The binding declares no constructor yet; otherwise compilation fails with a static_assert
+  ///   naming `.with_ctor<Args...>()`.
+  /// - The injector can build the class from `Args...` as it will build it: an aggregate with
+  ///   braces, so no argument may narrow, and any other class with parentheses, as
+  ///   `std::is_constructible_v<C, Args...>` checks. Otherwise `TRL-E002` where the injector uses
+  ///   the declaration.
+  ///
+  /// @par Errors
+  /// None itself. A declaration that matches no constructor of the class, or for an aggregate one
+  /// that doesn't brace-initialize it, is `TRL-E002`, raised by `create<T>()`, and by
+  /// `trellis::make_injector` with `options{.eager = true}`, once for the class and the
+  /// declaration.
+  ///
+  /// @par Example
+  /// @code
+  /// // SqlRepository also has a constructor for tests; the injector calls this one:
+  /// auto repository = trellis::bind<IRepository>.to<SqlRepository>()
+  ///                       .with_ctor<const Config&, ILogger&>()
+  ///                       .in(trellis::singleton);
+  /// @endcode
+  template <class... Args>
+  [[nodiscard]] constexpr auto with_ctor() const noexcept {
+    if constexpr (!valid_key) {
+      return *this;  // the constructor has reported the key
+    } else {
+      static_assert(no_declaration_yet,
+                    "trellis: .with_ctor<Args...>(): the binding declares a constructor already");
+      if constexpr (no_declaration_yet) {
+        return binding<Key, detail::declared_impl<Impl, ctor<Args...>>, Lifetime, AllowCopy>{};
+      } else {
+        return *this;  // after the static_assert, so that nothing else is reported
       }
     }
   }
@@ -513,6 +625,28 @@ class binding<Key, Object, external_t, AllowCopy> {
     return binding<Key, Object, external_t, true>(object_);
   }
 
+  /// @brief Rejects a constructor declaration: the binding holds the caller's object, so the
+  ///        injector builds nothing.
+  ///
+  /// @return The same binding, unchanged.
+  ///
+  /// @par Constraints
+  /// - Never valid: compilation fails with a static_assert naming `.with_ctor<Args...>()`, once
+  ///   per binding type and declaration.
+  ///
+  /// @par Errors
+  /// None.
+  ///
+  /// @par Example
+  /// @code
+  /// // trellis::bind<Config>.to_ref(config).with_ctor<int>();  // error: builds nothing
+  /// @endcode
+  template <class... Args>
+  [[nodiscard]] constexpr binding with_ctor() const noexcept {
+    detail::reject_ctor_declaration<binding, Args...>();
+    return *this;
+  }
+
  private:
   template <class, class, class, bool>
   friend class binding;
@@ -579,6 +713,28 @@ class binding<Key, Object, shared_external_t, AllowCopy> {
   /// @endcode
   [[nodiscard]] binding<Key, Object, shared_external_t, true> allow_copy() && noexcept {
     return binding<Key, Object, shared_external_t, true>(std::move(object_));
+  }
+
+  /// @brief Rejects a constructor declaration: the binding holds the caller's shared object, so
+  ///        the injector builds nothing.
+  ///
+  /// @return The same binding, unchanged.
+  ///
+  /// @par Constraints
+  /// - Never valid: compilation fails with a static_assert naming `.with_ctor<Args...>()`, once
+  ///   per binding type and declaration.
+  ///
+  /// @par Errors
+  /// None.
+  ///
+  /// @par Example
+  /// @code
+  /// // trellis::bind<IClock>.to_shared(clock).with_ctor<int>();  // error: builds nothing
+  /// @endcode
+  template <class... Args>
+  [[nodiscard]] binding with_ctor() const noexcept {
+    detail::reject_ctor_declaration<binding, Args...>();
+    return *this;
   }
 
  private:
@@ -648,6 +804,49 @@ class binding<Key, Value, value_t, AllowCopy> {
     return binding<Key, Value, value_t, true>(std::move(value_));
   }
 
+  /// @brief Rejects a constructor declaration: the binding holds the injector's copy of a value,
+  ///        so the injector builds nothing.
+  ///
+  /// @return The same binding, unchanged.
+  ///
+  /// @par Constraints
+  /// - Never valid: compilation fails with a static_assert naming `.with_ctor<Args...>()`, once
+  ///   per binding type and declaration, whichever overload is called.
+  ///
+  /// @par Errors
+  /// None.
+  ///
+  /// @par Example
+  /// @code
+  /// // trellis::bind<Config>.to_value(Config{}).with_ctor<int>();  // error: builds nothing
+  /// @endcode
+  template <class... Args>
+  [[nodiscard]] constexpr const binding& with_ctor() const& noexcept {
+    detail::reject_ctor_declaration<binding, Args...>();
+    return *this;
+  }
+  /// @brief Rejects a constructor declaration, as the overload above does; returns the binding
+  ///        as an rvalue, so that a move-only value is moved along, not copied.
+  ///
+  /// @return The same binding, unchanged.
+  ///
+  /// @par Constraints
+  /// - Never valid: compilation fails with a static_assert naming `.with_ctor<Args...>()`, once
+  ///   per binding type and declaration, whichever overload is called.
+  ///
+  /// @par Errors
+  /// None.
+  ///
+  /// @par Example
+  /// @code
+  /// // trellis::bind<Config>.to_value(Config{}).with_ctor<int>();  // error: builds nothing
+  /// @endcode
+  template <class... Args>
+  [[nodiscard]] constexpr binding&& with_ctor() && noexcept {
+    detail::reject_ctor_declaration<binding, Args...>();
+    return std::move(*this);
+  }
+
  private:
   template <class, class, class, bool>
   friend class binding;
@@ -698,9 +897,9 @@ struct binding_access {
 // never look at it.
 /// @brief Starts a binding of the key `I`: the binding of `I` to itself, unique.
 ///
-/// Chain `.to<C>()`, `.in(lifetime)` and `.allow_copy()`, or `.to_ref(x)`, `.to_ptr(p)`,
-/// `.to_value(v)` and `.to_shared(sp)`, then pass the binding to `trellis::make_module` or
-/// `trellis::make_injector`. `bind<I>` alone is a binding too.
+/// Chain `.to<C>()`, `.in(lifetime)`, `.allow_copy()` and `.with_ctor<Args...>()`, or
+/// `.to_ref(x)`, `.to_ptr(p)`, `.to_value(v)` and `.to_shared(sp)`, then pass the binding to
+/// `trellis::make_module` or `trellis::make_injector`. `bind<I>` alone is a binding too.
 ///
 /// @tparam I The key: the type that consumers request, qualifiers included.
 ///

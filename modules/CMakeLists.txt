@@ -81,6 +81,11 @@ add_library(trellis::module ALIAS trellis_module)
 target_sources(trellis_module PUBLIC FILE_SET CXX_MODULES FILES trellis.cppm trellis.testing.cppm)
 target_link_libraries(trellis_module PUBLIC trellis::trellis)
 target_compile_features(trellis_module PUBLIC cxx_std_20)
+# The module's own build, and only that (PRIVATE): config.hpp reads TRELLIS_BUILDING_MODULE to make
+# static/declared_aggregate.hpp a system header where Clang before 20 needs one to keep a warning
+# from importers (TRELLIS_MODULE_SYSTEM_HEADER). Importers read the compiled interface and don't
+# need it.
+target_compile_definitions(trellis_module PRIVATE TRELLIS_BUILDING_MODULE=1)
 # No compiler launcher, so no ccache, for the module or for its importers (trellis_module_importer
 # below): ccache 4.9 doesn't hash the compiled module interface that an importer reads, so after a
 # header changes it can return an importer's stale object file. It doesn't cache the interface

@@ -12,7 +12,7 @@ The engine's entry points, all in `trellis::detail`:
 | `deduced_constructible_v<T, Arity, Ctx>` | whether T builds with every parameter resolved by `Ctx` | none |
 | `construct_deduced<T, Arity>(ctx)` | the built T, a prvalue | none |
 
-`MaxArity` is the injector's `max_ctor_arity`, 16 by default (`default_max_ctor_arity`) and at most 32, which `create<T>()` passes (T1.5). `BindingCtor` is for a binding's `.with_ctor<Args...>()`, which plan §5.3 lists first among the declarations; the binding DSL doesn't offer it yet, and no task in `docs/tasks.json` builds it, so `create<T>()` passes `no_ctor_declared`. Every entry point strips `T`'s cv-qualifiers, and `not_self` compares unqualified types, so a `const` or `volatile` `T` is the same class with the same constructors.
+`MaxArity` is the injector's `max_ctor_arity`, 16 by default (`default_max_ctor_arity`) and at most 32, which `create<T>()` passes (T1.5). `BindingCtor` is for a binding's `.with_ctor<Args...>()`, which plan §5.3 lists first among the declarations: `create<T>()` passes the declaration of the class's binding, or `no_ctor_declared` for a binding without one and for an unbound class (T1.15; `served_binding::binding_ctor` in `include/trellis/static/resolve.hpp`). Every entry point strips `T`'s cv-qualifiers, and `not_self` compares unqualified types, so a `const` or `volatile` `T` is the same class with the same constructors.
 
 ## The placeholders
 
@@ -238,7 +238,7 @@ S1's limits (S1 §3.5, ADR-0003 items 5 and 7), plus the aggregate member check.
 | Parameter of type `std::optional`, `std::tuple` or `std::any` | TRL-E002 | `deduced_optional_param.cpp`; unit tests for all three |
 | Abstract class | TRL-E002, "it is abstract". The injector reports TRL-E001 for an unbound abstract key before it asks discovery (T1.6) | `deduced_abstract.cpp` |
 | Not a class (`int`, a pointer, an enumeration, a union) | TRL-E002, "deduction needs a class type" | `deduced_not_a_class.cpp` |
-| Incomplete class | TRL-E002, "it is incomplete here" | `deduced_incomplete.cpp` |
+| Incomplete class | TRL-E002, "it is incomplete here"; through `create<T>()` also for a class whose constructor a binding or a `ctor_traits` specialization declares, with the same error type (`declaration_report`, T1.15) | `deduced_incomplete.cpp`; `create/e002_incomplete_with_ctor.cpp`, `create/e002_incomplete_specialization.cpp` |
 | Unresolvable parameter of the discovered constructor | an error, never a shorter constructor; documented message below | `deduced_no_fallback.cpp` |
 | Defaulted parameter | injected, never defaulted; documented message below when it can't be resolved | `deduced_defaulted_param.cpp`; `DefaultedParameterIsInjected` |
 | Same-arity overloads next to a shorter constructor | residual: the shorter one is chosen silently | unit test `same_arity_plus_default` |

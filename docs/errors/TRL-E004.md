@@ -59,7 +59,7 @@ template <>
 struct trellis::ctor_traits<app::greedy> : trellis::ctor<const app::config&> {};
 ```
 
-- The declaration lists the parameter types the injector should pass, which Trellis checks with `std::is_constructible` ([TRL-E002](TRL-E002.md) if no constructor takes them). A member alias `using trellis_ctor = trellis::ctor<...>;` in the class, or a binding's `.with_ctor<...>()` (T1.4), declare it too.
+- The declaration lists the parameter types the injector should pass, which Trellis checks with `std::is_constructible` ([TRL-E002](TRL-E002.md) if no constructor takes them). A member alias `using trellis_ctor = trellis::ctor<...>;` in the class, or a binding's `.with_ctor<...>()`, such as `trellis::bind<app::greedy>.with_ctor<const app::config&>()` (T1.15), declare it too.
 - **An aggregate with an array member:** declare one parameter per element, in order. Aggregates are built with braces, so `trellis::ctor<int, int, app::endpoint>` fills `numbers[0]`, `numbers[1]` and `where` on every compiler. Or give the type a constructor, or bind it to a value.
 - **An aggregate with a `std::optional`, `std::tuple` or `std::any` member:** declare all its fields, such as `trellis::ctor<std::string, std::optional<int>, int>`; the injector then needs a binding for the `std::optional<int>`. Configuration structs like this one are usually bound as values.
 - A constructor template is often a forwarding convenience next to a real constructor. A non-template constructor with more parameters wins over it, so declaring nothing works once the real constructor is the longest.

@@ -475,18 +475,31 @@ constexpr error_message deduction_message(deduction_status status) noexcept {
   }
 }
 
-// discovery_report<T, BindingCtor, MaxArity>: what discovery reports for T when it finds no
-// constructor to call: the error type and the message. For a declaration, TRL-E002 naming it (as
-// explicit_ctor_t reports it); for a deduction, the message of its status, with TRL-E004's,
-// TRL-E010's or TRL-E002's error type. discover, below, raises it, and so does the explain pass
-// for a class whose constructor can't be found (diagnostics/explain.hpp): the same arguments, so
-// one report however the class is reached. T has no cv-qualifiers.
-template <class T, class BindingCtor, std::size_t MaxArity,
-          class Declared = typename declared_ctor<T, BindingCtor>::type>
-struct discovery_report {
+// declaration_report<T, Declared>: TRL-E002 for a declaration that doesn't match how a T will be
+// built, naming it. A T that is incomplete here can't be checked, nor asked whether it is an
+// aggregate: its report is the one deduction gives an incomplete class, so that one class is one
+// report however its constructor is declared, by a binding, a ctor_traits specialization or not
+// at all (T1.15).
+template <class T, class Declared, bool Complete = complete_class<T>>
+struct declaration_report {
   using error = trellis::error::E002<T, Declared>;
   static constexpr error_message message = declaration_message<T>;
 };
+template <class T, class Declared>
+struct declaration_report<T, Declared, false> {
+  using error = trellis::error::E002<T, no_ctor_declared>;
+  static constexpr error_message message = error_message::incomplete;
+};
+
+// discovery_report<T, BindingCtor, MaxArity>: what discovery reports for T when it finds no
+// constructor to call: the error type and the message. For a declaration, declaration_report; for
+// a deduction, the message of its status, with TRL-E004's, TRL-E010's or TRL-E002's error type.
+// discover, below, raises it, and so does the explain pass for a class whose constructor can't be
+// found (diagnostics/explain.hpp): the same arguments, so one report however the class is
+// reached. T has no cv-qualifiers.
+template <class T, class BindingCtor, std::size_t MaxArity,
+          class Declared = typename declared_ctor<T, BindingCtor>::type>
+struct discovery_report : declaration_report<T, Declared> {};
 template <class T, class BindingCtor, std::size_t MaxArity>
 struct discovery_report<T, BindingCtor, MaxArity, no_ctor_declared> {
   static constexpr deduction_status status = deduction<T, MaxArity>::status;
@@ -529,8 +542,8 @@ constexpr auto discover() {
 // to deduce), TRL-E004 (an ambiguous constructor) or TRL-E010 (above the bound); after it the type
 // is no_ctor_declared, so nothing else fails. MaxArity is the injector's max_ctor_arity, which
 // create<T>() passes (T1.5). BindingCtor is for a binding's .with_ctor<Args...>(), as for
-// explicit_ctor_t; the binding DSL has no .with_ctor yet and no task in the task list builds it,
-// so create<T>() passes no_ctor_declared. cv-qualifiers are stripped.
+// explicit_ctor_t: create<T>() passes the declaration of the class's binding, or
+// no_ctor_declared (static/resolve.hpp, served_binding; T1.15). cv-qualifiers are stripped.
 template <class T, class BindingCtor = no_ctor_declared,
           std::size_t MaxArity = default_max_ctor_arity>
 using discovered_ctor_t = decltype(detail::discover<std::remove_cv_t<T>, BindingCtor, MaxArity>());

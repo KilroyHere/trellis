@@ -316,4 +316,57 @@
 #define TRELLIS_EMPTY_BASES
 #endif
 
+// TRELLIS_PARTIAL_AGGREGATE_INIT_BEGIN and _END surround the code that builds an aggregate from an
+// explicit declaration with braces (static/declared_aggregate.hpp). A declaration may list fewer
+// members than the aggregate has, as braces allow (plan §7.2, ADR-0003 item 1), and each member it
+// leaves out keeps its default member initializer or is value-initialized, as the user declared.
+// GCC and Clang still warn about each such member without a default member initializer
+// (-Wmissing-field-initializers, part of -Wextra), at that code, so a user's -Werror would make it
+// an error from a Trellis header, against NFR-10. No construction keeps the meaning of braces
+// without the warning: parentheses warn on GCC too, and would accept narrowing and refuse brace
+// elision. So the pair switches that one warning off there and only there, on GCC and Clang. Every
+// other warning stays, such as Clang's -Wdangling-field for a reference member that a declaration
+// binds to a temporary (tests/warnings/). MSVC has no such warning, so the pair is empty there.
+// tests/unit/declared_aggregate_test.cpp builds partial declarations through each explicit source
+// and each creation path under the project warnings and -Werror.
+#if defined(__GNUC__) || defined(__clang__)
+// clang-format off: _Pragma takes one string literal, which the formatter would split in two.
+#define TRELLIS_PARTIAL_AGGREGATE_INIT_BEGIN \
+  _Pragma("GCC diagnostic push")             \
+  _Pragma("GCC diagnostic ignored \"-Wmissing-field-initializers\"")
+// clang-format on
+#define TRELLIS_PARTIAL_AGGREGATE_INIT_END _Pragma("GCC diagnostic pop")
+#else
+#define TRELLIS_PARTIAL_AGGREGATE_INIT_BEGIN
+#define TRELLIS_PARTIAL_AGGREGATE_INIT_END
+#endif
+
+// TRELLIS_MODULE_SYSTEM_HEADER, at the top of static/declared_aggregate.hpp, makes that header a
+// system header in one build only: the C++20 module's own, on Clang before 20, where the pair
+// above isn't enough. Clang before 20 doesn't apply a diagnostic pragma of a header in a module to
+// an instantiation that an importer of the module makes (measured: clang-18 warns there, clang-20
+// doesn't; T1.15), while a system header's status reaches the importer. The module target defines
+// TRELLIS_BUILDING_MODULE for its own build (modules/CMakeLists.txt). Apple Clang numbers its
+// versions differently, so it is treated as before 20. The cost falls on those importers alone:
+// no warning located in that header reaches them, Clang's -Wdangling-field for a reference member
+// bound to a temporary included. Everywhere else, in the headers, the single header and the module
+// built by Clang 20 or later, the macro is empty, so no Trellis file is a system header, and a
+// header compiled as the main file, as a precompiled header or a header unit is, meets no
+// system_header pragma: GCC warns about one there, with no flag to switch the warning off. On
+// Clang, the macro also switches off the warning that the pragma does nothing in a main file
+// (-Wpragma-system-header-outside-header), as when clang-tidy checks the header itself; NOLINT
+// doesn't reach a warning of the preprocessor. The header's status outlasts the pop.
+#if defined(TRELLIS_BUILDING_MODULE) && defined(__clang__) && \
+    (defined(__apple_build_version__) || __clang_major__ < 20)
+// clang-format off: _Pragma takes one string literal, which the formatter would split in two.
+#define TRELLIS_MODULE_SYSTEM_HEADER                                            \
+  _Pragma("clang diagnostic push")                                              \
+  _Pragma("clang diagnostic ignored \"-Wpragma-system-header-outside-header\"") \
+  _Pragma("clang system_header")                                                \
+  _Pragma("clang diagnostic pop")
+// clang-format on
+#else
+#define TRELLIS_MODULE_SYSTEM_HEADER
+#endif
+
 #endif  // TRELLIS_CONFIG_HPP

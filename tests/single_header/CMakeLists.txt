@@ -106,3 +106,16 @@ if(NOT twins)
   message(FATAL_ERROR
     "tests/single_header: no unit test program of tests/unit links trellis::trellis")
 endif()
+
+# The single header compiled as the main file of a translation unit, as a precompiled header or a
+# header unit compiles it, with the project warnings as errors, on GCC and Clang: nothing in it may
+# depend on being included, such as a system_header pragma, which GCC reports in a main file with
+# no flag to switch the warning off (T1.15; config.hpp, TRELLIS_MODULE_SYSTEM_HEADER). It needs the
+# generated header, which the twins' build makes.
+if(NOT MSVC)
+  separate_arguments(trellis_cxx_flags UNIX_COMMAND "${CMAKE_CXX_FLAGS}")
+  add_test(NAME single_header.main_file
+    COMMAND "${CMAKE_CXX_COMPILER}" ${trellis_cxx_flags} -std=c++20 -fsyntax-only -x c++-header
+            ${TRELLIS_WARNING_FLAGS} ${TRELLIS_WARNINGS_AS_ERRORS} "${single_header}")
+  set_tests_properties(single_header.main_file PROPERTIES LABELS single_header)
+endif()

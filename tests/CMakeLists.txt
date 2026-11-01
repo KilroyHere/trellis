@@ -92,6 +92,8 @@ add_subdirectory(unit)
 add_subdirectory(property)
 # The chain-depth test (label chain_depth), T1.11.
 add_subdirectory(chain_depth)
+# Warnings that Trellis's code must still give users (label compile_fail), T1.15.
+add_subdirectory(warnings)
 # The C++20 module (label module) and the single header (label single_header), T1.8.
 if(TARGET trellis_module)
   add_subdirectory(module)
