@@ -299,8 +299,11 @@ class binding {
   /// @code
   /// // trellis::bind<Config>.to_ref(Config{});  // error: deleted function
   /// @endcode
+  // It returns a binding, not void, so that the deleted call is the one error: given void, MSVC
+  // also rejects the variable the call initializes (cl 19.51, C3313), as in
+  // tests/compile_fail/dsl/bind_to_ref_temporary.cpp.
   template <class T>
-  void to_ref(const T&& object) const = delete;
+  binding to_ref(const T&& object) const = delete;
 
   /// @brief Binds the key to an object that the caller owns, through a pointer.
   ///

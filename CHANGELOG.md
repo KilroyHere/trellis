@@ -47,6 +47,6 @@ Phase 0 (foundations) is complete. The injector API is being built for v0.1: bin
 
 ### Fixed
 
-- **MSVC,** found by the first macOS and Windows CI run since Phase 1 code landed: deduced discovery failed to compile for a class whose constructor has one parameter (C3546), and refused with TRL-E004 an aggregate with a member of aggregate class type, such as `std::array` or an empty struct, as if it had an array member.
+- **MSVC,** found by the first macOS and Windows CI run since Phase 1 code landed: deduced discovery failed to compile for a class whose constructor has one parameter (C3546), and refused with TRL-E004 an aggregate with a member of aggregate class type, such as `std::array` or an empty struct, as if it had an array member. `.to_ref()` of a temporary is now one error there, the deleted function, rather than two.
 - **`trellis::type_name`** names member pointer types such as `int app::widget::*` the same on MSVC and Clang 21 as on GCC: MSVC left out the space before the class, and Clang 21, Apple clang 21 included, the class's namespace.
 - **Compile-fail tests in parallel:** each compile runs in a scratch directory of its own. On MSVC, parallel compiles in one directory failed with C1041 on its shared `vc140.pdb`, which made most compile-fail tests fail, and a snippet that compiles pass.
