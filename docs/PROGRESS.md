@@ -35,6 +35,7 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - (a) keep NFR-13's minimum, 19.38, and use a 150-hop bound on MSVC before 19.50: the provisional text, measured to give exactly one TRL-E007 on cl 19.44;
   - (b) raise NFR-13's MSVC minimum to 19.51. 19.45 to 19.50 can't be measured on GitHub's image, so 19.50 is only an assumed boundary.
   Not blocking until the cycle check lands in Phase 2.
+- **`const std::shared_ptr<T>&` parameters (ADR-0004's open question, T1.4).** Such a parameter asks for a `shared_ptr<T>` object by reference. Today it is TRL-E012, unless `shared_ptr<T>` itself is bound, with a message saying to take `std::shared_ptr<T>` by value. Allowing it, by holding a temporary until the constructor returns, would dangle if the constructor kept the reference. Recommendation: keep the error for v0.1, and revisit at the API review. Not blocking.
 - **Construction rule for explicit declarations (T1.2, ADR-0003, amended).** An aggregate is checked and built with braces, which rejects narrowing and allows brace elision; every other type is checked with `is_constructible` and built with parentheses. This refines the accepted ADR-0003, which said `is_constructible` for every type. Confirm it, or say otherwise before T1.5 builds on it.
 - **Error IDs for misuse asserts (T1.1, T1.2).** Some static_asserts report misuse of Trellis's own vocabulary rather than a wiring mistake, and carry no TRL ID, because plan §7.8 lists none for them: a `type_list` or `type_map` given a non-list, an out-of-range index, a missing key, and a `trellis_ctor` alias that doesn't name a `ctor<...>`. ADR-0006 says every mistake Trellis reports has a stable ID. Recommendation: give an ID (the next free numbers after TRL-E012) to misuse a user can make through the public API, such as the malformed alias, and leave the internal meta-toolkit guards without IDs. Not blocking.
 - **The ADR set (T0.8)** is owner-reviewable: `docs/adr/README.md` indexes ADR-0001 to ADR-0014 with their statuses.
@@ -45,6 +46,36 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Add `tests/golden_manifest.txt` to the protected paths.
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev` so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
+
+## 2026-11-01: T1.4 binding vocabulary and modules (passed)
+
+- **What changed** (squashed as 94689a7): `include/trellis/dsl/` (bind, lifetimes, module, options, request_forms) and `include/trellis/static/` (binding_map, injector, validate).
+  - **Bindings.** `bind<I>.to<C>().in(...)`, `.to_ref`, `.to_ptr`, `.to_shared`, `.to_value` and `.allow_copy()`. Each step returns one `binding<Key, Impl, Lifetime, AllowCopy>`, so nothing accumulates (ADR-0010).
+  - **Modules and options.** `make_module`; `options` as a structural template argument.
+  - **Injector.** `make_injector<options{...}>(...)` flattens linearly and reports a repeated key as exactly one TRL-E003, naming both bindings. Its type is `injector<Opts, Parts...>`.
+  - **Request forms.** The §6.3 table is constexpr data, with an unbound column and a test per cell. `detail::request_check` and `detail::report_request_form` are T1.5's entry points for TRL-E005 and TRL-E012.
+  - **Tests and docs.** 32 compile-fail tests; pages for TRL-E003, E005 and E012; `docs/internals/bindings-and-modules.md`; History entries in ADR-0004 and ADR-0010.
+- **Review:** failed twice, and the third check passed.
+  - Round 1: a repeated key cascaded once the injector was used (3–12 errors), and a bad bind key plus a chain call gave two errors.
+  - Round 2: the fix let a bad key through when `bind<I>` appeared only inside `decltype`, as in the documented named-module pattern. That compiled silently and dropped `.in(singleton)`.
+  - Fixed: the key check is a static_assert in binding's constructor. After E003 the request entry points report nothing. A move-only module passed as an lvalue gets one error. E012 for a reference to a smart pointer says to take it by value.
+  - The final check: every probe gives exactly one error on gcc-13, gcc-14, clang-18 and clang-20, and valid code compiles warning-free in C++20 and C++23.
+- **Evidence:** `scripts/tasks.py verify T1.4` on main: `[PASS] scripts/check-full.sh (782.8 s)`, `check-full: 10 of 10 presets passed, 0 failed`, `T1.4: all verify commands passed`. Earlier, `scripts/init.sh`: `clang-18-debug: 204 tests: 193 passed, 11 skipped`.
+- **[NEEDS CLARIFICATION]**
+  - `const std::shared_ptr<T>&` is a reference request for the key `shared_ptr<T>`, so it gives E012 with a hint to take it by value (ADR-0004's open question; see "Waiting for owner").
+  - The reasons for ✗ cells that §6.3 leaves blank are inferred and listed in ADR-0004's History.
+  - The lazy/provider row allows every column.
+  - `.to_value()` accepts only the key type or a derived one.
+  - Plan §7.8 says E003 "names both modules"; it names both bindings, and the module types appear in the instantiation note. T1.6 could add them.
+- **Follow-ups:**
+  - **T1.5:** call the two request entry points from `create<T>()`; make `.allow_copy()` copies; decide whether unbound non-class types are implicitly unique; handle `[[no_unique_address]]` on MSVC.
+  - **T1.6:**
+    - add the path to E005 and E012;
+    - golden tests for E003, E005 and E012;
+    - on Clang the bad-key error line shows `valid_key`, with the key type only in the following note;
+    - check the compile-fail regexes on MSVC's C2338.
+  - **Phase 2:** scoped × weak_ptr is a plain ✓, but §6.3's captive paragraph lists weak_ptr.
+  - **T1.9:** GCC time at 1,000 → 2,000 bindings goes 3.5 s → 11.7 s; instantiations stay linear. A request check costs 0.3–1.5 ms at 100–300 bindings.
 
 ## 2026-10-31: T1.2 explicit constructor declaration (passed)
 
