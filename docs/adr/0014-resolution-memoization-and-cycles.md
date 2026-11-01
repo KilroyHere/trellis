@@ -115,3 +115,31 @@ Spike S2 measured three strategies on S1's injector stub, with identical creatio
   - Clang 20 stops the aggregate chain with `-Wstack-exhausted`, its warning that its stack is nearly exhausted, which `-Werror` makes an error; without it, the chain reaches 251 hops. Clang budgets 8 MiB of stack, Linux's default, and checking an aggregate's braces takes more of it per hop.
   - T1.5's 295 and 252 hops were measured on chains whose last class was an empty aggregate. The deepest instantiation is the last class's discovery, and a last class with a constructor of its own costs 2 more levels on GCC and 3 on Clang: 3N + 16 and 4N + 19 levels for the test's value chain.
   - An eager injector checks and builds its singletons in binding order. With its bindings listed from the root down, as in the test, the chain stops where a lazy injector's does. Listed from the leaf up, every singleton finds its dependencies already checked and built, and the chain doesn't nest: 1,000 hops compile on gcc-13, and 300 on clang-18. This bears out the last sentence of the Alternatives' "warming the memo in binding order": the creation code instantiated in binding order lifts the limit, and an eager injector does that by itself. Nothing in the decision changes.
+- **2026-11-01, the Apple Clang fix (9ce6866):**
+  - A deduced hop now instantiates one variable template instead of two. `context::can_resolve<R, Node>` evaluates a deduced class's node in out-of-class partial specializations, and every other node through `node_v`.
+    - So Clang nests three template levels per hop, not four.
+    - Memoization is now per request rather than per node, still within item 1's key.
+  - Discovery's greedy check, and the engine's checks of a deduced aggregate, use parentheses; on MSVC they keep braces (ADR-0003, provisional).
+  - The deepest chains at the default limits:
+
+    | Compiler | Aggregates | By value |
+    |---|---|---|
+    | Apple Clang 21 | 213 (stack) | 335 (depth) |
+    | clang-18 | 335 (depth) | 310 (stack) |
+    | clang-20 | 241 (stack) | 305 (stack) |
+
+  - NFR-09 holds on Apple Clang, with 13 hops to spare for aggregates.
+- **2026-11-01, MSVC measured.** These are after the Apple fix: run 41349651148 for the deepest chains, run 41352149959 for the 200- and 150-hop tests.
+  - The deepest chains:
+
+    | Shape | cl 19.51 | cl 19.44 |
+    |---|---|---|
+    | every deduced request form except `std::unique_ptr` | 246 | 161–162 |
+    | `std::unique_ptr` | 198 (C2999 in `<memory>`) | 161–162 |
+    | declared constructors | 332 | 242 |
+    | the mix | 288 | 194 |
+    | aggregates | 15 (C1054) | 15 (C1054) |
+
+  - C1054 is cl's own limit on nested braced initializers, and plain C++ hits it too: 16 nested aggregates fail without Trellis.
+  - So NFR-09 holds in 8 of 10 shapes on cl 19.51, and in 9 of 10 on cl 19.44 at item 3's 150-hop bound.
+  - Whether to accept the `std::unique_ptr` and aggregate shapes for v0.1 waits for the owner.

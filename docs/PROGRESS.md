@@ -137,11 +137,27 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Recommendation: (a).
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev clang-tools-18 clang-tools-20` (`clang-tools-*` gives `clang-scan-deps`, which the C++20 module build needs, T1.8) so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
 
+## 2026-11-01: T1.11 chain-depth and arity budgets (landed at 06c22c2; passes with the final tree)
+
+- **The chain test:** `tests/chain_depth/check_chain_depth.py`, in ten shapes. CTest's `chain_depth.<shape>` compiles 200 hops on every preset, and 150 on MSVC before 19.50. `--deepest` measures the deepest chain, and `--record` writes `tests/chain_depth/deepest.json`.
+- **platforms.yml** runs the test with the image's latest cl and with cl 19.44.
+- **max_ctor_arity:** 16 is kept, measured against NFR-04 and NFR-05 at N = 100 (docs/benchmarks/v0.1.md).
+- **Results, recorded in ADR-0014's History:**
+  - GCC and Clang pass 200 hops in every shape. After the Apple fix:
+    - clang-18 reaches 335 for aggregates and 310 by value;
+    - clang-20 reaches 241 and 305.
+  - Apple Clang 21 passes at 213 hops for aggregates (run 41342943535).
+  - MSVC, run 41352149959:
+    - cl 19.51 passes 8 of 10 shapes at 200 hops. `std::unique_ptr` reaches 198. Aggregates stop at 15, cl's own C1054 limit.
+    - cl 19.44 passes 9 of 10 at 150. Aggregates stop at 15 there too.
+  - NFR-09 on MSVC is listed for the owner.
+- **Before T1.11 passes:** `deepest.json` must be re-recorded on the final tree.
+
 ## 2026-11-01: the gate fixes and T1.15 landed (T1.15 passes with the final tree)
 
 - **Gate fixes (0f19f6a).** The review passed, then its follow-ups went in before landing.
   - **`expect-max-lines-nfr07`** counts lines as 1A amended NFR-07, on GCC and Clang only. The self-test catches eight mutants of the rule.
-  - **Six compile-fail tests, with goldens, pin the alternating chain** that led to 1A, in four layouts plus aggregates in the worst one. By NFR-07's count they need 17 lines on gcc-13, 35 to 37 on gcc-14, and 33 to 35 on Clang.
+  - **Five compile-fail tests, with goldens, pin the alternating chain** that led to 1A, in four layouts plus aggregates in the worst one. By NFR-07's count they need 17 lines on gcc-13, 35 to 37 on gcc-14, and 33 to 35 on Clang.
   - **Docs:** the ADR index lists the provisional amendments and the missing plan changes, plan §9.2 and §12.2 record 2a and 3a, and stale text is fixed.
   - **Nightly:** it enforces what the amended T1.9 verify does, and only reports the waived clang-18 scenario.
   - **Integration on main:**
