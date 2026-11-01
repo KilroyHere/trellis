@@ -786,6 +786,35 @@
       ],
       "depends_on": [],
       "passes": true
+    },
+    {
+      "id": "T1.14",
+      "phase": 1,
+      "title": "Meet the v0.1 compile-time and binary-size budgets",
+      "description": "T1.9's measurements missed three budgets that the Phase 1 exit criteria require. NFR-04: a 100-component graph compiles at 1.68x (gcc-13) and 1.78x (clang-18) of hand-wired, against 1.3x. NFR-06: the stripped scenario binary grows by 8,192 and 12,352 bytes, against 8 KB. NFR-03: the scenario compile grows by 0.31 s on clang-18, against 0.3 s. Most of the extra compile time is code generation for per-singleton creation code; most of the binary growth is the thread-safe slot. Reduce the code Trellis generates per binding and per singleton without changing behaviour, tests or budgets.",
+      "plan_refs": [
+        "§3.2",
+        "§8.1",
+        "§8.4",
+        "NFR-03",
+        "NFR-04",
+        "NFR-06",
+        "ADR-0005",
+        "ADR-0012"
+      ],
+      "acceptance": [
+        "With T1.9's Trellis variants, scripts/bench-compile.sh --quick reports no missed budget on a quiet machine (1-minute load below 1.5), and the numbers are recorded in docs/benchmarks/v0.1.md.",
+        "NFR-06 holds on gcc-13 and clang-18 for the scenario with the default threading option, measured as T1.9 measured it.",
+        "Behaviour is unchanged: every existing test passes as it is, including the threading, scenario, sanitizer and compile-fail tests, and budgets.json is unchanged."
+      ],
+      "verify": [
+        "scripts/check-full.sh",
+        "scripts/bench-compile.sh --quick"
+      ],
+      "depends_on": [
+        "T1.5"
+      ],
+      "passes": false
     }
   ]
 }

@@ -35,6 +35,7 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - (a) keep NFR-13's minimum, 19.38, and use a 150-hop bound on MSVC before 19.50: the provisional text, measured to give exactly one TRL-E007 on cl 19.44;
   - (b) raise NFR-13's MSVC minimum to 19.51. 19.45 to 19.50 can't be measured on GitHub's image, so 19.50 is only an assumed boundary.
   Not blocking until the cycle check lands in Phase 2.
+- **Performance budgets missed (T1.9).** NFR-04 (1.68× / 1.78× against 1.3×), NFR-06 on Clang (+12,352 B against +8 KB) and NFR-03 on Clang (+0.31 s against +0.3 s). These are Phase 1 exit criteria. The plan is T1.14: generate less code per binding and per singleton, then re-measure on a quiet machine. Budgets stay unchanged unless you decide otherwise. Also: is NFR-06's "KB" 1,000 or 1,024 bytes? GCC lands exactly on +8,192 B.
 - **New error IDs TRL-E013 and TRL-E014 (T1.5), provisional.** ADR-0006 says an ID never changes meaning, and the catalog's process gives a new mistake the next free number. So these are new IDs, not wider meanings for E001 and E005:
   - TRL-E013: an unbound concrete type requested under `options{.strict = true}`;
   - TRL-E014: a `unique_ptr<I>` request that would delete an implementation through a non-virtual `~I`.
@@ -61,6 +62,28 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Add `tests/golden_manifest.txt` to the protected paths.
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev clang-tools-18 clang-tools-20` (`clang-tools-*` gives `clang-scan-deps`, which the C++20 module build needs, T1.8) so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
+
+## 2026-11-01: T1.9 v0.1 benchmarks: three budgets missed (not passing yet)
+
+- **What was built** (not on main yet, branch `worktree-agent-a2ce542abfb74c8c5`: 4b882c9, 7422f5c, db4fb4e):
+  - Trellis variants in `benchmarks/compile/gen_graph.py`, `benchmarks/scenario/trellis.{hpp,cpp}` and `benchmarks/runtime/scenario_bench.cpp`;
+  - the equivalence oracle (`tests/property/check_sharing.py`) running manual and Trellis wiring;
+  - `docs/benchmarks/v0.1.md`.
+  
+  It lands with T1.14, because the nightly benchmark job would otherwise open an issue every night until NFR-04 passes.
+- **Results**, gcc-13 / clang-18, measured at 1-minute load 0.6–2.0:
+  - **NFR-01** (resolve): 1.07× / 1.01×. Met.
+  - **NFR-03** (scenario compile): +0.21 s / +0.31 s against +0.3 s. **Clang missed narrowly**; the run is noisy (+0.07 to +0.60 s).
+  - **NFR-04** (N=100 graph): 1.68× / 1.78× against 1.3×. **Missed.** Growth is linear from N=50 to 100.
+  - **NFR-05** (memory): 1.30× / 1.50×. Met; Clang is at the limit.
+  - **NFR-06** (stripped binary): +8,192 B / +12,352 B against +8 KB. **Clang missed**, and GCC is at the limit.
+  - **NFR-02** (graph build, not a v0.1 criterion): 1.56–1.60× against 1.5×.
+  - **Oracle:** passes on 200 random graphs.
+- **Why:**
+  - **NFR-04:** code generation is 61–69% of the extra compile time, instantiation about a third, headers about none. Per-singleton creation code is the cause: 1,381 functions against 809. With `threading::none` it is 1.53× / 1.42×.
+  - **NFR-06:** Trellis adds 3.4 / 4.3 KB of code, mostly the thread-safe slot (the `atomic::wait` futex path and the retry try/catch), and page-aligned segments round it up to 8 / 12 KiB.
+  - **NFR-03 on Clang:** about 0.13 s of headers plus 0.17–0.32 s of wiring.
+- **Next:** T1.14 was added to meet the budgets by generating less code per binding and per singleton. It changes no behaviour, tests or budgets, and `budgets.json` is untouched. T1.9 passes once its verify passes.
 
 ## 2026-11-01: T1.5 storage, lifetimes and create<T>() (passed)
 
