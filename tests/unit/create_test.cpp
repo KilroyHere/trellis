@@ -716,6 +716,13 @@ static_assert(std::is_empty_v<unowned_slots::slots>);
 // One byte, not one per binding: TRELLIS_EMPTY_BASES gives MSVC the layout GCC and Clang have, and
 // TRELLIS_NO_UNIQUE_ADDRESS does the same for a module of empty bindings (config.hpp).
 static_assert(sizeof(unowned_slots::slots) == 1);
+// Also for three and more, which MSVC lays out in one byte only in a primary template
+// (TRELLIS_STORES_ARE_PRIMARY_TEMPLATES, config.hpp): the partial specialization took 2.
+using three_unowned_slots = trellis::detail::storage_for<
+    threading::safe, trellis::detail::type_list<trellis::binding<int, int, trellis::unique_t>,
+                                                trellis::binding<long, long, trellis::unique_t>,
+                                                trellis::binding<short, short, trellis::unique_t>>>;
+static_assert(sizeof(three_unowned_slots::slots) == 1);
 using empty_module =
     decltype(trellis::make_module(bind<part<20>>, bind<part<21>>.in(trellis::singleton),
                                   bind<part<22>>.in(trellis::singleton_inline)));

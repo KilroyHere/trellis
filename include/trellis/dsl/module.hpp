@@ -102,6 +102,36 @@ struct from_layout_t {
 };
 
 // All the bindings of a module, as the bases of one struct (see the top of this file).
+#if TRELLIS_STORES_ARE_PRIMARY_TEMPLATES
+// On MSVC, binding_store names a primary template over the stored bindings, stored_bindings: cl
+// applies TRELLIS_EMPTY_BASES in full only to a primary template, and gave the partial
+// specialization below a byte for each empty binding after the second (config.hpp,
+// TRELLIS_STORES_ARE_PRIMARY_TEMPLATES). Every use passes std::index_sequence_for, so the
+// stored bindings come in index order, and the J-th base is binding J.
+template <class... Stored>
+struct TRELLIS_EMPTY_BASES stored_bindings : Stored... {
+  stored_bindings() = default;
+  template <class... Args>
+  constexpr explicit stored_bindings(from_bindings_t /*tag*/, Args&&... bindings)
+      : Stored{std::forward<Args>(bindings)}... {}
+  template <class Layout, class Refs>
+  constexpr stored_bindings(from_layout_t tag, Layout layout, Refs& refs)
+      : stored_bindings(tag, layout, refs, std::index_sequence_for<Stored...>{}) {}
+  // Binding J is Layout::extract<J>(refs): moved or copied out of the arguments refs refers to.
+  template <class Layout, class Refs, std::size_t... J>
+  constexpr stored_bindings(from_layout_t /*tag*/, Layout /*layout*/, Refs& refs,
+                            std::index_sequence<J...> /*positions*/)
+      : Stored{Layout::template extract<J>(refs)}... {}
+};
+template <class Indices, class... Bindings>
+struct binding_store_of;
+template <std::size_t... J, class... Bindings>
+struct binding_store_of<std::index_sequence<J...>, Bindings...> {
+  using type = stored_bindings<stored_binding<J, Bindings>...>;
+};
+template <class Indices, class... Bindings>
+using binding_store = typename binding_store_of<Indices, Bindings...>::type;
+#else
 template <class Indices, class... Bindings>
 struct binding_store;
 template <std::size_t... J, class... Bindings>
@@ -116,6 +146,7 @@ struct TRELLIS_EMPTY_BASES binding_store<std::index_sequence<J...>, Bindings...>
   constexpr binding_store(from_layout_t /*tag*/, Layout /*layout*/, Refs& refs)
       : stored_binding<J, Bindings>{Layout::template extract<J>(refs)}... {}
 };
+#endif
 
 // ---- the arguments of make_module and make_injector -------------------------------------------
 
@@ -263,15 +294,18 @@ constexpr flat_positions<Count> locate(std::initializer_list<std::size_t> sizes)
 // The three shapes of an argument list (see the top of this file).
 enum class flat_shape : unsigned char { bindings, one_module, mixed };
 
+// An if-constexpr chain with nothing after it: with plain ifs, cl 19.44 reports the code after the
+// first one as unreachable (C4702) wherever its condition is constant, as for make_injector's
+// bindings (chain-depth test, platforms run 41330765617).
 template <class... Parts>
 constexpr flat_shape shape_of() noexcept {
-  if (first_true({!binding_part<Parts>...}) == sizeof...(Parts)) {
+  if constexpr (first_true({!binding_part<Parts>...}) == sizeof...(Parts)) {
     return flat_shape::bindings;  // also for no arguments at all
-  }
-  if (sizeof...(Parts) == 1 && first_true({!module_part<Parts>...}) == 1) {
+  } else if constexpr (sizeof...(Parts) == 1 && first_true({!module_part<Parts>...}) == 1) {
     return flat_shape::one_module;
+  } else {
+    return flat_shape::mixed;
   }
-  return flat_shape::mixed;
 }
 
 // flat_layout<Shape, Parts...>: the bindings of the arguments Parts (types without references or
