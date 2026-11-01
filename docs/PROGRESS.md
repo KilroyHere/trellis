@@ -122,7 +122,50 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Make `scripts/hooks/protect_files.py` protect only committed files, so a task can fix tests it created itself.
   - Add `tests/golden_manifest.txt` to the protected paths.
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
+- **T1.15's readings (ADR-0003 History).** Recommendation: confirm all four.
+  - `.to<C>()` after `.with_ctor` moves the declaration to `C`.
+  - A second `.with_ctor` is an error.
+  - TRL-E003 and TRL-E009 for a declared binding print `detail::declared_impl<…>`.
+  - A declaration is checked at use, like the type-level ones.
+- **Declared aggregates in the module on Clang before 20 (T1.15, ADR-0003 History).**
+  - Clang before 20 ignores diagnostic pragmas in a module's importers. So the module's own build marks `declared_aggregate.hpp` a system header, which keeps `-Wmissing-field-initializers` from partial aggregate declarations out of importers.
+  - The cost: in that build (Clang before 20, and any Apple Clang), no warning located in that header reaches importers, `-Wdangling-field` included.
+  - Everywhere else, a targeted pragma silences only that one warning, and tests check that `-Wdangling-field` still fires.
+  - Options:
+    - (a) accept it for v0.1;
+    - (b) drop the module's system header, and let module users on Clang before 20 see the warning.
+  - Recommendation: (a).
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev clang-tools-18 clang-tools-20` (`clang-tools-*` gives `clang-scan-deps`, which the C++20 module build needs, T1.8) so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
+
+## 2026-11-01: the gate fixes and T1.15 landed (T1.15 passes with the final tree)
+
+- **Gate fixes (0f19f6a).** The review passed, then its follow-ups went in before landing.
+  - **`expect-max-lines-nfr07`** counts lines as 1A amended NFR-07, on GCC and Clang only. The self-test catches eight mutants of the rule.
+  - **Six compile-fail tests, with goldens, pin the alternating chain** that led to 1A, in four layouts plus aggregates in the worst one. By NFR-07's count they need 17 lines on gcc-13, 35 to 37 on gcc-14, and 33 to 35 on Clang.
+  - **Docs:** the ADR index lists the provisional amendments and the missing plan changes, plan §9.2 and §12.2 record 2a and 3a, and stale text is fixed.
+  - **Nightly:** it enforces what the amended T1.9 verify does, and only reports the waived clang-18 scenario.
+  - **Integration on main:**
+    - check-fast: 681 passed and 26 skipped on clang-18;
+    - gcc-13: 168 of 168 tools, compile-fail and golden tests.
+- **T1.15 `.with_ctor<Args...>()` (3c20302).** It was reviewed twice: the first review failed the warning fix, the second passed after it was narrowed.
+  - **The step:** the declaration rides in the binding's Impl slot, so undeclared bindings keep their exact types and no golden changes. It works with every lifetime, request form and step order, eager mode, overrides, `testing::wireable` and the explain pass. Each misuse gives one error.
+  - **Fixes to bugs already on main:**
+    - `-Wmissing-field-initializers` from partial aggregate declarations broke NFR-10. A targeted pragma fixes it, with a system header only in the module's own build on Clang before 20; see "Waiting for owner".
+    - A declaration on an incomplete class printed raw errors; it is now TRL-E002.
+    - Fixed a clang-tidy warning in `storage.hpp`.
+  - **Verification:** T1.15 verifies with check-full on the final tree, together with T1.14 and T1.10.
+- **Apple Clang (branch fix/apple-clang-stack).**
+  - **Root cause:** discovery's greedy check, and the engine's check of a deduced aggregate, elided braces through every aggregate below. On Apple Clang that costs about 40 KB of stack per hop.
+  - **The fix so far:**
+    - a deduced hop instantiates one variable template instead of two;
+    - the aggregate checks use parentheses, keeping braces on cl. That's a provisional refinement of ADR-0003.
+  - **Results:** Apple Clang's aggregate chain went from under 200 hops to 213, and all 640 tests passed on macOS (run 41342943535).
+  - **Bugs fixed along the way, both already on main:**
+    - Clang silently value-initialized a member of an aggregate whose own deduction failed (TRL-E004); every compiler now reports it.
+    - Clang silently copied a singleton aggregate held by value without `.allow_copy()` (TRL-E005).
+  - **Review:** it found no code defect on GCC or Clang. The two open items are cl, which hasn't run this code yet and will in the integrated branch's final run, and the re-measurement on the final tree.
+  - **Follow-ups in progress:** docs, rejecting aggregate members of type `X&&` (they always dangle; this is on main too), and a check-versus-creation disagreement on GCC.
+- **MSVC (branch fix/msvc-phase1):** in progress. It rebases onto all the above for its final Windows run.
 
 ## 2026-11-01: T1.6, T1.7 and T1.8 pass; the phase review's findings
 
