@@ -152,8 +152,9 @@ using last_consumer_t = typename last_consumer<Path>::type;
 // anything, and any_arg is viable for anything too, through its deleted twins, so overload
 // resolution selects the same constructor as discovery did and the same operator at every
 // position; only the operator at K can be deleted, exactly when Ctx can't serve its request
-// (discovery/deduced.hpp). Like node_v, a builtin for a class built with parentheses and a
-// requires-expression for an aggregate built with braces (ADR-0003 item 5).
+// (discovery/deduced.hpp). Like node_v, the builtin, for an aggregate too, whose parentheses never
+// elide braces into a member whose request fails, except on MSVC, where a requires-expression with
+// braces (TRELLIS_AGGREGATE_CHECKS_WITH_BRACES, config.hpp).
 template <class Impl, class Ctx, std::size_t K, class Indices, bool Aggregate>
 inline constexpr bool resolves_at = false;
 template <class Impl, class Ctx, std::size_t K, std::size_t... Is>
@@ -161,9 +162,15 @@ inline constexpr bool resolves_at<Impl, Ctx, K, std::index_sequence<Is...>, fals
     TRELLIS_IS_CONSTRUCTIBLE(Impl,
                              std::conditional_t<Is == K, any_arg<Impl, Ctx>, probe_arg<Impl>>...);
 template <class Impl, class Ctx, std::size_t K, std::size_t... Is>
-inline constexpr bool resolves_at<Impl, Ctx, K, std::index_sequence<Is...>, true> = requires {
-  Impl{std::declval<std::conditional_t<Is == K, any_arg<Impl, Ctx>, probe_arg<Impl>>>()...};
-};
+inline constexpr bool resolves_at<Impl, Ctx, K, std::index_sequence<Is...>, true> =
+#if TRELLIS_AGGREGATE_CHECKS_WITH_BRACES
+    requires {
+      Impl{std::declval<std::conditional_t<Is == K, any_arg<Impl, Ctx>, probe_arg<Impl>>>()...};
+    };
+#else
+    TRELLIS_IS_CONSTRUCTIBLE(Impl,
+                             std::conditional_t<Is == K, any_arg<Impl, Ctx>, probe_arg<Impl>>...);
+#endif
 
 // failing_parameter<Node>: the 1-based index of the first parameter of a failing class node that
 // its context can't serve. For a declared constructor, a read of each parameter's memoized check;
@@ -376,7 +383,11 @@ inline constexpr bool cycles_back<Impl, Injector, Path, std::index_sequence<Is..
     !TRELLIS_IS_CONSTRUCTIBLE(Impl, repeat_t<Is, cycle_arg<Impl, Injector, Path>>...);
 template <class Impl, class Injector, class Path, std::size_t... Is>
 inline constexpr bool cycles_back<Impl, Injector, Path, std::index_sequence<Is...>, true> =
+#if TRELLIS_AGGREGATE_CHECKS_WITH_BRACES
     !requires { Impl{std::declval<repeat_t<Is, cycle_arg<Impl, Injector, Path>>>()...}; };
+#else
+    !TRELLIS_IS_CONSTRUCTIBLE(Impl, repeat_t<Is, cycle_arg<Impl, Injector, Path>>...);
+#endif
 
 // declared_cycles_back<Injector, Path, Args...>: the same for a declared constructor's requests.
 template <class Injector, class Path, class... Args>
@@ -546,7 +557,7 @@ struct query_arg {
 
 // query_at<Impl, Indices, Aggregate, K, Query>: whether Query holds for the request that the
 // deduced class Impl's parameter K (1-based) makes: Impl built as discovery found it, with
-// query_arg at K and discovery's probe elsewhere (as resolves_at, with braces for an aggregate).
+// query_arg at K and discovery's probe elsewhere (built as resolves_at builds it).
 template <class Impl, class Indices, bool Aggregate, std::size_t K, class Query>
 inline constexpr bool query_at = false;
 template <class Impl, std::size_t... Is, std::size_t K, class Query>
@@ -554,9 +565,16 @@ inline constexpr bool query_at<Impl, std::index_sequence<Is...>, false, K, Query
     TRELLIS_IS_CONSTRUCTIBLE(
         Impl, std::conditional_t<Is + 1 == K, query_arg<Impl, Query>, probe_arg<Impl>>...);
 template <class Impl, std::size_t... Is, std::size_t K, class Query>
-inline constexpr bool query_at<Impl, std::index_sequence<Is...>, true, K, Query> = requires {
-  Impl{std::declval<std::conditional_t<Is + 1 == K, query_arg<Impl, Query>, probe_arg<Impl>>>()...};
-};
+inline constexpr bool query_at<Impl, std::index_sequence<Is...>, true, K, Query> =
+#if TRELLIS_AGGREGATE_CHECKS_WITH_BRACES
+    requires {
+      Impl{std::declval<
+          std::conditional_t<Is + 1 == K, query_arg<Impl, Query>, probe_arg<Impl>>>()...};
+    };
+#else
+    TRELLIS_IS_CONSTRUCTIBLE(
+        Impl, std::conditional_t<Is + 1 == K, query_arg<Impl, Query>, probe_arg<Impl>>...);
+#endif
 
 // next_indices_t<Path, Parameter, Ctx, Indices, Aggregate>: std::make_index_sequence of the arity
 // of the deduced class at the stop below parameter Parameter of the last class of Path (a deduced

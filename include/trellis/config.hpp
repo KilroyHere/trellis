@@ -218,6 +218,20 @@
 #define TRELLIS_ARRAY_CHECK_WITH_BRACES 0
 #endif
 
+// TRELLIS_AGGREGATE_CHECKS_WITH_BRACES is TRELLIS_ARRAY_CHECK_WITH_BRACES, 1 on MSVC, for the same
+// reason: cl's parenthesized aggregate initialization fails for members of aggregate class type.
+// Elsewhere, two more checks of a deduced aggregate use parentheses, which never elide braces
+// ([dcl.init.general]/16.6.2.2), where braces would elide into a member that is an aggregate when
+// the placeholder can't initialize it:
+//   - discovery's greedy check (discovery/deduced.hpp, accepts_inert), so that an aggregate is
+//     TRL-E004 only for a member of its own that accepts anything, not for one nested in a member;
+//   - the resolution check of the aggregate's node (static/resolve.hpp, and the explain pass), so
+//     that a member whose request fails fails the aggregate. Clang treats the deleted function that
+//     overload resolution selects for it as no conversion, elides braces into the member and builds
+//     it from its own members' requests; GCC doesn't.
+// The creation code keeps braces, which then initialize each member directly.
+#define TRELLIS_AGGREGATE_CHECKS_WITH_BRACES TRELLIS_ARRAY_CHECK_WITH_BRACES
+
 // ---- the static engine's resolution and storage (T1.5) ------------------------------------------
 
 // TRELLIS_IS_CONSTRUCTIBLE(T, Args...) is std::is_constructible_v<T, Args...>, but where the

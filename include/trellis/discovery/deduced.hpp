@@ -128,12 +128,22 @@ struct inert_arg {};
 template <class Ctx, class R>
 concept can_resolve = Ctx::template can_resolve<R>;
 
+// other_than<T, Consumer>: not_self<Consumer, T> with the type first, so that the real operators
+// can state it as a type-constraint, other_than<Consumer> T. A template's associated constraints
+// are a list, a type-constraint and then the requires-clause, which Clang checks in order, stopping
+// at the first not satisfied, as it does a conjunction; but a conjunction in one requires-clause
+// nests one more evaluation per operand, and the real operators' check of Ctx::can_resolve<R> is on
+// every hop of a dependency chain: 0.6 KB of Clang 20's stack per hop, about 1 KB of Apple Clang's
+// (docs/internals/deduction.md).
+template <class T, class Consumer>
+concept other_than = not_self<Consumer, T>;
+
 template <class Consumer, class Ctx>
 struct any_arg {
   Ctx& ctx;
 
-  template <class T>
-    requires not_self<Consumer, T> && (Ctx::template can_resolve<T>)
+  template <other_than<Consumer> T>
+    requires(Ctx::template can_resolve<T>)
   operator T() {
     return ctx.template resolve<T>();
   }
@@ -141,8 +151,8 @@ struct any_arg {
     requires not_self<Consumer, T> && (!can_resolve<Ctx, T>)
   operator T() = delete;
 
-  template <class T>
-    requires not_self<Consumer, T> && (Ctx::template can_resolve<T&>)
+  template <other_than<Consumer> T>
+    requires(Ctx::template can_resolve<T&>)
   operator T&() const {
     return ctx.template resolve<T&>();
   }
@@ -187,9 +197,30 @@ template <class T, std::size_t N, std::size_t MaxArity>
 concept probes_at =
     (N <= MaxArity) && constructible_from_n<T, probe_arg<T>, std::make_index_sequence<N>>;
 
-// greedy_at<T, N>: a constructor of T with N > 0 parameters accepts N inert arguments.
+// accepts_inert<T, Indices>: whether a T can be built from as many inert_arg as Indices has: with
+// parentheses, also for an aggregate, except on MSVC (TRELLIS_AGGREGATE_CHECKS_WITH_BRACES,
+// config.hpp). Parentheses never elide braces, so an aggregate accepts the inert arguments only if
+// each of its deduced members accepts one directly, as a member whose type accepts anything does.
+// With braces, an inert argument that converts to
+// no member of aggregate class type was tried on that member's first member, and so on down, so
+// an aggregate holding an aggregate that holds such a member was itself TRL-E004: deduction takes
+// the member as one request, whose own deduction reports the member that accepts anything. The
+// elision also nested one level of Clang's stack per aggregate below, which stopped Apple Clang's
+// chain of aggregates before 200 hops (docs/internals/deduction.md).
+template <class T, class Indices>
+inline constexpr bool accepts_inert = false;
+template <class T, std::size_t... Is>
+inline constexpr bool accepts_inert<T, std::index_sequence<Is...>> =
+#if TRELLIS_AGGREGATE_CHECKS_WITH_BRACES
+    detail::builds_from<T, repeat_t<Is, inert_arg>...>();
+#else
+    TRELLIS_IS_CONSTRUCTIBLE(T, repeat_t<Is, inert_arg>...);
+#endif
+
+// greedy_at<T, N>: a constructor of T with N > 0 parameters, or N > 0 members of an aggregate T,
+// accept N inert arguments.
 template <class T, std::size_t N>
-concept greedy_at = (N > 0) && constructible_from_n<T, inert_arg, std::make_index_sequence<N>>;
+concept greedy_at = (N > 0) && accepts_inert<T, std::make_index_sequence<N>>;
 
 // ---- the arity search -------------------------------------------------------------------------
 
@@ -573,9 +604,15 @@ inline constexpr bool discoverable_v =
 // per hop, and each template between it and the check costs a level of instantiation depth per hop
 // of a dependency chain (NFR-09, docs/internals/deduction.md). So it is itself the specialization
 // that expands the arity and makes the check, through parameters that callers never pass: Class is
-// T without cv-qualifiers, Indices the arity as a sequence, and Aggregate selects the check. The
-// check is the construction rule of builds_from (ctor_traits.hpp), written out rather than called:
-// a call would be one more level per hop. tests/unit/deduced_test.cpp checks that the two agree.
+// T without cv-qualifiers, Indices the arity as a sequence, and Aggregate selects the check. For a
+// class built with parentheses, the check is builds_from's construction rule (ctor_traits.hpp),
+// written out rather than called: a call would be one more level per hop. An aggregate differs by
+// design: builds_from uses braces, and this check parentheses, except on MSVC
+// (TRELLIS_AGGREGATE_CHECKS_WITH_BRACES, config.hpp), as braces would elide into a member whose
+// request fails, where the deleted twin is selected, and Clang would then build that member from
+// its own members' requests. tests/unit/deduced_test.cpp checks that the two agree wherever no such
+// member fails. Once every member's request resolves, the braces of construct_deduced initialize
+// each member directly.
 template <class T, std::size_t Arity, class Ctx, class Class = std::remove_cv_t<T>,
           class Indices = std::make_index_sequence<Arity>,
           bool Aggregate = std::is_aggregate_v<Class>>
@@ -583,7 +620,11 @@ inline constexpr bool deduced_constructible_v = false;
 template <class T, std::size_t Arity, class Ctx, class Class, std::size_t... Is>
 inline constexpr bool
     deduced_constructible_v<T, Arity, Ctx, Class, std::index_sequence<Is...>, true> =
+#if TRELLIS_AGGREGATE_CHECKS_WITH_BRACES
         requires { Class{std::declval<repeat_t<Is, any_arg<Class, Ctx>>>()...}; };
+#else
+        std::is_constructible_v<Class, repeat_t<Is, any_arg<Class, Ctx>>...>;
+#endif
 template <class T, std::size_t Arity, class Ctx, class Class, std::size_t... Is>
 inline constexpr bool
     deduced_constructible_v<T, Arity, Ctx, Class, std::index_sequence<Is...>, false> =

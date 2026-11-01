@@ -10,7 +10,8 @@
 //   agree with ctor_matches_v.
 // - "Workarounds": the config.hpp workarounds: for GCC, TRELLIS_PROBE_DECLARES_TWINS and the
 //   -Wconversion pragma pair, which this file needs to compile under -Werror on GCC; for MSVC,
-//   TRELLIS_REPEAT_THROUGH_CLASS and TRELLIS_ARRAY_CHECK_WITH_BRACES.
+//   TRELLIS_REPEAT_THROUGH_CLASS, TRELLIS_ARRAY_CHECK_WITH_BRACES and
+//   TRELLIS_AGGREGATE_CHECKS_WITH_BRACES.
 //
 // Most checks are static_asserts, so a wrong answer breaks the build; the TESTs run the
 // constructions. tests/compile_fail/discovery/deduced_*.cpp have the types that must not compile.
@@ -503,6 +504,20 @@ struct variadic_template {
 struct c_variadic {
   explicit c_variadic(...) {}
 };
+// An aggregate with a member that accepts anything is TRL-E004 (greedy). An aggregate that holds
+// such an aggregate isn't: deduction takes the member as one request, and the member's own
+// deduction is greedy. The greedy check uses parentheses, which never elide braces (accepts_inert,
+// TRELLIS_AGGREGATE_CHECKS_WITH_BRACES; ADR-0003's provisional refinement); with braces, which MSVC
+// keeps, the inert argument reached the inner member, and E004 named the outer aggregate.
+struct accepts_anything {
+  accepts_anything(...) {}  // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
+};
+struct holds_greedy_member {
+  accepts_anything member;
+};
+struct holds_greedy_aggregate {
+  holds_greedy_member inner;
+};
 // Same-arity overloads: ambiguous, so not constructible at that arity (TRL-E002).
 struct same_arity {
   same_arity(x /*a*/, y /*b*/) {}
@@ -611,6 +626,14 @@ static_assert(status_of<probe_satisfies_constraint> == deduced &&
 static_assert(status_of<variadic_template> == deduction_status::greedy &&
               arity_of<variadic_template> == 16);
 static_assert(status_of<c_variadic> == deduction_status::greedy && arity_of<c_variadic> == 16);
+static_assert(status_of<holds_greedy_member> == deduction_status::greedy &&
+              arity_of<holds_greedy_member> == 1);
+#if TRELLIS_AGGREGATE_CHECKS_WITH_BRACES
+static_assert(status_of<holds_greedy_aggregate> == deduction_status::greedy);
+#else
+static_assert(status_of<holds_greedy_aggregate> == deduced &&
+              arity_of<holds_greedy_aggregate> == 1);
+#endif
 static_assert(status_of<same_arity> == deduction_status::not_constructible);
 static_assert(status_of<same_arity_plus_default> == deduced &&
               arity_of<same_arity_plus_default> == 0);
@@ -916,7 +939,10 @@ static_assert(deduction<cvq::never_defined>::status == deduction_status::incompl
 static_assert(!discoverable_v<cvq::never_defined>);
 
 // deduced_constructible_v writes out the construction rule rather than calling builds_from, to save
-// a level of depth per hop; the two must agree.
+// a level of depth per hop; the two must agree. For an aggregate, deduced_constructible_v uses
+// parentheses and builds_from braces (except on MSVC), which differ by design only where a
+// member's request fails into an aggregate member (tests/unit/create_test.cpp, "members whose
+// request fails"); every case here has no such member.
 template <class T, class Ctx, std::size_t... Is>
 consteval bool rule_agrees(std::index_sequence<Is...> /*arity*/) {
   return deduced_constructible_v<T, sizeof...(Is), Ctx> ==
@@ -987,14 +1013,19 @@ static_assert(deduction<dd::consumer<dd::x&&>>::status == deduction_status::dedu
 static_assert(deduction<dd::consumer<std::reference_wrapper<dd::x>>>::status ==
               deduction_status::deduced);
 
-// The two MSVC workarounds are on exactly on MSVC (not clang-cl).
+// The MSVC workarounds are on exactly on MSVC (not clang-cl).
 #if defined(_MSC_VER) && !defined(__clang__)
 static_assert(TRELLIS_REPEAT_THROUGH_CLASS == 1);
 static_assert(TRELLIS_ARRAY_CHECK_WITH_BRACES == 1);
+static_assert(TRELLIS_AGGREGATE_CHECKS_WITH_BRACES == 1);
 #else
 static_assert(TRELLIS_REPEAT_THROUGH_CLASS == 0);
 static_assert(TRELLIS_ARRAY_CHECK_WITH_BRACES == 0);
+static_assert(TRELLIS_AGGREGATE_CHECKS_WITH_BRACES == 0);
 #endif
+// TRELLIS_AGGREGATE_CHECKS_WITH_BRACES: the greedy check and the resolution check of an aggregate
+// use parentheses, which never elide braces, elsewhere. holds_greedy_aggregate ("Limits") shows the
+// greedy check; tests/unit/create_test.cpp, "members whose request fails", the resolution check.
 // TRELLIS_REPEAT_THROUGH_CLASS: cl expands repeat_t<Is, A>... over a single index into no pack,
 // so a deduced constructor with one parameter failed to compile (C3546). Every form under "Forms"
 // has one parameter; here is one more, through the entry point.
