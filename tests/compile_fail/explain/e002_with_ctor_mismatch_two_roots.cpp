@@ -4,6 +4,10 @@
 // expect-regex: trellis::error::E002<app::meter, ?trellis::(v1::)?ctor<int> ?>
 // expect-regex: trellis::error::path<app::panel>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E002: type not constructible: its trellis::ctor<\.\.\.> declaration matches no constructor
+// expect-regex-msvc: trellis::error::E002<T,Declared>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +T=app::meter,\n +Declared=trellis::v1::ctor<int>(?:,|$)
+// expect-regex-msvc: trellis::error::path<app::dial>
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
 //
 // meter's own member alias is right, but its binding declares trellis::ctor<int>, which wins, and

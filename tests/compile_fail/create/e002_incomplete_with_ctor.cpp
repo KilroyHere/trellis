@@ -3,6 +3,9 @@
 // expect-regex: TRL-E002: type not constructible: it is incomplete here
 // expect-regex: trellis::error::E002<app::journal, ?trellis::(v1::)?detail::no_ctor_declared ?>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E002: type not constructible: it is incomplete here
+// expect-regex-msvc: trellis::error::E002<T,trellis::v1::detail::no_ctor_declared>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +T=app::journal(?:,|$)
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
 //
 // journal is only declared where the injector would build it, so its binding's declaration can't

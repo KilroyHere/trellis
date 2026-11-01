@@ -3,6 +3,9 @@
 // expect-regex: TRL-E002: type not constructible: its trellis::ctor<\.\.\.> declaration matches no constructor
 // expect-regex: trellis::error::E002<app::journal, ?trellis::(v1::)?ctor<const app::config ?&, ?int> ?>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E002: type not constructible: its trellis::ctor<\.\.\.> declaration matches no constructor
+// expect-regex-msvc: trellis::error::E002<T,Declared>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +T=app::journal,\n +Declared=trellis::v1::ctor<const app::config &,int>(?:,|$)
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
 //
 // Eager mode builds every singleton inside make_injector (plan §7.5), so the declaration is
