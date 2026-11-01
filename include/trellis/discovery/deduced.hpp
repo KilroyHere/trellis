@@ -154,9 +154,19 @@ struct any_arg {
 // ---- constructibility at one arity ------------------------------------------------------------
 
 // repeat_t<I, A> is A for every I: it repeats a placeholder N times in a pack expansion over
-// std::make_index_sequence<N>, which the compilers build with a builtin, so no arity recurses.
+// std::make_index_sequence<N>, which the compilers build with a builtin, so no arity recurses. On
+// MSVC it goes through the class template repeat (TRELLIS_REPEAT_THROUGH_CLASS, config.hpp).
+#if TRELLIS_REPEAT_THROUGH_CLASS
+template <std::size_t, class A>
+struct repeat {
+  using type = A;
+};
+template <std::size_t I, class A>
+using repeat_t = typename repeat<I, A>::type;
+#else
 template <std::size_t, class A>
 using repeat_t = A;
+#endif
 
 // constructible_from_n<T, Arg, std::index_sequence<Is...>>: whether a T can be built from as many
 // Arg as Is by the one construction rule, by which explicit declarations are checked too
@@ -303,6 +313,12 @@ consteval bool probes_above(std::index_sequence<Ks...> /*offsets*/) {
 // compiler. So an aggregate with an array member is not constructible from as many no_array_arg as
 // it has deduced fields, whichever way the compiler counted them, while any other aggregate is,
 // as parentheses then initialize the same fields as braces.
+//
+// On MSVC (TRELLIS_ARRAY_CHECK_WITH_BRACES, config.hpp) parentheses fail for members of aggregate
+// class type too, so the check uses braces there, at MSVC's count, where each array is one field,
+// and no_array_arg declares its conversion to an array reference deleted: MSVC selects it for an
+// array member, which makes the initialization ill-formed, and never for anything else, where
+// no_array_arg converts as the probe does.
 template <class Consumer>
 struct no_array_arg {
   template <class T>
@@ -311,6 +327,11 @@ struct no_array_arg {
   template <class T>
     requires not_self<Consumer, T> && (!std::is_array_v<T>)
   operator T&() const;
+#if TRELLIS_ARRAY_CHECK_WITH_BRACES
+  template <class T>
+    requires std::is_array_v<T>
+  operator T&() const = delete;
+#endif
 #if TRELLIS_PROBE_DECLARES_TWINS
   template <class T>
     requires not_self<Consumer, T> && twin_tag_request<T>
@@ -325,7 +346,11 @@ template <class T, class Indices>
 inline constexpr bool arrays_free = false;
 template <class T, std::size_t... Is>
 inline constexpr bool arrays_free<T, std::index_sequence<Is...>> =
+#if TRELLIS_ARRAY_CHECK_WITH_BRACES
+    requires { T{std::declval<repeat_t<Is, no_array_arg<T>>>()...}; };
+#else
     std::is_constructible_v<T, repeat_t<Is, no_array_arg<T>>...>;
+#endif
 
 // Members the probe can't initialize. Such a member (std::optional, std::tuple, std::any: S1
 // §3.2 note c) ends the deduced field list, and the members after it would be value-initialized

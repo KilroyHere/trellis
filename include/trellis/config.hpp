@@ -124,8 +124,9 @@
 #define TRELLIS_FUNCTION_SIGNATURE_CLASS_KEYS 0
 #endif
 
-// The two compiler workarounds of deduced constructor discovery (discovery/deduced.hpp, ADR-0003
-// item 6, docs/internals/deduction.md). Both are tested in tests/unit/deduced_test.cpp.
+// The compiler workarounds of deduced constructor discovery (discovery/deduced.hpp, ADR-0003 item
+// 6, docs/internals/deduction.md): two for GCC, two for MSVC. All are tested in
+// tests/unit/deduced_test.cpp.
 //
 // TRELLIS_PROBE_DECLARES_TWINS is 1 on GCC before 14. GCC 13 picks the discovery probe's
 // `operator T&() const` for a parameter of type X&&, const X&&, std::unique_ptr<X>&& or
@@ -157,6 +158,36 @@
 #else
 #define TRELLIS_PLACEHOLDER_CONVERSIONS_BEGIN
 #define TRELLIS_PLACEHOLDER_CONVERSIONS_END
+#endif
+
+// TRELLIS_REPEAT_THROUGH_CLASS is 1 on MSVC (not clang-cl). Deduced discovery repeats a
+// placeholder N times by expanding repeat_t<Is, A>... over an index pack, where repeat_t<I, A> is
+// an alias template for A that ignores I. cl 19.51 (VS 2026) loses the pack when such an
+// expansion of one element makes a class template's arguments: ctor<repeat_t<Is, A>...> with
+// Is = {0} fails with C3546 ("there are no parameter packs available to expand") inside ctor, the
+// deduced declaration of every one-parameter constructor (T1.3, platforms CI). Where this is 1,
+// repeat_t goes through a class template, repeat<I, A>::type, which keeps the pattern dependent on
+// I. Elsewhere it stays a plain alias, which instantiates nothing.
+#if defined(_MSC_VER) && !defined(__clang__)
+#define TRELLIS_REPEAT_THROUGH_CLASS 1
+#else
+#define TRELLIS_REPEAT_THROUGH_CLASS 0
+#endif
+
+// TRELLIS_ARRAY_CHECK_WITH_BRACES is 1 on MSVC (not clang-cl). Deduction refuses an aggregate with
+// an array member (TRL-E004), which GCC and Clang count element by element and MSVC as one field.
+// GCC and Clang find one by initializing the aggregate with parentheses from placeholders that
+// can't become an array (discovery/deduced.hpp, arrays_free). cl 19.51's parenthesized aggregate
+// initialization fails for every member that is itself an aggregate class, such as std::array or
+// an empty struct, although the placeholder converts to it (T1.3, platforms CI), so that check
+// refused aggregates without arrays. Where this is 1, the check uses braces, with a placeholder
+// whose conversion to an array reference is deleted: MSVC initializes an array member from a
+// conversion function that yields an array reference (spike S1's MSVC addendum), so it selects the
+// deleted one exactly when the aggregate has an array member, of any size.
+#if defined(_MSC_VER) && !defined(__clang__)
+#define TRELLIS_ARRAY_CHECK_WITH_BRACES 1
+#else
+#define TRELLIS_ARRAY_CHECK_WITH_BRACES 0
 #endif
 
 #endif  // TRELLIS_CONFIG_HPP
