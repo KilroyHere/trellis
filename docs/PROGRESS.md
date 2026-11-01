@@ -35,6 +35,13 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - (a) keep NFR-13's minimum, 19.38, and use a 150-hop bound on MSVC before 19.50: the provisional text, measured to give exactly one TRL-E007 on cl 19.44;
   - (b) raise NFR-13's MSVC minimum to 19.51. 19.45 to 19.50 can't be measured on GitHub's image, so 19.50 is only an assumed boundary.
   Not blocking until the cycle check lands in Phase 2.
+- **T1.3's amendments to ADR-0003, provisional.**
+  - An abstract type is TRL-E002 at discovery; E001 stays with the engine for an unbound abstract key.
+  - An aggregate member that no placeholder can initialize is TRL-E004, where S1 silently value-initialized the rest.
+  - An incomplete type is TRL-E002.
+  - On gcc-13 the probe declares the deleted twins instead of S1's `operator T&&()`, which made gcc-13 accept `optional` and `tuple`.
+  - E010 probes the 16 arities above the bound, and `max_ctor_arity` is capped at 32.
+  Each keeps the one-error contract and the accepted operator set's intent. Confirm them, or say which to revisit.
 - **`const std::shared_ptr<T>&` parameters (ADR-0004's open question, T1.4).** Such a parameter asks for a `shared_ptr<T>` object by reference. Today it is TRL-E012, unless `shared_ptr<T>` itself is bound, with a message saying to take `std::shared_ptr<T>` by value. Allowing it, by holding a temporary until the constructor returns, would dangle if the constructor kept the reference. Recommendation: keep the error for v0.1, and revisit at the API review. Not blocking.
 - **Construction rule for explicit declarations (T1.2, ADR-0003, amended).** An aggregate is checked and built with braces, which rejects narrowing and allows brace elision; every other type is checked with `is_constructible` and built with parentheses. This refines the accepted ADR-0003, which said `is_constructible` for every type. Confirm it, or say otherwise before T1.5 builds on it.
 - **Error IDs for misuse asserts (T1.1, T1.2).** Some static_asserts report misuse of Trellis's own vocabulary rather than a wiring mistake, and carry no TRL ID, because plan §7.8 lists none for them: a `type_list` or `type_map` given a non-list, an out-of-range index, a missing key, and a `trellis_ctor` alias that doesn't name a `ctor<...>`. ADR-0006 says every mistake Trellis reports has a stable ID. Recommendation: give an ID (the next free numbers after TRL-E012) to misuse a user can make through the public API, such as the malformed alias, and leave the internal meta-toolkit guards without IDs. Not blocking.
@@ -46,6 +53,38 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Add `tests/golden_manifest.txt` to the protected paths.
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev` so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
+
+## 2026-11-01: T1.3 deduced constructor discovery (passed)
+
+- **What changed** (squashed as e88d9d9): `include/trellis/discovery/deduced.hpp`. Discovery is automatic and needs no macros.
+  - **Entry point.** `detail::discovered_ctor_t<T, BindingCtor, MaxArity = 16>` gives the declaration when there is one. Otherwise it gives `ctor<probe_arg<T>, ...>`, one placeholder per parameter, whose conversion operators ask the injector for each request while the object is built (`construct_deduced`).
+  - **Operators.** `any_arg` is S1's set with its deleted twins.
+  - **Arity.** Searched with S1's flat chain up to the bound (at most 32). Copy and move constructors are never chosen, cv-qualifiers are stripped, and results are memoized per (T, bound).
+  - **Errors.** Each failure is one static_assert, from a function read through decltype: TRL-E004 (ambiguous or greedy constructors, array members, uninitializable members), TRL-E010 (arity above the bound) or TRL-E002 (abstract, incomplete, non-constructible, same-arity overloads).
+  - **Tests and docs.** 17 compile-fail tests, each using the entry point twice. The TRL-E004 and TRL-E010 pages, `docs/internals/deduction.md` and a CHANGELOG line.
+- **Results:** S1's 35 forms and 29 limit cases give the same result on gcc-13, gcc-14, clang-18 and clang-20. The intended differences from S1: array members are E004, an abstract type is E002, and `optional` on gcc-13 is E002 as on the others. A 100-hop chain needs template depth 409 on GCC and 511 on Clang, against S1's 509 and 715. Discovery costs 2.7 ms per class on gcc-13 and 4.7 ms on clang-18, at or below S1.
+- **Design changes, provisional, recorded in ADR-0003 and plan §6.13, §7.2 and §7.4:**
+  - an abstract type gives E002 at discovery, while E001 stays with the engine for an unbound abstract key;
+  - an aggregate member that no placeholder can initialize is E004, where S1 silently value-initialized the rest;
+  - an incomplete type gives E002;
+  - on gcc-13 the probe declares the deleted twins instead of S1's `operator T&&()`, which accepted `optional` and `tuple`;
+  - E010 probes the 16 arities above the bound;
+  - the bound is capped at 32.
+  
+  See "Waiting for owner".
+- **Review:** failed twice, and the third check passed.
+  - Round 1: two decision changes weren't recorded. Also a real bug: a `const T` brought back the copy and move constructors, so a consumer requested itself, which would recurse in T1.5. Also fixed: an incomplete type cascaded (77 errors on GCC), the cap and the MSVC claims went undocumented, and an extra template level per hop.
+  - Round 2: the depth trim changed the twins' behaviour for a context whose `can_resolve` is SFINAE-constrained, so a `const x&` bound a temporary, the dangling case the twins exist to prevent. The twins use the concept again, with tests.
+- **Evidence:** `scripts/tasks.py verify T1.3` on main: `[PASS] scripts/check-full.sh (809.8 s)`, `check-full: 10 of 10 presets passed, 0 failed`, `T1.3: all verify commands passed`. Earlier, `scripts/init.sh`: `clang-18-debug: 228 tests: 217 passed, 11 skipped`.
+- **[NEEDS CLARIFICATION]**
+  - The Args of a deduced `ctor<...>` are placeholders, not named types, because deduction can't name parameter types.
+  - Same-arity overloads give E002 with a hint, not E004, because deduction can't tell them from a private or deleted constructor.
+  - The cap's assert has no error ID.
+  - No GCC bug link for the gcc-13 workaround: gcc.gnu.org is blocked here.
+- **Follow-ups:**
+  - **T1.5:** pass `max_ctor_arity` as the bound; check `discoverable_v` before reading `::args`; build with `construct_deduced` from a context that carries the consumer's lifetime; keep the per-hop depth lean for NFR-09 (about 222 hops left on GCC and 204 on Clang at default limits).
+  - **T1.6:** decide where the assertions live, and report E005 with the parameter index instead of the deleted-twin message.
+  - **Platforms:** run [41259741887](https://github.com/KilroyHere/trellis/actions/runs/41259741887), the first on Phase 1 code, failed. MSVC rejects the pack expansion at `ctor_traits.hpp:88` (C3546, reached from `deduced_test.cpp`), and Apple Clang spells `int widget::*` differently in `type_name`. A fix is in progress on branch `fix/platforms`. The array check's reliance on MSVC's `is_constructible` for parenthesized aggregate initialization is checked there too.
 
 ## 2026-11-01: T1.4 binding vocabulary and modules (passed)
 
