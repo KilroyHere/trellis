@@ -36,10 +36,60 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
 
 ## Waiting for owner
 
-- **MSVC chain depth (T1.13, ADR-0014's provisional amendment).** cl 19.44 (VS 2022) stops a dependency chain at 161 hops, below the 200 hops that NFR-09 and the cycle check assume; cl 19.51 (VS 2026) reaches 245. Options:
-  - (a) keep NFR-13's minimum, 19.38, and use a 150-hop bound on MSVC before 19.50: the provisional text, measured to give exactly one TRL-E007 on cl 19.44;
-  - (b) raise NFR-13's MSVC minimum to 19.51. 19.45 to 19.50 can't be measured on GitHub's image, so 19.50 is only an assumed boundary.
-  Not blocking until the cycle check lands in Phase 2.
+- **NFR-09 on MSVC** (replaces the T1.13 item "MSVC chain depth"). The numbers are after the Apple fix (runs 41349651148 and 41352149959; ADR-0014 History).
+  - cl 19.51 passes 8 of 10 shapes at 200 hops:
+    - 246 in every deduced request form except `std::unique_ptr`, which reaches 198 (C2999, two short);
+    - 332 with declared constructors, and 288 in the mix.
+  - cl 19.44 passes 9 of 10 at the 150-hop bound: 161–162, 242 and 194.
+  - Aggregate chains stop at 15 on both versions. That's C1054, cl's fixed limit on nested braced initializers, which plain C++ hits too. cl can't do parenthesized aggregate initialization of aggregate members, so Trellis can't avoid it.
+  - Options:
+    - (a) accept for v0.1, document both limits, and give `std::unique_ptr` a Phase 2 task (`/templateDepth:1024` or a cheaper hop);
+    - (b) fix `std::unique_ptr` before v0.1.
+  - Recommendation: (a), keeping the 150-hop bound for cl before 19.50.
+- **MSVC compile-fail results under decision 4a.** Run 41352149959 on cl 19.51: everything builds, and 538 of 544 tests pass.
+  - **Line budgets on cl.** 42 tests fail on cl only on length; cl prints 49–612 lines where GCC and Clang print up to 40.
+    - The tool's `expect-max-lines-msvc` would give each a cl budget of cl's count plus 10%. It's on branch `owner/msvc-line-budgets`, commit 056de53, not landed, because it relaxes protected tests' limits on cl and 4a covered wording.
+    - Options: (a) approve, since NFR-07's 40 lines are GCC's and Clang's (plan §3.2); (b) leave these failing on cl.
+    - Recommendation: (a).
+  - **Six failures that no MSVC line fixes:**
+    - two for CWG 2327: cl can't pass a non-movable class by value from a conversion;
+    - three where cl adds follow-on errors after `bind<I>`'s key check;
+    - one where cl reports one `raise` per translation unit, so the second of two overrides goes unreported.
+    - Options: (a) an `expect-fail-msvc: <reason>` directive, so the verdict shows the debt and Windows CI goes green; (b) leave Windows CI red until Phase 4's diagnostics work.
+    - Recommendation: (a).
+  - **Facts for ADR-0006 on cl:**
+    - cl names the second of two roots' paths, where GCC and Clang name the first;
+    - cl shows only the first failing `raise` in a translation unit;
+    - CWG 2327 means a deduced constructor that takes a non-movable class by value can't be wired on cl.
+    - Recommendation: record all three as known MSVC limitations.
+- **ADR-0003's Apple Clang refinements (provisional, 9ce6866).**
+  - Discovery's greedy check, and the engine's checks of a deduced aggregate, use parentheses, which never elide braces; on cl they keep braces.
+  - So when a type that accepts anything sits inside an aggregate member, TRL-E004 names that inner aggregate instead of the outer one.
+  - Options: (a) confirm; (b) revert to braces and give up Apple Clang's 200-hop aggregate chain.
+  - Recommendation: (a).
+- **Apple Clang's margin.** The 200-hop aggregate chain passes at 213 hops, 6% to spare.
+  - Options:
+    - (a) accept for v0.1, with a Phase 2 task (a greedy check that never looks through a member reached 751 in a test run);
+    - (b) do that work before v0.1.
+  - Recommendation: (a).
+- **Known issues for v0.1**, to document. Each needs a design change, so each goes to Phase 2.
+  - An aggregate with an `X&&` member that Trellis builds always binds it to a temporary, which dangles. This is on main since T1.3.
+    - Rejecting it needs a change to ADR-0003's operator set, and amending the unit case `lim::agg_rvalue_member`, which asserts such an aggregate is deduced.
+  - On GCC, an aggregate with a non-movable base passes the check, and then creation fails with GCC's own error instead of a TRL error.
+  - Recommendation: document both in the CHANGELOG and getting-started's known limitations, and add Phase 2 tasks.
+- **NFR-12's reading.** After the cleanup pass, `include/trellis/` has 4,406 lines that are neither blank nor comments, and 9,778 in all.
+  - The project's doc and technique comments alone are about 4,600 lines.
+  - Options:
+    - (a) count lines that are neither blank nor comments: the budget is met;
+    - (b) count all lines: missed, and not fixable without dropping required comments.
+  - Recommendation: (a).
+- **The Phase 2 task list (T2.0).** It is drafted as 17 tasks, with 15 owner points (scratchpad draft, to move into the repository with T2.0).
+  - It predates the Apple and MSVC findings, so it still needs tasks for:
+    - the `X&&` member;
+    - GCC's non-movable base;
+    - cl's `std::unique_ptr` depth;
+    - Clang's NFR-03 (decision 2a).
+  - Recommendation: review it after the v0.1 tag, as T2.0.
 - **ADR-0006's T1.6 amendments (provisional).**
   - Every TRL `static_assert` is in one function template, `detail::raise<Error, Message, Scope>`, so a cause that several roots, consumers or entry points reach is one error.
   - The path from the root is in the instantiation note of the explain step that reports it, not in the condition.
