@@ -956,4 +956,32 @@ static_assert(!checked_context::can_resolve<needs_unique_by_reference>);
 static_assert(!checked_context::can_resolve<holds_unique_by_reference>);
 static_assert(!checked_context::can_resolve<unique_part&>);
 
+// can_resolve<R> evaluates the node of a deduced class in partial specializations of its own, and
+// any other node through node_v (static/resolve.hpp). The two must agree: for aggregates and other
+// classes, for nodes that hold and nodes that don't, and for requests whose node isn't deduced.
+// deduced_kind shows which nodes the specializations evaluate: 1 for a class built with
+// parentheses, 2 for an aggregate built with braces, 0 for any other node.
+template <class Node>
+constexpr int deduced_kind = 0;
+template <class Impl, class Ctx, class Indices, bool Aggregate>
+constexpr int deduced_kind<trellis::detail::deduced_node<Impl, Ctx, Indices, Aggregate>> =
+    Aggregate ? 2 : 1;
+template <class R>
+using checked_node_t = typename trellis::detail::plan<checked_injector, R>::node;
+template <class R>
+constexpr bool check_agrees() {
+  return checked_context::can_resolve<R> == trellis::detail::node_v<checked_node_t<R>>;
+}
+static_assert(deduced_kind<checked_node_t<needs_shared>> == 1);
+static_assert(deduced_kind<checked_node_t<needs_unique_by_reference>> == 1);
+static_assert(deduced_kind<checked_node_t<holds_shared>> == 2);
+static_assert(deduced_kind<checked_node_t<holds_unique_by_reference>> == 2);
+static_assert(deduced_kind<checked_node_t<singleton_part&>> == 1);
+static_assert(deduced_kind<checked_node_t<unique_part&>> == 0);
+static_assert(check_agrees<needs_shared>() && check_agrees<needs_unique_by_reference>());
+static_assert(check_agrees<holds_shared>() && check_agrees<holds_unique_by_reference>());
+static_assert(check_agrees<consumer>() && check_agrees<aggregate>() && check_agrees<unique_part>());
+static_assert(check_agrees<std::unique_ptr<holds_shared>>() && check_agrees<unique_part&>());
+static_assert(check_agrees<singleton_part&>() && check_agrees<std::shared_ptr<needs_shared>>());
+
 }  // namespace

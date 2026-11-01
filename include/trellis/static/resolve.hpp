@@ -29,7 +29,9 @@
 // recursion through the graph happens: building the class with every constructor parameter
 // resolved. Everything else in the plan finishes before the recursion starts, so the recursion
 // nests only the node and the constructor's overload resolution per hop of a dependency chain:
-// the lean shape of ADR-0014 item 3, which decides the longest chain that compiles (NFR-09).
+// the lean shape of ADR-0014 item 3, which decides the longest chain that compiles (NFR-09). The
+// node of a deduced class is evaluated by can_resolve<R> itself, so that such a hop instantiates
+// one variable template.
 //
 // Deduced classes are checked and built with the resolving placeholder any_arg<Impl, Ctx>
 // (discovery/deduced.hpp), whose conversion operators ask Ctx::can_resolve<T> and call
@@ -272,15 +274,18 @@ struct plan<Injector, R, false> {
   using node = decltype(detail::select_node<plan>());
 };
 
-// node_v<Node>: whether a node can be built; the recursion of the check. Each specialization
-// evaluates its node directly, with no class template or function call between one request and
-// the requests of the built class's constructor: the deduced node asks the __is_constructible
-// builtin (TRELLIS_IS_CONSTRUCTIBLE), whose overload resolution checks the placeholders'
-// constraints, Ctx::can_resolve<T>, which is the next hop's node_v. So a hop of a dependency chain
-// costs the variable template can_resolve<R>, this one, and the constraint check (ADR-0014 item 3;
-// docs/internals/resolution-and-storage.md has the measurements). The two deduced specializations
-// are discovery/deduced.hpp's deduced_constructible_v with the builtin, which saves a level per
-// hop; tests/unit/create_test.cpp checks that they agree.
+// node_v<Node>: whether a node can be built. Each specialization evaluates its node directly, with
+// no class template or function call between one request and the requests of the built class's
+// constructor: the deduced node asks the __is_constructible builtin (TRELLIS_IS_CONSTRUCTIBLE),
+// whose overload resolution checks the placeholders' constraints, Ctx::can_resolve<T>, the next
+// hop's check. The two deduced specializations are discovery/deduced.hpp's
+// deduced_constructible_v with the builtin, which saves a level per hop; tests/unit/create_test.cpp
+// checks that they agree. can_resolve<R> evaluates a deduced node with the same two expressions,
+// in specializations of its own (below context), and any other node through node_v, so a hop of a
+// dependency chain of deduced classes costs the variable template can_resolve<R> and the
+// constraint check, and a hop through a declared constructor costs can_resolve<R> and node_v
+// (ADR-0014 item 3; docs/internals/resolution-and-storage.md has the measurements). The explain
+// pass and the tests name a node rather than a request, and use node_v.
 template <class Node>
 inline constexpr bool node_v = false;
 template <>
@@ -321,9 +326,10 @@ struct context {
   Injector& owner;
 
   // The check: whether request R can be served, its dependencies included (see the top of this
-  // file). Memoized per (Injector, Lifetime, R).
-  template <class R>
-  static constexpr bool can_resolve = node_v<typename plan<Injector, R>::node>;
+  // file). Memoized per (Injector, Lifetime, R). Node, which callers never pass, is R's node: the
+  // specializations below the class evaluate the node of a deduced class, and node_v any other.
+  template <class R, class Node = typename plan<Injector, R>::node>
+  static constexpr bool can_resolve = node_v<Node>;
 
   // The creation code: the object request R asks for, as request_result_t says (a reference, or
   // a prvalue). Only instantiated after can_resolve<R> passed. Every function it calls that leads
@@ -415,6 +421,28 @@ struct context {
     }
   }
 };
+
+// can_resolve<R> for a class that deduction found the constructor of: node_v's check of its node,
+// written out in specializations of can_resolve itself. Through node_v, each hop of a dependency
+// chain of deduced classes instantiated two variable templates, can_resolve<R> and node_v<Node>;
+// written out, it instantiates one, which saves a level of instantiation depth per hop and, on
+// Clang, about a tenth of the frontend stack that a hop takes. The stack is what limits Clang's
+// chains of aggregates (-Wstack-exhausted; NFR-09, docs/internals/resolution-and-storage.md).
+// Node is a parameter of can_resolve so that these partial specializations can select on it; its
+// default is R's node, so callers pass R alone and the check is still memoized per (Injector,
+// Lifetime, R). The explain pass and the tests name a node, and keep node_v;
+// tests/unit/create_test.cpp checks that the two agree. Defined out of the class: GCC 13 rejects a
+// partial specialization of a member variable template inside it.
+template <class Injector, class Lifetime, slot_access Access>
+template <class R, class Impl, class Ctx, std::size_t... Is>
+constexpr bool context<Injector, Lifetime, Access>::can_resolve<
+    R, deduced_node<Impl, Ctx, std::index_sequence<Is...>, false>> =
+    TRELLIS_IS_CONSTRUCTIBLE(Impl, repeat_t<Is, any_arg<Impl, Ctx>>...);
+template <class Injector, class Lifetime, slot_access Access>
+template <class R, class Impl, class Ctx, std::size_t... Is>
+constexpr bool context<Injector, Lifetime, Access>::can_resolve<
+    R, deduced_node<Impl, Ctx, std::index_sequence<Is...>, true>> =
+    requires { Impl{std::declval<repeat_t<Is, any_arg<Impl, Ctx>>>()...}; };
 
 // ---- building a class -------------------------------------------------------------------------
 
