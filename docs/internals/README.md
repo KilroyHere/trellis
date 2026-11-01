@@ -8,6 +8,7 @@ Notes for maintainers on how Trellis works inside, and why, written for the seco
 |---|---|---|
 | [meta-toolkit.md](meta-toolkit.md) | `include/trellis/meta/`: flat pack expansions instead of folds, the per-list indexed set behind `contains_v`, `index_of_v` and `at_t`, the inheritance-based type map and its deduction-free lookups, `type_name` from function signatures, `fixed_string`, and the `result<T>` fallback | `tests/unit/{type_list,type_map,type_name,fixed_string,result,error_namespace,no_exceptions}_test.cpp`, `tests/compile_fail/meta/` |
 | [constructor-discovery.md](constructor-discovery.md) | The explicit strategy: `ctor<Args...>`, `ctor_traits<T>` and the member alias, why a specialization wins over the alias, the binding's hook, the check that a declaration can't lie (TRL-E002), and the "nothing declared" state that deduction takes over | `tests/unit/ctor_traits_test.cpp`, `tests/compile_fail/discovery/` |
+| [bindings-and-modules.md](bindings-and-modules.md) | One binding type per chain step; flattening modules once, linearly, through indexed bases; the binding map and duplicate keys; request forms, the plan §6.3 table and its checks (T1.4) | `tests/unit/{bind,module,injector,request_forms}_test.cpp`, `tests/compile_fail/{dsl,static}/` |
 
 Plan §11 also asks for notes on the deduction tricks of spike S1 (T1.3), on memoization ([ADR-0014](../adr/0014-resolution-memoization-and-cycles.md)), on the storage layout (T1.5) and on the explain pass (T1.6).
 
@@ -64,7 +65,7 @@ The reference documentation will be generated from these comments and checked fo
 
 ### Example
 
-This illustration follows the API sketch in plan §6.1 and §6.9; the real comment comes with `make_injector` in T1.4.
+This illustration follows the API sketch in plan §6.1 and §6.9; the real comment, from T1.4, is in `include/trellis/static/injector.hpp`.
 
 ```cpp
 /// @brief Builds a static injector from bindings and modules.

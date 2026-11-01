@@ -1,0 +1,32 @@
+// compile-fail: a singleton requested as std::unique_ptr, which would duplicate ownership
+// expect-id: TRL-E005
+// expect-regex: duplicate ownership
+// expect-regex: E005<.*sensor.*request<std::unique_ptr<.*sensor.*singleton_t>|error C2338:
+// expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-max-lines: 20
+//
+// The request-form table (plan §6.3) rejects std::unique_ptr<T> of a singleton: the consumer
+// would own an object that the injector owns.
+//
+// There is no create<T>() yet (T1.5), so the test drives the check through its entry point,
+// trellis::detail::report_request_form, which create<T>()'s failure branch calls.
+//
+// The regex that starts with \A accepts only an output with exactly one error line (ADR-0006:
+// one static_assert per root cause). The regex on the error type also accepts MSVC's
+// static_assert error, C2338, in its place: MSVC prints the literal but not the condition
+// (ADR-0006; untested here, as MSVC runs only in CI).
+#include <trellis/static/validate.hpp>
+#include <trellis/trellis.hpp>
+
+#include <memory>
+
+namespace {
+
+struct sensor {};
+
+}  // namespace
+
+int main() {
+  auto injector = trellis::make_injector(trellis::bind<sensor>.in(trellis::singleton));
+  trellis::detail::report_request_form<decltype(injector), std::unique_ptr<sensor>>();
+}

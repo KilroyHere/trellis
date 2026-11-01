@@ -61,6 +61,148 @@ struct E002 {
   static constexpr bool reported = false;
 };
 
+// ---- T1.4: TRL-E003, TRL-E005, TRL-E012 -------------------------------------------------------
+
+/// @brief Names a request in an error: the type a consumer asked for, spelled as it asked.
+///
+/// `request<const Config&>` and `request<std::shared_ptr<IClock>>` say which form of the type was
+/// requested, which the error type's other arguments don't.
+///
+/// @tparam Requested The requested type, with its references, pointers and smart pointer.
+///
+/// @par Constraints
+/// None.
+///
+/// @par Errors
+/// None.
+///
+/// @par Example
+/// @code
+/// // In a diagnostic, for a constructor parameter `ILogger& log`:
+/// //   trellis::error::E005<ILogger, trellis::error::request<ILogger&>, trellis::unique_t>
+/// @endcode
+template <class Requested>
+struct request {};
+
+/// @brief The error type of `TRL-E003`: two bindings for the same key.
+///
+/// `make_injector` raises it when two of the bindings it collects, from its arguments and the
+/// modules among them, bind the same key (plan §5.3, step 1).
+///
+/// @tparam Key The key bound twice: the bound type, qualifiers included.
+/// @tparam First The first binding of the key, in argument order.
+/// @tparam Second The second binding of the key.
+///
+/// @par Constraints
+/// None.
+///
+/// @par Errors
+/// - `TRL-E003`: this type is the condition of the static_assert that reports it.
+///
+/// @par Example
+/// @code
+/// // trellis::make_injector(trellis::bind<ILogger>.to<ConsoleLogger>(),
+/// //                        trellis::bind<ILogger>.to<FileLogger>()) fails with:
+/// //   static assertion failed due to requirement
+/// //   'trellis::error::E003<ILogger, ..., ...>::reported': TRL-E003: duplicate binding ...
+/// @endcode
+template <class Key, class First, class Second>
+struct E003 {
+  /// @brief Always false, so that the static_assert naming it fails and prints this type.
+  ///
+  /// @par Constraints
+  /// None.
+  ///
+  /// @par Errors
+  /// None.
+  ///
+  /// @par Example
+  /// @code
+  /// static_assert(!trellis::error::E003<int, char, long>::reported);
+  /// @endcode
+  static constexpr bool reported = false;
+};
+
+/// @brief The error type of `TRL-E005`: a request form that the binding's lifetime doesn't allow.
+///
+/// Raised when the request-form table of plan §6.3 rejects the form for the lifetime, such as a
+/// reference to a unique object, or when the request would drop the constness of a const external
+/// object.
+///
+/// @tparam Key The requested key.
+/// @tparam Request `request<R>`, where `R` is the request as the consumer spelled it.
+/// @tparam Lifetime The binding's lifetime: `trellis::unique_t`, `trellis::singleton_t`,
+///                  `trellis::external_t` and so on.
+///
+/// @par Constraints
+/// None.
+///
+/// @par Errors
+/// - `TRL-E005`: this type is the condition of the static_assert that reports it.
+///
+/// @par Example
+/// @code
+/// // A unique Clock requested as Clock& fails with:
+/// //   'trellis::error::E005<Clock, trellis::error::request<Clock &>,
+/// //                         trellis::unique_t>::reported':
+/// //   TRL-E005: request form incompatible with the lifetime: nothing would keep the object
+/// //   alive
+/// @endcode
+template <class Key, class Request, class Lifetime>
+struct E005 {
+  /// @brief Always false, so that the static_assert naming it fails and prints this type.
+  ///
+  /// @par Constraints
+  /// None.
+  ///
+  /// @par Errors
+  /// None.
+  ///
+  /// @par Example
+  /// @code
+  /// static_assert(!trellis::error::E005<int, trellis::error::request<int&>, void>::reported);
+  /// @endcode
+  static constexpr bool reported = false;
+};
+
+/// @brief The error type of `TRL-E012`: an unbound type requested by reference, pointer,
+///        `std::shared_ptr` or `std::weak_ptr`.
+///
+/// An unbound concrete type is implicitly unique, so each request gets a new object that nothing
+/// in the injector keeps alive. Only owning requests can take one (ADR-0004).
+///
+/// @tparam Key The requested key, which has no binding.
+/// @tparam Request `request<R>`, where `R` is the request as the consumer spelled it.
+///
+/// @par Constraints
+/// None.
+///
+/// @par Errors
+/// - `TRL-E012`: this type is the condition of the static_assert that reports it.
+///
+/// @par Example
+/// @code
+/// // An unbound Clock requested as const Clock& fails with:
+/// //   'trellis::error::E012<Clock, trellis::error::request<const Clock &>>::reported':
+/// //   TRL-E012: unbound concrete type requested by reference, pointer or shared_ptr: ...
+/// @endcode
+template <class Key, class Request>
+struct E012 {
+  /// @brief Always false, so that the static_assert naming it fails and prints this type.
+  ///
+  /// @par Constraints
+  /// None.
+  ///
+  /// @par Errors
+  /// None.
+  ///
+  /// @par Example
+  /// @code
+  /// static_assert(!trellis::error::E012<int, trellis::error::request<int&>>::reported);
+  /// @endcode
+  static constexpr bool reported = false;
+};
+
 }  // namespace trellis::error
 
 #endif  // TRELLIS_DIAGNOSTICS_ERRORS_HPP

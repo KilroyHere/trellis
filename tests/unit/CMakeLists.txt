@@ -23,9 +23,15 @@ set(trellis_per_mode_tests
   type_map_test.cpp
   type_name_test.cpp)
 
-# Tests whose subject is the same in every language mode, compiled in C++20 only.
+# Tests whose subject is the same in every language mode, compiled in C++20 only: the
+# explicit constructor declarations (T1.2), and the binding vocabulary, modules and the
+# injector (T1.4), which use no TRELLIS_HAS_* feature.
 set(trellis_cxx20_tests
+  bind_test.cpp
   ctor_traits_test.cpp
+  injector_test.cpp
+  module_test.cpp
+  request_forms_test.cpp
   smoke_test.cpp)
 
 trellis_unit_test_executable(trellis_unit_tests 20 ${trellis_cxx20_tests} ${trellis_per_mode_tests})

@@ -32,7 +32,7 @@ A related rule from ADR-0003: a parameter of type `X&&` or `const X&&` is the re
 ## Consequences
 
 - The rules may feel strict (risk K11). The escape hatches are `.allow_copy()` and explicit external bindings, and every rejection names its reason (E005, E006, E012).
-- **Open question from S1 §5:** should `const shared_ptr<T>&` and `const T&` parameters of unique objects be allowed, with the placeholder holding the object until the constructor returns? Today the table rejects them (E005). The binding-vocabulary work (T1.4) or the API review decides.
+- **Open question from S1 §5:** should `const shared_ptr<T>&` and `const T&` parameters of unique objects be allowed, with the placeholder holding the object until the constructor returns? Today the table rejects them (E005). The binding-vocabulary work (T1.4) or the API review decides. T1.4 kept the rejection and left the question to the API review: `const T&` of a unique object is E005, and `const std::shared_ptr<T>&` is a reference to a `std::shared_ptr<T>` object, a key of its own, so without a binding of that type it is E012 (History).
 - The table is encoded as a `constexpr` table, with checks and tests (§13, week 6).
 
 ## History
@@ -40,3 +40,7 @@ A related rule from ADR-0003: a parameter of type `X&&` or `const X&&` is the re
 - **2026-10-30, plan draft 1:** drafted as ADR-04 in plan §4.
 - **2026-10-31, T0.8:** recorded in this file, unchanged. §6.3 gained ADR-0003's note on `T&&` parameters.
 - **2026-10-31, T0.8 review:** the Spikes line and the list of spike findings made consistent: the `T&&` rule belongs to ADR-0003 and leaves this ADR's lifetimes and table unchanged.
+- **2026-10-31, T1.4:** the table is encoded cell for cell as `constexpr` data (`include/trellis/dsl/request_forms.hpp`), with the scoped column and the `lazy`/`provider` row although both arrive in Phase 2, and an eighth column for unbound concrete types, whose sharing forms are E012. No decision changes; details for review:
+  - `.allow_copy()` exists and turns exactly the "copies hide sharing" cells into allowed ones. Constness carries through for `to_ref`, `to_ptr` and `to_shared` bindings.
+  - Cells that §6.3 marks ✗ without a reason take their row's reason (`unique_ptr`: would duplicate ownership), or that of the matching `shared_ptr` cell (`weak_ptr` of `singleton_inline` and `to_value`: not heap-owned); `shared_ptr` and `weak_ptr` of a `to_ref` or `to_ptr` binding say "the caller owns the object", and `weak_ptr` of a unique object "nothing would keep it alive". The `lazy`/`provider` row allows every column, as §6.3 says; whether those wrappers check their inner form is for Phase 2.
+  - The open question above stays open for the API review.

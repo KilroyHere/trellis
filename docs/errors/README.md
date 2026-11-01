@@ -10,16 +10,16 @@ Each page gives the cause, a minimal example, the fix and the related errors ([p
 |---|---|---|
 | [TRL-E001](TRL-E001.md) | No binding for an abstract type | Not yet emitted; planned in T1.6 |
 | [TRL-E002](TRL-E002.md) | Type not constructible: no viable constructor for the available bindings | Emitted by T1.2, for an explicit constructor declaration that matches no constructor; the general case is planned in T1.6 |
-| [TRL-E003](TRL-E003.md) | Duplicate binding for a key | Not yet emitted; planned in T1.4 and T1.6 |
+| [TRL-E003](TRL-E003.md) | Duplicate binding for a key | Emitted by T1.4 |
 | [TRL-E004](TRL-E004.md) | Ambiguous constructor | Not yet emitted; planned in T1.3 and T1.6 |
-| [TRL-E005](TRL-E005.md) | Requested form incompatible with the lifetime | Not yet emitted; planned in T1.4 and T1.6 |
+| [TRL-E005](TRL-E005.md) | Requested form incompatible with the lifetime | Emitted by T1.4 |
 | [TRL-E006](TRL-E006.md) | Captive dependency | Not yet emitted; planned in Phase 2 |
 | [TRL-E007](TRL-E007.md) | Dependency cycle. In deduced mode only with `options{.cycle_check = true}`; otherwise the compiler's own errors, which the page will document ([ADR-0014](../adr/0014-resolution-memoization-and-cycles.md)) | Not yet emitted; planned in Phase 2 |
 | [TRL-E008](TRL-E008.md) | Factory signature does not match the constructor | Not yet emitted; planned in Phase 3 |
 | [TRL-E009](TRL-E009.md) | Override without an existing binding | Not yet emitted; planned in T1.6 and T1.7 |
 | [TRL-E010](TRL-E010.md) | Constructor arity above `max_ctor_arity` | Not yet emitted; planned in T1.3 and T1.6 |
 | [TRL-E011](TRL-E011.md) | Scoped binding requested outside its scope | Not yet emitted; planned in Phase 2 |
-| [TRL-E012](TRL-E012.md) | Unbound concrete type requested by reference, pointer or `shared_ptr` | Not yet emitted; planned in T1.4 and T1.6 |
+| [TRL-E012](TRL-E012.md) | Unbound concrete type requested by reference, pointer or `shared_ptr` | Emitted by T1.4 |
 
 ## Runtime errors
 

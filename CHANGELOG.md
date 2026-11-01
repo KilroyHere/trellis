@@ -6,7 +6,7 @@ Each user-visible change adds a line under "Unreleased", in the group that fits:
 
 ## [Unreleased]
 
-Phase 0 (foundations) is complete. There is no injector API yet; the first one comes with v0.1.
+Phase 0 (foundations) is complete. The injector API is being built for v0.1: bindings and modules exist, and creating objects (`create<T>()`) comes next.
 
 ### Added
 
@@ -14,6 +14,13 @@ Phase 0 (foundations) is complete. There is no injector API yet; the first one c
 - **Meta toolkit** (`include/trellis/meta/`, T1.1): `trellis::fixed_string<N>`, a string usable as a template argument and as a compile-time message buffer; `trellis::type_name<T>()`, a type's name as a constant expression; and `trellis::result<T>`, which is `std::expected<T, trellis::failure>` where the standard library provides it (`__cpp_lib_expected`) and otherwise a fallback with the same core interface, with `trellis::make_unexpected` to return a failure in both. Internally, type lists and an inheritance-based type map whose lookups never recurse, fold over a pack or instantiate the types they hold ([notes](docs/internals/meta-toolkit.md)).
 - **Configuration macros** in `<trellis/config.hpp>`: `TRELLIS_HAS_EXCEPTIONS`, `TRELLIS_HAS_TYPE_PACK_ELEMENT`, `TRELLIS_IS_SAME` (the `__is_same` builtin where there is one), and `TRELLIS_FUNCTION_SIGNATURE` with `TRELLIS_FUNCTION_SIGNATURE_CLASS_KEYS`.
 - **Explicit constructor declarations** (`<trellis/discovery/ctor_traits.hpp>`, T1.2): `trellis::ctor<Args...>` lists the parameter types of the constructor that Trellis calls. A class declares it with a specialization of `trellis::ctor_traits<T>`, which leaves the class untouched, or with a public member alias `using trellis_ctor = trellis::ctor<...>;`. The specialization wins when both exist. A declaration that matches no constructor, or that doesn't brace-initialize an aggregate, fails to compile with [TRL-E002](docs/errors/TRL-E002.md), the first error ID that the library emits.
+- **Bindings, modules and options** (`include/trellis/dsl/` and `include/trellis/static/`, T1.4; plan §6.1, §6.2, §6.9, §6.13):
+  - `trellis::bind<I>` with `.to<C>()`, `.in(lifetime)` and `.allow_copy()`, or `.to_ref(x)`, `.to_ptr(p)`, `.to_value(v)` and `.to_shared(sp)`. Each step returns one binding type; nothing accumulates.
+  - The lifetimes `trellis::unique` (the default), `trellis::singleton` and `trellis::singleton_inline`.
+  - `trellis::make_module(...)`, which flattens bindings and modules into one module. A struct derived from a module is a module, which gives the injector a short type name.
+  - `trellis::options`, a template argument with designated initializers: `strict`, `eager`, `threading`, `max_ctor_arity` and `cycle_check`. Each field takes effect with the task that implements it.
+  - `trellis::make_injector<options{...}>(...)`, which flattens its arguments once into one binding map. A key bound twice is the compile error TRL-E003.
+  - The request-form table of plan §6.3 is checked at compile time: a form that the binding's lifetime rejects is TRL-E005, and an unbound type requested by reference, pointer or `shared_ptr` is TRL-E012. `create<T>()`, which triggers the check, comes with the next task.
 - **Compilers:** GCC 13 and 14, Clang 18 and 20, and Clang 18 with libc++ 18, built and tested on every push; Apple Clang and MSVC, built and tested weekly and on demand. All warning-free under `-Werror` or `/WX`.
 - **Build presets and scripts:** CMake presets for each compiler in debug mode, two release builds, ASan with UBSan, TSan and a `-ftime-trace` build. `scripts/init.sh`, `check-fast.sh`, `check-full.sh` and `tidy.sh` print a short summary and keep the full logs in `build/logs/`; `scripts/ci-status.sh` shows the latest CI runs and the first errors of failed jobs.
 - **CI:** six Linux presets on every push, TSan and the quick compile-time benchmark nightly, and macOS and Windows weekly or on demand. A failed scheduled run opens an issue.
