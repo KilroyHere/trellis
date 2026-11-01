@@ -35,6 +35,11 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - (a) keep NFR-13's minimum, 19.38, and use a 150-hop bound on MSVC before 19.50: the provisional text, measured to give exactly one TRL-E007 on cl 19.44;
   - (b) raise NFR-13's MSVC minimum to 19.51. 19.45 to 19.50 can't be measured on GitHub's image, so 19.50 is only an assumed boundary.
   Not blocking until the cycle check lands in Phase 2.
+- **NFR-07, error length (T1.6), blocks marking T1.6 passing.** Common layouts give 14–33 lines. A chain alternating by-value and by-reference requests reaches 41–49 lines on GCC 14 and 39–43 on Clang, which is inherent to ADR-0003's two-operator design. Options:
+  - (A) don't count lines the user's own layout produces: the include chain and the call-site excerpt. Every measured case then meets 40. Recommended;
+  - (B) raise the limit to 50 for such chains;
+  - (C) keep 40 and redesign constructor discovery.
+  Asked on 2026-11-01.
 - **Performance budgets missed (T1.9).** NFR-04 (1.68× / 1.78× against 1.3×), NFR-06 on Clang (+12,352 B against +8 KB) and NFR-03 on Clang (+0.31 s against +0.3 s). These are Phase 1 exit criteria. The plan is T1.14: generate less code per binding and per singleton, then re-measure on a quiet machine. Budgets stay unchanged unless you decide otherwise. Also: is NFR-06's "KB" 1,000 or 1,024 bytes? GCC lands exactly on +8,192 B.
 - **New error IDs TRL-E013 and TRL-E014 (T1.5), provisional.** ADR-0006 says an ID never changes meaning, and the catalog's process gives a new mistake the next free number. So these are new IDs, not wider meanings for E001 and E005:
   - TRL-E013: an unbound concrete type requested under `options{.strict = true}`;
@@ -62,6 +67,25 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Add `tests/golden_manifest.txt` to the protected paths.
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev clang-tools-18 clang-tools-20` (`clang-tools-*` gives `clang-scan-deps`, which the C++20 module build needs, T1.8) so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
+
+## 2026-11-01: T1.6 diagnostics in C++20 form (landed; awaiting the owner on NFR-07)
+
+- **What changed** (squashed as 5837eb5), in `include/trellis/diagnostics/explain.hpp` with 30 new compile-fail tests and 60 goldens on four compilers:
+  - **One report per root cause.** Every TRL static_assert is in one function template, `detail::raise<Error, Message, Scope>`, instantiated once per report, so one cause reached from several roots is one error. Its note names the error type, which is ADR-0006's MSVC mitigation.
+  - **The explain pass** runs only after a failure. It follows the first failing parameter from the root and classifies the deepest failure: E001–E005, E009, E010, E012, E013, E014. The path is in the instantiation note above the error (ADR-0006 items 2 and 3, re-amended, provisional), because putting it in the condition would break protected T1.5 tests that expect one error for two roots. A passing build instantiates none of it.
+  - **Output size:** each deduced class costs one note, printed from one line, so the compilers fold chains to 14–33 lines for a 21-class chain on GCC 13/14 and Clang 18/20, across include depths and multi-line calls.
+  - **Also:** TRL-E009 and `detail::report_override_target` for T1.7, and `.to_ptr`/`.to_ref` bindings of incomplete types now serve references (T1.7's builder found that bug).
+- **Review:** failed twice, and the third check passed on everything except the NFR-07 residual.
+  - Round 1: dependency cycles made the explain pass recurse on Clang (20 errors, 885 lines, up to the depth limit). Also, NFR-07's 40 lines held only in the best layout.
+  - Round 2: the new cycle stop counted rejected requests as cycles, so three broken graphs compiled silently and aborted at run time.
+  - Fixed: a cycle now gives 1–4 errors (within ADR-0014's 2–6). A differential sweep of 192 snippets × 4 compilers found nothing main rejects that the new code accepts. The reviewer's 60 probes don't flip.
+- **Evidence:** `scripts/tasks.py verify T1.6` on main: `[PASS] scripts/check-full.sh`, `check-full: 10 of 10 presets passed, 0 failed, 3164s`, `[PASS] ctest --preset gcc-13-debug -L golden`, `[PASS] ctest --preset clang-18-debug -L golden`, `T1.6: all verify commands passed`.
+- **Not passed yet:** a chain whose classes alternate by-value and by-reference requests can't fold, because ADR-0003's two operators print from two lines. It reaches 41 lines on GCC 14 in the best layout and up to 49 with four user headers and a 3-line call (Clang 39–43). See "Waiting for owner". `tasks.py pass T1.6` waits for that answer; the verify record above matches the tree.
+- **Disclosure:** the builder deleted and re-added six of its own unlanded tests under new names, rather than editing them past the hook. No landed test or golden changed: the diff against main is additions only.
+- **Follow-ups:**
+  - Phase 4: C++26 messages behind `TRELLIS_HAS_STATIC_ASSERT_MESSAGE`, and path elision.
+  - MSVC: run a platforms CI dispatch; about 14 earlier tests may now pass through `raise`'s note.
+  - Protected tests with stale comments (`static/e005_*`, `static/e012_*` and six `create/` tests) need the owner's leave to update.
 
 ## 2026-11-01: T1.9 v0.1 benchmarks: three budgets missed (not passing yet)
 
