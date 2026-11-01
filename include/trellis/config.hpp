@@ -124,16 +124,22 @@
 #define TRELLIS_FUNCTION_SIGNATURE_CLASS_KEYS 0
 #endif
 
-// TRELLIS_TYPE_NAME_RESPELLS_MEMBER_POINTERS is 1 on Clang 21 and later, Apple clang 21 included,
-// and on MSVC (not clang-cl), whose signatures misspell a member pointer type (platforms CI):
-// - Clang 21 keeps a member pointer's class as a nested-name-specifier, and __PRETTY_FUNCTION__
-//   prints it without its scope: `int widget::*` for int tn::widget::* (Apple clang 21.0.0,
-//   clang-2100.1.1.101; Clang 18 and 20 print `int tn::widget::*`). Member pointers into two
-//   classes of the same name in different namespaces would get one name.
-// - cl 19.51's __FUNCSIG__ leaves out the space before the class: `inttn::widget::*`.
+// TRELLIS_TYPE_NAME_RESPELLS_MEMBER_POINTERS is 1 on Clang 21 and later and on MSVC (not
+// clang-cl), whose signatures misspell a member pointer type:
+// - Apple clang 21.0.0 (clang-2100.1.1.101, platforms CI) prints int tn::widget::* as
+//   `int widget::*`, without the class's scope, so member pointers into two classes of the same
+//   name in different namespaces would get one name; Clang 18 and 20 print `int tn::widget::*`.
+//   The likely cause is llvm-project #132401 (March 2025), which made a member pointer type keep
+//   its class as a nested-name-specifier (not checked: the LLVM tracker is unreachable here). The
+//   gate for upstream Clang is inferred from that, not measured: no upstream Clang 21 is available
+//   here or in CI. Where a Clang it covers spells the scope after all, the respelling gives the
+//   same name.
+// - cl 19.51's __FUNCSIG__ leaves out the space before the class: `inttn::widget::*`. No upstream
+//   report found; godbolt.org and the GCC/LLVM/MSVC trackers are unreachable here. The gate
+//   covers every cl from NFR-13's 19.38, but only 19.51 was measured.
 // Where this is 1, type_name builds a member pointer type's name from the compiler's spelling of
 // the class itself, which both get right (meta/type_name.hpp, tests/unit/type_name_test.cpp).
-// GCC and Clang 20 and earlier spell member pointers right.
+// GCC spells member pointers right.
 #if (defined(__clang__) && __clang_major__ >= 21) || (defined(_MSC_VER) && !defined(__clang__))
 #define TRELLIS_TYPE_NAME_RESPELLS_MEMBER_POINTERS 1
 #else
@@ -183,7 +189,9 @@
 // Is = {0} fails with C3546 ("there are no parameter packs available to expand") inside ctor, the
 // deduced declaration of every one-parameter constructor (T1.3, platforms CI). Where this is 1,
 // repeat_t goes through a class template, repeat<I, A>::type, which keeps the pattern dependent on
-// I. Elsewhere it stays a plain alias, which instantiates nothing.
+// I. Elsewhere it stays a plain alias, which instantiates nothing. No upstream report found;
+// godbolt.org and the GCC/LLVM/MSVC trackers are unreachable here. The gate covers every cl from
+// NFR-13's 19.38, but only 19.51 was measured.
 #if defined(_MSC_VER) && !defined(__clang__)
 #define TRELLIS_REPEAT_THROUGH_CLASS 1
 #else
@@ -199,7 +207,11 @@
 // refused aggregates without arrays. Where this is 1, the check uses braces, with a placeholder
 // whose conversion to an array reference is deleted: MSVC initializes an array member from a
 // conversion function that yields an array reference (spike S1's MSVC addendum), so it selects the
-// deleted one exactly when the aggregate has an array member, of any size.
+// deleted one exactly when the aggregate has an array member, of any size. No upstream report
+// found for the parentheses; godbolt.org and the GCC/LLVM/MSVC trackers are unreachable here. The
+// gate covers every cl from NFR-13's 19.38, but the parentheses' failure was measured on 19.51
+// only; the array-reference initialization that the check relies on was seen on 19.51 and 19.44
+// (T1.13).
 #if defined(_MSC_VER) && !defined(__clang__)
 #define TRELLIS_ARRAY_CHECK_WITH_BRACES 1
 #else

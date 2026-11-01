@@ -18,6 +18,8 @@ Four kinds of case:
     LC_ALL=C and none of the inherited variables, and the output users see (colors off, but quoted
     source and carets kept, as expect-max-lines counts them). It must run in a scratch directory
     of its own, which the runner removes afterwards.
+  - The concurrency check starts two runners at once, on that stub lingering after its report, so
+    that the two compiles overlap; their working directories must differ.
 CASES and STUB_CASES are checked against the runner's verdict (its first output line) and exit
 status. CTest runs this as tools.compile_fail_selftest with the build's --config.
 """
@@ -102,15 +104,17 @@ def check(label, status, report, expected_status, expected_text):
     return False
 
 
-def stub_config(real_config, scratch, scenario, pid_file=None):
+def stub_config(real_config, scratch, scenario, pid_file=None, linger=None):
     """A copy of the build's config whose compiler is stub_compiler.py playing SCENARIO."""
     config = json.loads(Path(real_config).read_text(encoding="utf-8"))
     flags = ["-I", str(STUB), "--scenario", scenario]
     if pid_file:
         flags += ["--pid-file", str(pid_file)]
+    if linger:
+        flags += ["--linger", str(linger)]
     config.update(compiler=sys.executable, frontend="GNU", golden_name="stub-1", flags=flags,
                   binary_dir=str(scratch))
-    path = scratch / f"{scenario}.json"
+    path = scratch / f"{scenario}{'-linger' if linger else ''}.json"
     path.write_text(json.dumps(config, indent=2), encoding="utf-8")
     return path
 
@@ -201,6 +205,37 @@ def check_invocation(config, scratch):
     return True
 
 
+def check_concurrent_compiles(config, scratch):
+    """Two runners started together, as CTest starts them, on the stub that reports its working
+    directory and then lingers, so that the two compiles overlap: each must run in a directory of
+    its own (with one shared directory, MSVC's second cl fails with C1041 on vc140.pdb)."""
+    label = "concurrent compiles"
+    stub = stub_config(config, scratch, "report-invocation", linger=1)
+    sources = [FIXTURES / "passes.cpp", FIXTURES / "regex_mismatch.cpp"]
+    runners = [subprocess.Popen([sys.executable, "-I", str(RUNNER), "--config", str(stub),
+                                 source.relative_to(ROOT).as_posix()],
+                                cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                text=True)
+               for source in sources]
+    for runner in runners:
+        runner.communicate(timeout=60)
+    directories = []
+    for source in sources:
+        log = compile_fail.log_path({"binary_dir": scratch}, compile_fail.snippet_name(source))
+        directory = stub_compiler.read_directory(
+            log.read_text(encoding="utf-8") if log.is_file() else "")
+        if directory is None:
+            print(f"FAIL {label}: the stub's report is missing from {log}")
+            return False
+        directories.append(directory)
+    if directories[0] == directories[1]:
+        print(f"FAIL {label}: both compiles ran in {directories[0]}")
+        return False
+    print(f"ok   {label}: two directories, {Path(directories[0]).name} and "
+          f"{Path(directories[1]).name}")
+    return True
+
+
 def check_interrupt(config, scratch, signum, expected_status):
     """Interrupt the runner itself while the stub hangs; it must stop the stub before exiting."""
     label = f"runner interrupted by {signal.Signals(signum).name}"
@@ -266,6 +301,7 @@ def main():
             if pid_file:
                 results.append(check_processes_died("hang", pid_file))
         results.append(check_invocation(config, scratch))
+        results.append(check_concurrent_compiles(config, scratch))
         for signum, expected_status in INTERRUPTS:
             results.extend(check_interrupt(config, scratch, signum, expected_status))
 
