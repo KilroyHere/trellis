@@ -120,9 +120,12 @@ namespace detail {
 
 #if TRELLIS_HAS_EXPECTED
 
+// trellis::failure, qualified, as everywhere in this namespace: detail has a failure of its own,
+// the enum of static/resolve.hpp, which an unqualified name here would find wherever that header
+// is included before this one.
 template <class T>
-using result_type = std::expected<T, failure>;
-using unexpected_type = std::unexpected<failure>;
+using result_type = std::expected<T, trellis::failure>;
+using unexpected_type = std::unexpected<trellis::failure>;
 
 #else
 

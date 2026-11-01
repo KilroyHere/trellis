@@ -18,6 +18,7 @@ set(trellis_per_mode_tests
   config_test.cpp
   error_namespace_test.cpp
   fixed_string_test.cpp
+  result_after_injector_test.cpp
   result_test.cpp
   type_list_test.cpp
   type_map_test.cpp
