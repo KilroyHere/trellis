@@ -6,8 +6,9 @@
 //
 // A variant is a wiring class of the shape benchmarks/scenario/manual.hpp describes. Each one must
 // wire the scenario correctly (demo::check_wiring) before it is measured. The hand-written wiring
-// is the baseline; T1.9 adds Trellis in main(). scripts/bench-runtime.sh builds this program with
-// the release presets and runs it pinned to one CPU.
+// (manual.hpp) is the baseline, and trellis.hpp wires the scenario with Trellis (T1.9).
+// scripts/bench-runtime.sh builds this program with the release presets and runs it pinned to one
+// CPU.
 #include <cstdio>
 #include <string>
 
@@ -15,6 +16,7 @@
 
 #include "domain.hpp"
 #include "manual.hpp"
+#include "trellis.hpp"
 
 namespace {
 
@@ -65,6 +67,7 @@ int main(int argc, char** argv) {
   if (benchmark::ReportUnrecognizedArguments(argc, argv)) return 1;
   // The variants, the hand-written baseline first.
   if (!add_variant<demo::manual_wiring>("manual")) return 2;
+  if (!add_variant<demo::trellis_wiring>("trellis")) return 2;
   benchmark::RunSpecifiedBenchmarks();
   benchmark::Shutdown();
   return 0;

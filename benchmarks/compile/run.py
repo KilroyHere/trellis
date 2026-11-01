@@ -9,7 +9,8 @@ time, and record what each compile costs.
 --quick means --n 10,50,100 --fan-in 1-3 --compilers gcc-13,clang-18. Without it the defaults are
 the sweep of plan §8.4: N = 10, 25, 50, 100, 250, 500 and 1000, fan-in 1-3 and 10, the same two
 compilers. LIST is comma-separated; a compiler is gcc-13, gcc-14, clang-18 or clang-20, or
-NAME=EXECUTABLE.
+NAME=EXECUTABLE. The variants are gen_graph.py's wirings, by default manual (the baseline) and
+trellis.
 
 The programs, for each compiler:
   scenario  benchmarks/scenario/<variant>.cpp, compiled as the research's compile matrix was
@@ -86,6 +87,7 @@ QUICK = {"n": "10,50,100", "fan_in": "1-3", "compilers": "gcc-13,clang-18", "tim
 FULL = {"n": "10,25,50,100,250,500,1000", "fan_in": "1-3,10", "compilers": "gcc-13,clang-18",
         "timeout": 900}
 LONG_COMPILE_S = 60
+DEFAULT_VARIANTS = "manual,trellis"  # the baseline first, then the wirings checked against it
 RUN_TIMEOUT_S = 60
 SCENARIO_OUTPUT = "{variant}: wiring_errors=0 handled=6 log_lines=8 repo_size=6"
 # A compiler that ran out of memory under the cap, or was killed (as research/experiments did).
@@ -550,8 +552,9 @@ def main(argv=None):
                         help=f"request-form sets: {', '.join(gen_graph.FORM_SETS)} (default shared_ptr)")
     parser.add_argument("--seed", type=int, default=gen_graph.RESEARCH_SEED)
     parser.add_argument("--compilers", help=f"default {FULL['compilers']}")
-    parser.add_argument("--variants", default="manual",
-                        help=f"wirings to measure: {', '.join(gen_graph.VARIANTS)} (default manual)")
+    parser.add_argument("--variants", default=DEFAULT_VARIANTS,
+                        help=f"wirings to measure: {', '.join(gen_graph.VARIANTS)} "
+                             f"(default {DEFAULT_VARIANTS})")
     parser.add_argument("--runs", type=int,
                         help="compiles per program (default: the runs of budgets.json, 3)")
     parser.add_argument("--timeout", type=int,

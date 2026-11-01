@@ -2,18 +2,19 @@
 """Property tests: random dependency graphs must share objects exactly as their lifetimes say.
 
   check_sharing.py --config build/<preset>/trellis_compiler.json [--seeds SEEDS] [--shard I/N]
-                   [--variants manual] [--batch 8]
+                   [--variants manual,trellis] [--batch 8]
   check_sharing.py --config build/<preset>/trellis_compiler.json --self-test
 
 benchmarks/compile/gen_graph.py makes one random graph per seed (1 to 40 components, fan-in 1-3 or
 10, singleton and unique lifetimes, and the request forms T, T&, const T&, T*, const T*,
 unique_ptr and shared_ptr wherever plan §6.3 allows them; weak_ptr, lazy and provider are not
-generated) and a program that wires the graphs with a variant (manual: written by hand), resolves
-each graph's root twice from one injector and once from a second, and prints an identity checksum
-of the objects it reached, with the number of objects it built. The checksum shows which requests
-share an object, and every object built must be reached, so the line must equal the one
-gen_graph.py computes from its own model of the graph. This is the equivalence oracle of plan
-§9.1; T1.9 adds the Trellis variant.
+generated) and a program that wires the graphs with each variant (manual: written by hand;
+trellis: Trellis's injector, T1.9), resolves each graph's root twice from one injector and once
+from a second, and prints an identity checksum of the objects it reached, with the number of
+objects it built. The checksum shows which requests share an object, and every object built must
+be reached, so the line must equal the one gen_graph.py computes from its own model of the graph.
+This is the equivalence oracle of plan §9.1: every variant must print the model's line for every
+graph, so Trellis's checksums also equal the hand-wired ones.
 
 Seeds: --seeds, else the TRELLIS_PROPERTY_SEEDS environment variable, else DEFAULT_SEEDS (1-32). A
 list is "1-32", "7,9" or "1000000+64" (64 seeds from 1000000). CI sets TRELLIS_PROPERTY_SEEDS from
@@ -48,6 +49,7 @@ sys.dont_write_bytecode = True  # keep the source tree free of __pycache__
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 DEFAULT_SEEDS = "1-32"
+DEFAULT_VARIANTS = "manual,trellis"
 SELF_TEST_SEEDS = "1-24"
 DEFAULT_BATCH = 8
 COMPILE_TIMEOUT_S = 300
@@ -349,8 +351,9 @@ def main(argv=None):
     parser.add_argument("--config", required=True, help="path to the build's trellis_compiler.json")
     parser.add_argument("--seeds", help=f"default: $TRELLIS_PROPERTY_SEEDS, else {DEFAULT_SEEDS}")
     parser.add_argument("--shard", default="1/1", help="I/N: every Nth seed from the Ith")
-    parser.add_argument("--variants", default="manual",
-                        help=f"comma-separated, from: {', '.join(gen_graph.VARIANTS)}")
+    parser.add_argument("--variants", default=DEFAULT_VARIANTS,
+                        help=f"comma-separated, from: {', '.join(gen_graph.VARIANTS)} "
+                             f"(default {DEFAULT_VARIANTS})")
     parser.add_argument("--batch", type=int, default=DEFAULT_BATCH, help="graphs per program")
     parser.add_argument("--self-test", action="store_true", help="check the oracle itself")
     args = parser.parse_args(argv)

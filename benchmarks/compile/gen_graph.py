@@ -2,8 +2,8 @@
 """Generate dependency graphs and C++ programs that wire them (plan §8.4 and §9.1).
 
   gen_graph.py --n 100 [--fan-in 1-3|10] [--forms shared_ptr|reference|mixed] [--seed S]
-               [--variant manual] [-o FILE] [--expected]
-  gen_graph.py --random SEEDS [--variant manual] [-o FILE] [--expected]
+               [--variant manual|trellis] [-o FILE] [--expected]
+  gen_graph.py --random SEEDS [--variant manual|trellis] [-o FILE] [--expected]
 
 The first form makes one graph of N components, for the compile-time benchmarks
 (benchmarks/compile/run.py). The second makes one random graph per seed, all in one program, for
@@ -56,7 +56,8 @@ and `wiring()` the code, inside the graph's namespace, that defines
 which builds two injectors, resolves Root twice from the first and once from the second, and calls
 w.edge() on the three roots, in that order, while everything is alive. `include_dirs` lists the
 include directories it needs, relative to the repository. ManualVariant is the hand-written
-baseline; add a variant to VARIANTS to measure it (T1.9 adds trellis).
+baseline, and TrellisVariant wires the graph with Trellis's injector (T1.9); add a variant to
+VARIANTS to measure it.
 """
 import argparse
 import sys
@@ -482,7 +483,53 @@ class ManualVariant:
                 "}"]
 
 
-VARIANTS = {"manual": ManualVariant()}
+class TrellisVariant:
+    """Trellis's static injector, wired as a user would wire it, through the public API only:
+    make_wiring() is the composition root, one make_injector call with a binding per decision
+    (the research harness wired Boost.DI the same way, one flat make_injector). A component with
+    an interface binds it to its class, and a singleton without one binds its class to itself.
+    A unique class without an interface needs no binding, as Trellis builds an unbound class as
+    a new object per request, unless something requests it as std::shared_ptr: that needs an
+    explicit unique binding (plan §6.3; unbound, it is TRL-E012). Root, concrete and unbound, is
+    requested by value, and every constructor is deduced."""
+
+    name = "trellis"
+    include_dirs = ("include",)
+
+    def includes(self, graph):
+        return ["#include <trellis/trellis.hpp>"]
+
+    def binding(self, comp, shared):
+        """The binding of one component, or None if it needs none. SHARED: something requests it
+        as std::shared_ptr."""
+        k = comp.index
+        lifetime = ".in(trellis::singleton)" if comp.lifetime == SINGLETON else ""
+        if comp.interface:
+            return f"trellis::bind<I{k}>.to<C{k}>(){lifetime}"
+        return f"trellis::bind<C{k}>{lifetime}" if lifetime or shared else None
+
+    def wiring(self, graph):
+        edges = [e for comp in graph.components for e in comp.deps] + list(graph.root)
+        shared = {e.target for e in edges if e.form == "shared_ptr"}
+        bindings = [b for b in (self.binding(c, c.index in shared) for c in graph.components)
+                    if b is not None]
+        return ["inline auto make_wiring() {",
+                "  return trellis::make_injector(" + ",".join(f"\n      {b}" for b in bindings)
+                + ");",
+                "}",
+                "inline void walk_roots(gen::walker& w) {",
+                "  auto first = make_wiring();",
+                "  auto second = make_wiring();",
+                "  const Root a = first.create<Root>();",
+                "  const Root b = first.create<Root>();",
+                "  const Root c = second.create<Root>();",
+                "  w.edge(a);",
+                "  w.edge(b);",
+                "  w.edge(c);",
+                "}"]
+
+
+VARIANTS = {"manual": ManualVariant(), "trellis": TrellisVariant()}
 
 
 def variant_of(variant):

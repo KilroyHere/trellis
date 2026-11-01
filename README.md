@@ -101,6 +101,7 @@ error: static assertion failed: trellis [TRL-E001]: no binding for abstract type
 | `include/trellis/` | The library (header-only) |
 | `tests/` | Unit, compile-fail, golden-diagnostics and property tests |
 | `benchmarks/` | Compile-time and runtime benchmarks, and their budgets |
+| [`docs/benchmarks/`](docs/benchmarks/v0.1.md) | Benchmark results against hand-written wiring and the targets, per release |
 | `tools/`, `scripts/` | Test runners and developer scripts |
 | [`research/`](research/README.md) | Background research on existing C++ DI libraries |
 | [`docs/agent/PROMPTS.md`](docs/agent/PROMPTS.md) | How this project is built with Claude Code |
