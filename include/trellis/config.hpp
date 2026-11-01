@@ -124,6 +124,22 @@
 #define TRELLIS_FUNCTION_SIGNATURE_CLASS_KEYS 0
 #endif
 
+// TRELLIS_TYPE_NAME_RESPELLS_MEMBER_POINTERS is 1 on Clang 21 and later, Apple clang 21 included,
+// and on MSVC (not clang-cl), whose signatures misspell a member pointer type (platforms CI):
+// - Clang 21 keeps a member pointer's class as a nested-name-specifier, and __PRETTY_FUNCTION__
+//   prints it without its scope: `int widget::*` for int tn::widget::* (Apple clang 21.0.0,
+//   clang-2100.1.1.101; Clang 18 and 20 print `int tn::widget::*`). Member pointers into two
+//   classes of the same name in different namespaces would get one name.
+// - cl 19.51's __FUNCSIG__ leaves out the space before the class: `inttn::widget::*`.
+// Where this is 1, type_name builds a member pointer type's name from the compiler's spelling of
+// the class itself, which both get right (meta/type_name.hpp, tests/unit/type_name_test.cpp).
+// GCC and Clang 20 and earlier spell member pointers right.
+#if (defined(__clang__) && __clang_major__ >= 21) || (defined(_MSC_VER) && !defined(__clang__))
+#define TRELLIS_TYPE_NAME_RESPELLS_MEMBER_POINTERS 1
+#else
+#define TRELLIS_TYPE_NAME_RESPELLS_MEMBER_POINTERS 0
+#endif
+
 // The compiler workarounds of deduced constructor discovery (discovery/deduced.hpp, ADR-0003 item
 // 6, docs/internals/deduction.md): two for GCC, two for MSVC. All are tested in
 // tests/unit/deduced_test.cpp.
