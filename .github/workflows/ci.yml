@@ -1,6 +1,6 @@
 # Linux CI on every push to a branch, and on pull requests from forks. Each job configures, builds
 # and tests one CMake preset, as scripts/check-full.sh does locally, so every test runs: unit,
-# headers, compile_fail, golden, property and tools. The repository is private and Actions
+# headers, compile_fail, golden, property, single_header and tools, and module on Clang. The repository is private and Actions
 # minutes are limited, so TSan and the benchmarks run nightly (nightly.yml), and macOS and
 # Windows weekly (platforms.yml). scripts/ci-status.sh summarizes the results.
 name: ci
@@ -36,20 +36,22 @@ jobs:
       matrix:
         # packages: what the runner image lacks for this preset, besides ccache, which every job
         # installs. The image has CMake, Ninja, GCC 12 to 14 (g++-13, g++-14) and Clang 16 to 18
-        # (clang++-18); the libc++ preset builds GoogleTest from source.
+        # (clang++-18); the libc++ preset builds GoogleTest from source. The Clang presets build
+        # the C++20 module (TRELLIS_ENABLE_MODULE), whose dependency scan needs clang-scan-deps,
+        # which Ubuntu packages as clang-tools-<major>.
         include:
           - preset: gcc-13-debug
             packages: libgtest-dev libgmock-dev
           - preset: gcc-14-debug
             packages: libgtest-dev libgmock-dev
           - preset: clang-18-debug
-            packages: libgtest-dev libgmock-dev
+            packages: clang-tools-18 libgtest-dev libgmock-dev
           - preset: clang-20-debug
-            packages: clang-20 libgtest-dev libgmock-dev
+            packages: clang-20 clang-tools-20 libgtest-dev libgmock-dev
           - preset: clang-18-libcxx-debug
-            packages: libc++-18-dev libc++abi-18-dev
+            packages: clang-tools-18 libc++-18-dev libc++abi-18-dev
           - preset: asan-ubsan
-            packages: libgtest-dev libgmock-dev libclang-rt-18-dev
+            packages: clang-tools-18 libgtest-dev libgmock-dev libclang-rt-18-dev
     env:
       # Inside the checkout but ignored by git (.gitignore has .cache/).
       CCACHE_DIR: ${{ github.workspace }}/.cache/ccache

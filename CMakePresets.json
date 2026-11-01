@@ -16,8 +16,16 @@
     },
     { "name": "gcc-13", "hidden": true, "cacheVariables": { "CMAKE_CXX_COMPILER": "g++-13" } },
     { "name": "gcc-14", "hidden": true, "cacheVariables": { "CMAKE_CXX_COMPILER": "g++-14" } },
-    { "name": "clang-18", "hidden": true, "cacheVariables": { "CMAKE_CXX_COMPILER": "clang++-18" } },
-    { "name": "clang-20", "hidden": true, "cacheVariables": { "CMAKE_CXX_COMPILER": "clang++-20" } },
+    {
+      "name": "clang-18",
+      "hidden": true,
+      "cacheVariables": { "CMAKE_CXX_COMPILER": "clang++-18", "TRELLIS_ENABLE_MODULE": "ON" }
+    },
+    {
+      "name": "clang-20",
+      "hidden": true,
+      "cacheVariables": { "CMAKE_CXX_COMPILER": "clang++-20", "TRELLIS_ENABLE_MODULE": "ON" }
+    },
     { "name": "release", "hidden": true, "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" } },
 
     { "name": "gcc-13-debug", "displayName": "GCC 13, Debug", "inherits": ["gcc-13", "base"] },

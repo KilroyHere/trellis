@@ -28,6 +28,9 @@ option(TRELLIS_BUILD_TESTS "Build the Trellis tests" ${PROJECT_IS_TOP_LEVEL})
 option(TRELLIS_BUILD_BENCHMARKS "Build the runtime benchmarks (needs Google Benchmark)" OFF)
 # The presets turn this on, except for timing builds (timetrace), which must not measure cache hits.
 option(TRELLIS_USE_CCACHE "Use ccache as the compiler launcher if it is installed" OFF)
+# The C++20 module trellis (target trellis::module), which needs CMake 3.28, Ninja and Clang 16 or
+# later with clang-scan-deps; modules/CMakeLists.txt checks them. The Clang presets turn it on.
+option(TRELLIS_ENABLE_MODULE "Build the C++20 module trellis (needs CMake 3.28)" OFF)
 
 if(TRELLIS_USE_CCACHE AND NOT CMAKE_CXX_COMPILER_LAUNCHER)
   find_program(TRELLIS_CCACHE_PROGRAM ccache)
@@ -73,6 +76,11 @@ install(FILES
   DESTINATION "${trellis_install_cmakedir}")
 install(FILES LICENSE DESTINATION "${CMAKE_INSTALL_DOCDIR}")
 
+# The module is for builds that add Trellis as a subdirectory (add_subdirectory, FetchContent). It
+# isn't installed yet: find_package(trellis) provides the headers only.
+if(TRELLIS_ENABLE_MODULE)
+  add_subdirectory(modules)
+endif()
 if(TRELLIS_BUILD_TESTS)
   enable_testing()
   add_subdirectory(tests)

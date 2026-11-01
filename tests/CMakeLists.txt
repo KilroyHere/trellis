@@ -90,3 +90,21 @@ set_tests_properties(tools.readme_example tools.readme_example_selftest PROPERTI
 
 add_subdirectory(unit)
 add_subdirectory(property)
+# The C++20 module (label module) and the single header (label single_header), T1.8.
+if(TARGET trellis_module)
+  add_subdirectory(module)
+endif()
+option(TRELLIS_SINGLE_HEADER_TESTS "Run the unit tests against the generated single header too" ON)
+if(TRELLIS_SINGLE_HEADER_TESTS)
+  add_subdirectory(single_header)
+endif()
+# tools/amalgamate.py on small trees: generation, its refusals, and --check, whose compile uses
+# GCC-style flags and so is skipped on MSVC.
+set(amalgamate_selftest_compiler "")
+if(NOT MSVC)
+  set(amalgamate_selftest_compiler --cxx "${CMAKE_CXX_COMPILER}")
+endif()
+add_test(NAME tools.amalgamate_selftest
+  COMMAND "${Python3_EXECUTABLE}" -I "${CMAKE_CURRENT_SOURCE_DIR}/tools/amalgamate_selftest.py"
+          ${amalgamate_selftest_compiler})
+set_tests_properties(tools.amalgamate_selftest PROPERTIES LABELS tools)

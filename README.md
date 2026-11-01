@@ -109,9 +109,9 @@ error: static assertion failed: trellis [TRL-E001]: no binding for abstract type
 
 You need:
 
-- CMake 3.21 or later (3.28 for the C++20 module);
+- CMake 3.28 or later, because the Clang presets build the C++20 module (the headers alone need 3.21);
 - Ninja;
-- GCC 13 or 14, or Clang 18 or 20 (libc++ optional).
+- GCC 13 or 14, or Clang 18 or 20 (libc++ optional), with Clang's `clang-scan-deps` (`clang-tools-18` and `clang-tools-20` on Debian and Ubuntu).
 
 GoogleTest is found on the system or fetched. The benchmarks need Google Benchmark 1.8 or later.
 
@@ -128,6 +128,31 @@ scripts/check-full.sh
 ```
 
 CI runs Linux on every push. macOS and Windows (MSVC) run weekly and on demand.
+
+### The single header and the C++20 module
+
+Besides `include/`, Trellis comes in two other forms, both made from the headers. Every unit test runs against the single header too. The modules run their own smoke tests and the unit tests that use only public names; the others test internals, which a module doesn't export. [docs/internals/delivery.md](docs/internals/delivery.md) explains both.
+
+**Single header.** Generate it, then copy `single_include/trellis.hpp` into your project and include it in place of the headers:
+
+```bash
+python3 tools/amalgamate.py          # writes single_include/trellis.hpp
+python3 tools/amalgamate.py --check  # generates it in memory, compiles it, and fails if the file is stale
+```
+
+**Module.** With CMake 3.28, Ninja and Clang 16 or later with `clang-scan-deps`, add Trellis to your build with the module turned on, and import it:
+
+```cmake
+set(TRELLIS_ENABLE_MODULE ON)  # before add_subdirectory() or FetchContent_MakeAvailable()
+add_subdirectory(trellis)
+target_link_libraries(app PRIVATE trellis::module)
+```
+
+```cpp
+import trellis;
+```
+
+Tests that use the testing helpers of `<trellis/testing/wiring.hpp>` write `import trellis.testing;` instead, which also gives everything `trellis` gives. Build the module and your program in the same language mode. A module carries no macros, so include `<trellis/config.hpp>` before the import if you need `TRELLIS_VERSION` or the `TRELLIS_HAS_*` macros. Nor does it export the standard library: include the standard headers whose names or operators you use, such as `<string_view>` to compare what `type_name<T>()` returns. Put every `#include` before `import trellis;`: Clang 20 with libstdc++ and Clang 18 with libc++ reject some standard headers included after it. A configuration macro such as `TRELLIS_HAS_ATOMIC_WAIT` reaches the module only from its own build: `target_compile_definitions(trellis_module PUBLIC TRELLIS_HAS_ATOMIC_WAIT=0)`. If your project requires a CMake older than 3.28, set `CXX_SCAN_FOR_MODULES` on the targets that import the module. Don't use ccache for those targets: it can return a stale object file after Trellis changes. GCC 14 can't use the module, and installed packages (`find_package(trellis)`) don't include it yet.
 
 ## Contributing
 

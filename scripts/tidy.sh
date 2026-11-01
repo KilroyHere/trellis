@@ -8,7 +8,9 @@
 # Compile flags come from build/clang-18-debug/compile_commands.json, which is configured first if
 # it is missing. Only files the build compiles are checked, plus the public headers in include/,
 # which clang-tidy checks with flags borrowed from a similar file. Snippets that must not compile
-# (tests/compile_fail/) and files built elsewhere (spikes/, tests/package/) are skipped.
+# (tests/compile_fail/) and files built elsewhere (spikes/, tests/package/) are skipped, and so are
+# files that import a C++20 module (tests/module/): clang-tidy 18's include-cleaner doesn't count
+# an import as providing names, so it asks for a header for every Trellis name they use.
 # Full output goes to build/logs/tidy/.
 set -uo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
@@ -31,16 +33,22 @@ if [[ ! -f $DB_DIR/compile_commands.json ]] &&
 fi
 
 # lintable FILE...: the files clang-tidy can check, as given: public headers, and files in the
-# compile database.
+# compile database that import no module. The others are UNCHECKED.
+UNCHECKED="not compiled by the build, or importing a module"
 lintable() {
   (($#)) || return 0
   python3 -I -c '
-import json, os, sys
+import json, os, re, sys
 database = {os.path.realpath(os.path.join(entry["directory"], entry["file"]))
             for entry in json.load(open(sys.argv[1]))}
+imports = re.compile(r"^[ \t]*(?:export[ \t]+)?import[ \t]+[\w.:]+[ \t]*;", re.M)
 for name in sys.argv[2:]:
-    if name.startswith("include/") or os.path.realpath(name) in database:
-        print(name)' "$DB_DIR/compile_commands.json" "$@"
+    if name.startswith("include/"):
+        print(name)
+    elif os.path.realpath(name) in database:
+        with open(name, encoding="utf-8", errors="replace") as source:
+            if not imports.search(source.read()):
+                print(name)' "$DB_DIR/compile_commands.json" "$@"
 }
 
 # The clang-tidy-diff script for LLVM 18 has several names, depending on the distribution.
@@ -59,7 +67,7 @@ if (($#)); then
   mapfile -t files < <(lintable "$@")
   skipped=$(($# - ${#files[@]}))
   if ((${#files[@]} == 0)); then
-    echo "PASS tidy: nothing to check ($skipped file(s) not compiled by the build)"
+    echo "PASS tidy: nothing to check ($skipped file(s) $UNCHECKED)"
     exit 0
   fi
   run_logged "$LOG" "$CLANG_TIDY" -p "$DB_DIR" --quiet "${files[@]}"
@@ -70,7 +78,7 @@ else
   mapfile -t files < <(lintable "${changed[@]}")
   skipped=$((${#changed[@]} - ${#files[@]}))
   if ((${#files[@]} == 0)); then
-    echo "PASS tidy: no changed files to check ($skipped changed file(s) not compiled by the build)"
+    echo "PASS tidy: no changed files to check ($skipped changed file(s) $UNCHECKED)"
     exit 0
   fi
   tracked=()
@@ -102,7 +110,7 @@ else
 fi
 
 note=""
-((skipped == 0)) || note="; skipped $skipped file(s) the build doesn't compile"
+((skipped == 0)) || note="; skipped $skipped file(s) $UNCHECKED"
 if ((status == 0)); then
   printf 'PASS tidy: %s%s; log %s\n' "$what" "$note" "$(relpath "$LOG")"
   exit 0

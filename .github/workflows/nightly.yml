@@ -30,12 +30,12 @@ jobs:
         run: echo "::add-matcher::.github/problem-matchers.json"
 
       # The runner image has CMake, Ninja and clang++-18 (see ci.yml); libclang-rt-18-dev holds the
-      # ThreadSanitizer runtime.
+      # ThreadSanitizer runtime, and clang-tools-18 the clang-scan-deps of the module build.
       - name: Install packages
         run: |
           sudo apt-get update -q
           sudo apt-get install -y -q --no-install-recommends ccache \
-            libgtest-dev libgmock-dev libclang-rt-18-dev
+            clang-tools-18 libgtest-dev libgmock-dev libclang-rt-18-dev
 
       # The runner's kernel randomizes mmap addresses with 32 bits; Clang 18's ThreadSanitizer
       # expects at most 28 and fails with "unexpected memory mapping" otherwise.

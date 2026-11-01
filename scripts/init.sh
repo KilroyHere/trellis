@@ -17,7 +17,8 @@ at_least() { [[ $(printf '%s\n%s\n' "$2" "$1" | sort -V | head -n1) == "$2" ]]; 
 
 check_tools() {
   local tool missing=() found=() notes=() version
-  for tool in cmake ninja clang++-18 python3 git; do
+  # The clang-18-debug preset builds the C++20 module, which needs CMake 3.28 and clang-scan-deps.
+  for tool in cmake ninja clang++-18 clang-scan-deps-18 python3 git; do
     if command -v "$tool" >/dev/null; then
       found+=("$tool $(version_of "$tool")")
     else
@@ -25,14 +26,14 @@ check_tools() {
     fi
   done
   version=$(version_of cmake 2>/dev/null)
-  if [[ -n $version ]] && ! at_least "$version" 3.21; then
-    missing+=("cmake >= 3.21 (found $version)")
+  if [[ -n $version ]] && ! at_least "$version" 3.28; then
+    missing+=("cmake >= 3.28 (found $version)")
   fi
   version=$(version_of python3 2>/dev/null)
   if [[ -n $version ]] && ! at_least "$version" 3.8; then
     missing+=("python3 >= 3.8 (found $version)")
   fi
-  for tool in ccache clang-format-18 clang-tidy-18 g++-13 g++-14 clang++-20; do
+  for tool in ccache clang-format-18 clang-tidy-18 g++-13 g++-14 clang++-20 clang-scan-deps-20; do
     command -v "$tool" >/dev/null || notes+=("$tool")
   done
   if ((${#missing[@]})); then
