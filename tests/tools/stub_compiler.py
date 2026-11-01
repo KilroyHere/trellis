@@ -5,8 +5,9 @@ The self-tests write temporary configs whose compiler is the Python interpreter 
 flags are `-I`, this script and `--scenario NAME`, so that the runner's own command line reaches
 it. Every scenario first prints the error that passes.cpp expects. Most then fail in their own
 way: a crash message, death by a signal, or a hang with a child process (like cc1plus under the
-g++ driver) that must die with it. report-invocation instead reports the arguments and the
-environment that the runner gave the compiler.
+g++ driver) that must die with it. report-invocation instead reports the arguments, the
+environment and the working directory that the runner gave the compiler, and with --linger
+waits before it exits.
 """
 import argparse
 import os
@@ -87,12 +88,16 @@ def main():
                         choices=[*SCENARIOS, "killed-by-signal", "hang", "report-invocation"])
     parser.add_argument("--pid-file",
                         help="hang: where to write this process's ID and its child's")
+    parser.add_argument("--linger", type=float, default=0,
+                        help="report-invocation: seconds to wait after the report, so that two "
+                             "compiles started together overlap")
     args, compiler_args = parser.parse_known_args()
     source = compiler_args[-1] if compiler_args else "input.cpp"
     print(EXPECTED_ERROR.format(source=source), flush=True)
 
     if args.scenario == "report-invocation":
         report_invocation(compiler_args)
+        time.sleep(args.linger)
         return 1
     if args.scenario == "killed-by-signal":
         os.kill(os.getpid(), signal.SIGKILL)
