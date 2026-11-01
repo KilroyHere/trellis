@@ -186,8 +186,10 @@ concept wireable =
 /// - `TRL-E004`: deduction finds an ambiguous constructor.
 /// - `TRL-E005`: a request form that the binding's lifetime rejects.
 /// - `TRL-E010`: a constructor takes more parameters than `max_ctor_arity`.
-/// - `TRL-E012`: an unbound type requested by reference, pointer or `std::shared_ptr`.
-/// - `TRL-E013`: with `options{.strict = true}`, an unbound type requested by value.
+/// - `TRL-E012`: an unbound type requested by reference, pointer, `std::shared_ptr` or
+///   `std::weak_ptr`.
+/// - `TRL-E013`: with `options{.strict = true}`, an unbound type requested by value or as
+///   `std::unique_ptr`.
 /// - `TRL-E014`: `std::unique_ptr<I>` that would delete the implementation through `I`.
 ///
 /// @par Example

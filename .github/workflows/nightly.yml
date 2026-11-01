@@ -88,9 +88,26 @@ jobs:
         run: echo "::add-matcher::.github/problem-matchers.json"
 
       # It compiles with g++-13 and clang++-18, which the runner image has, and never through
-      # ccache.
-      - name: Run scripts/bench-compile.sh --quick
-        run: scripts/bench-compile.sh --quick
+      # ccache. The first two steps enforce what T1.9's verify does since owner decisions 2a and 3a
+      # (2026-11-01, plan §9.2 and §12.2): every budget with GCC 13, and with Clang 18 every budget
+      # of the generated graphs. The Clang steps run even when an earlier one fails, so that a
+      # GCC miss doesn't hide that night's Clang results.
+      - name: Run scripts/bench-compile.sh --quick with gcc-13
+        run: scripts/bench-compile.sh --quick --compilers gcc-13
+
+      - name: Run scripts/bench-compile.sh --quick with clang-18, without the scenario
+        if: ${{ !cancelled() }}
+        run: scripts/bench-compile.sh --quick --compilers clang-18 --no-scenario
+
+      # NFR-03 (+0.38 s against +0.3 s) and NFR-06 (+8,240 B against 8 KB) on Clang are accepted
+      # for v0.1, and budgets.json stays strict, so the clang-18 scenario misses NFR-03 every night.
+      # A nightly that is always red would block releases and hide new regressions, so this step
+      # measures and prints the scenario's numbers without failing the job. A Phase 2 task brings
+      # NFR-03 within budget; continue-on-error goes then.
+      - name: Report the clang-18 scenario (NFR-03 and NFR-06 accepted for v0.1, owner decisions 2a and 3a)
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: scripts/bench-compile.sh --quick --compilers clang-18 --no-graphs
 
   report:
     name: report a failed scheduled run

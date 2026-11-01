@@ -26,3 +26,12 @@ explain/e012_three_forms_one_root gcc-13 gcc-14 clang-18 clang-20
 explain/e013_strict_two_roots gcc-13 gcc-14 clang-18 clang-20
 explain/e014_parameter_two_roots gcc-13 gcc-14 clang-18 clang-20
 explain/eager_singleton_eight_down gcc-13 gcc-14 clang-18 clang-20
+
+# Phase 1 gate: the chain whose requests alternate between by value and by reference, the shape
+# behind owner decision 1A (NFR-07's count), in the four layouts of the deep-chain tests, and with
+# aggregates mixed in, in the worst of them.
+explain/alternating_chain_one_header gcc-13 gcc-14 clang-18 clang-20
+explain/alternating_chain_call_over_three_lines gcc-13 gcc-14 clang-18 clang-20
+explain/alternating_chain_four_headers gcc-13 gcc-14 clang-18 clang-20
+explain/alternating_chain_four_headers_call_over_three_lines gcc-13 gcc-14 clang-18 clang-20
+explain/alternating_aggregates_four_headers_call_over_three_lines gcc-13 gcc-14 clang-18 clang-20

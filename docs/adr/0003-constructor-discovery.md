@@ -1,6 +1,6 @@
 # ADR-0003: Three constructor-discovery strategies behind one trait
 
-- **Status:** Accepted (owner, 2026-10-30). T1.3's amendments to items 5, 6 and 7 are provisional, awaiting owner review (T1.3, 2026-10-31; see History).
+- **Status:** Accepted (owner, 2026-10-30). Three amendments are provisional, awaiting owner review (see History): T1.2's construction rule for explicit declarations (2026-10-31), T1.3's amendments to items 5, 6 and 7 (2026-10-31), and item 6's two MSVC workarounds (platform fixes, 2026-11-01).
 - **Plan:** [§4](../plan.md#4-architecture-decisions) ADR-03; §6.3, §6.13, §7.2, §7.4, §7.10; FR-06
 - **Spikes:** [S1 deduced discovery](../spikes/S1-deduced-discovery.md), whose recommendation the owner accepted. Spike S5 (reflection prototype) is deferred, so the reflection strategy below is accepted as planned but not yet prototyped.
 - **Amends:** plan §6.3 (`T&&` parameters), §6.13 (the bound on `max_ctor_arity`), §7.2 (the operator set, the workarounds, the aggregate checks and the residual limits) and §7.4 (what deduced mode reports as E004).
@@ -160,3 +160,4 @@ Other choices:
   - 32 adds 16 failed probes to every deduced class: 3.9% more instructions with GCC and 11.1% with Clang on the fan-in 1-3 graph, and 27 MB and 69 MB more memory. With Clang, the fan-in 10 graph then took 1.31× the hand-written compile time in rounds at a load of up to 4, within their 10% variation of NFR-04's 1.3×, and 1.18× to 1.22× in two quiet rounds of T1.11's review; its memory, 1.29×, doesn't depend on the load.
   - 8 saves 1.3% and 3.2% of the instructions, and refuses every deduced constructor of 9 to 16 parameters with TRL-E010, the fan-in 10 graph's among them.
   - So the default stays 16, as item 5 decided. No decision changes.
+- **2026-11-01, Phase 1 gate:** the Status line names all three provisional amendments; it named only T1.3's, though the T1.2 and platform-fix entries above say theirs await the owner too. The plan's markers for T1.2's and T1.3's amendments now say provisional as well. No decision changes.

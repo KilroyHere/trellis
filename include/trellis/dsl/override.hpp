@@ -216,6 +216,9 @@ class override_binding<binding<Key, Impl, Lifetime, AllowCopy>> {
     return override_binding::wrap(binding_.to_ref(object));
   }
 
+  // The deleted to_ref(const T&&) below returns an override, not void, as bind<I>.to_ref's
+  // deleted twin returns a binding: given void, MSVC also rejects the variable the call
+  // initializes (dsl/bind.hpp).
   /// @brief Rejects a temporary: an override by it would dangle.
   ///
   /// @par Constraints
@@ -228,8 +231,6 @@ class override_binding<binding<Key, Impl, Lifetime, AllowCopy>> {
   /// @code
   /// // trellis::override<Config>.to_ref(Config{});  // error: deleted function
   /// @endcode
-  // It returns an override, not void, as bind<I>.to_ref's deleted twin returns a binding: given
-  // void, MSVC also rejects the variable the call initializes (dsl/bind.hpp).
   template <class T>
   [[nodiscard]] override_binding to_ref(const T&& object) const = delete;
 
@@ -422,6 +423,9 @@ class override_binding<binding<Key, Object, Lifetime, AllowCopy>> {
   wrapped binding_;
 };
 
+// override<K> below is declared auto, as bind<I> is: the type is deduced from the initializer,
+// which is then instantiated wherever override<K> is named, decltype included, and its
+// constructor checks the key through bind<K>'s binding (dsl/bind.hpp).
 /// @brief Starts an override of the key `K`: in a test, replaces the binding of `K` that the
 ///        other arguments of `trellis::make_injector` provide (plan §6.10).
 ///
@@ -459,9 +463,6 @@ class override_binding<binding<Key, Object, Lifetime, AllowCopy>> {
 ///   injector.create<Service>().handle(42);
 /// }
 /// @endcode
-// auto, as for bind<I>: the type is deduced from the initializer, which is then instantiated
-// wherever override<K> is named, decltype included, and its constructor checks the key through
-// bind<K>'s binding (dsl/bind.hpp).
 template <class K>
 inline constexpr auto override = override_binding<binding<K, K, unique_t>>{};
 

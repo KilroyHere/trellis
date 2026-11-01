@@ -201,3 +201,63 @@ T1.6 review round: four of T1.6's own explain tests are renamed, as their commen
 - added: explain/eager_singleton_eight_down
 - added: explain/e001_abstract_below_declared
 - added: explain/e002_copy_of_singleton_below
+
+## 2026-11-01: gcc-13 (13.3.0)
+
+Phase 1 gate: the chain that alternates by-value and by-reference requests, behind owner decision 1A (NFR-07's count), in the four layouts of the deep-chain tests
+
+- added: explain/alternating_chain_one_header
+- added: explain/alternating_chain_call_over_three_lines
+- added: explain/alternating_chain_four_headers
+- added: explain/alternating_chain_four_headers_call_over_three_lines
+
+## 2026-11-01: gcc-14 (14.2.0)
+
+Phase 1 gate: the chain that alternates by-value and by-reference requests, behind owner decision 1A (NFR-07's count), in the four layouts of the deep-chain tests
+
+- added: explain/alternating_chain_one_header
+- added: explain/alternating_chain_call_over_three_lines
+- added: explain/alternating_chain_four_headers
+- added: explain/alternating_chain_four_headers_call_over_three_lines
+
+## 2026-11-01: clang-18 (18.1.3)
+
+Phase 1 gate: the chain that alternates by-value and by-reference requests, behind owner decision 1A (NFR-07's count), in the four layouts of the deep-chain tests
+
+- added: explain/alternating_chain_one_header
+- added: explain/alternating_chain_call_over_three_lines
+- added: explain/alternating_chain_four_headers
+- added: explain/alternating_chain_four_headers_call_over_three_lines
+
+## 2026-11-01: clang-20 (20.1.2)
+
+Phase 1 gate: the chain that alternates by-value and by-reference requests, behind owner decision 1A (NFR-07's count), in the four layouts of the deep-chain tests
+
+- added: explain/alternating_chain_one_header
+- added: explain/alternating_chain_call_over_three_lines
+- added: explain/alternating_chain_four_headers
+- added: explain/alternating_chain_four_headers_call_over_three_lines
+
+## 2026-11-01: gcc-13 (13.3.0)
+
+Phase 1 gate review: the alternating chain with aggregates mixed in, the largest output measured (37 lines by NFR-07's count on GCC 14), in the worst layout
+
+- added: explain/alternating_aggregates_four_headers_call_over_three_lines
+
+## 2026-11-01: gcc-14 (14.2.0)
+
+Phase 1 gate review: the alternating chain with aggregates mixed in, the largest output measured (37 lines by NFR-07's count on GCC 14), in the worst layout
+
+- added: explain/alternating_aggregates_four_headers_call_over_three_lines
+
+## 2026-11-01: clang-18 (18.1.3)
+
+Phase 1 gate review: the alternating chain with aggregates mixed in, the largest output measured (37 lines by NFR-07's count on GCC 14), in the worst layout
+
+- added: explain/alternating_aggregates_four_headers_call_over_three_lines
+
+## 2026-11-01: clang-20 (20.1.2)
+
+Phase 1 gate review: the alternating chain with aggregates mixed in, the largest output measured (37 lines by NFR-07's count on GCC 14), in the worst layout
+
+- added: explain/alternating_aggregates_four_headers_call_over_three_lines

@@ -74,9 +74,9 @@ TYPOGRAPHIC_QUOTES = str.maketrans({"‘": "'", "’": "'", "“": '"', "”": '
 # "     |   ^~~~".
 QUOTED_SOURCE = compile_fail.SOURCE_EXCERPT
 # Include chains: Clang's "In file included from a.hpp:3:", one line per level, and GCC's
-# "In file included from a.hpp:3," followed by "                 from b.cpp:1:" lines. Each names
-# a file and a line; other text that starts with "from" stays.
-INCLUDE_CHAIN = re.compile(r"^(?:In file included from |\s+from ).+:\d+[:,]$")
+# "In file included from a.hpp:3," followed by "                 from b.cpp:1:" lines, as
+# compile_fail.py's NFR-07 count recognizes them.
+INCLUDE_CHAIN = compile_fail.INCLUDE_CHAIN
 # Clang's count of what it reported: "1 error generated.", "1 warning and 2 errors generated."
 ERROR_COUNT = re.compile(r"^\d+ (?:warning|error)s?(?: and \d+ (?:warning|error)s?)? generated\.$")
 # Version banners, which some drivers print (MSVC without /nologo; GCC and Clang with -v).

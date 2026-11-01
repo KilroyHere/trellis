@@ -351,8 +351,9 @@ struct E001 {
 /// (ADR-0004), so `create<T>()` raises it when a request names a type without a binding that the
 /// injector would otherwise build (plan §7.8, provisional: the ID awaits the owner's
 /// confirmation). An abstract type without a binding is `TRL-E001` in every mode, and a concrete
-/// one requested by reference, pointer or `std::shared_ptr` is `TRL-E012`. The path from the root
-/// is in the instantiation note that names `trellis::detail::explain_cause` (T1.6).
+/// one requested by reference, pointer, `std::shared_ptr` or `std::weak_ptr` is `TRL-E012`. The
+/// path from the root is in the instantiation note that names `trellis::detail::explain_cause`
+/// (T1.6).
 ///
 /// @tparam Key The requested key, which has no binding.
 /// @tparam Request `request<R>`, where `R` is the request as the consumer spelled it.

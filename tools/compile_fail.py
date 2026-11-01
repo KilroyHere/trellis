@@ -23,6 +23,19 @@ Directives, in the comment block at the top of the file:
   // expect-id: TRL-E001          the first error line must contain this ID, as a whole token
   // expect-regex: <regex>        repeatable: each Python regex must match the diagnostics
   // expect-max-lines: <n>        optional, default 60: the output may have at most n lines
+  // expect-max-lines-nfr07: <n>  optional: at most n lines by NFR-07's count (below)
+
+NFR-07's count is plan §3.2's, as owner decision 1A amended it (2026-11-01): every line of the
+output except those that the user's own layout produces. It leaves out the include chain, Clang's
+"In file included from a.hpp:3:" lines and GCC's "In file included from a.hpp:3," with its
+"                 from b.cpp:1:" lines, and the excerpt of the user's call site: the quoted
+source, caret and fix-it lines ("  12 |   code", "     |   ^~~") right under a location
+("file:12:5: ..." or "file:12: ...") in the user's code, a file of the source tree outside
+include/trellis, such as the snippet. The quoted lines of Trellis's own headers count, and so do
+those of the standard library and every other file outside the source tree. NFR-07's 40 lines
+are GCC's and Clang's, so with another compiler, such as MSVC's cl, expect-max-lines-nfr07 is
+skipped, which the verdict says. expect-max-lines keeps counting every line with every compiler,
+so a test may set both.
 
 A test needs an expect-id or at least one expect-regex; otherwise any error, even a missing
 header, would pass it. A comment anywhere in the file that looks like a directive (it starts with
@@ -32,7 +45,7 @@ the top comment block: a misspelt or misplaced one is an error, never silently i
 A test passes only when the compiler reports an error, without crashing, running out of memory,
 dying by a signal or timing out, and every expectation holds. Regexes are searched (re.MULTILINE)
 in the diagnostics only: the output with colors removed and without the quoted source and caret
-lines, so a word that appears only in the snippet's own code doesn't match. The line budget counts
+lines, so a word that appears only in the snippet's own code doesn't match. expect-max-lines counts
 every line, as users see them. On timeout the compiler's whole process group is killed, so that
 cc1plus doesn't run on. Each test's full compiler output goes to <build>/compile_fail/<name>.log.
 
@@ -41,6 +54,7 @@ Exit status: 0 when every test passed, 1 when one failed, 2 for a usage or confi
 import argparse
 import json
 import os
+import posixpath
 import re
 import shutil
 import signal
@@ -59,7 +73,8 @@ DEFAULT_MEMORY_MB = 6000  # address-space cap per compile (POSIX only), as CLAUD
 # Anything that looks like a directive, anywhere on a line: "//", then a word starting with
 # "compile" or "expect" in any case and spelling ("expect_regex", "Expect-ID"), then a colon.
 DIRECTIVE_LIKE = re.compile(r"//\s*((?:compile|expect)[\w-]*)\s*:(.*)$", re.IGNORECASE)
-KNOWN_DIRECTIVES = ("compile-fail", "expect-id", "expect-regex", "expect-max-lines")
+KNOWN_DIRECTIVES = ("compile-fail", "expect-id", "expect-regex", "expect-max-lines",
+                    "expect-max-lines-nfr07")
 ERROR_ID = re.compile(r"^TRL-[ER]\d{3}$")
 # Terminal escapes: colors and other CSI sequences (ESC [ params final, as in GCC's ESC[01m ESC[K),
 # and OSC-8 hyperlinks (ESC ] 8 ; params ; URL, then BEL, GCC's default, or ESC \), which GCC puts
@@ -90,6 +105,18 @@ ERROR_LINE = re.compile(r"(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: ")
 # Quoted source with its margin ("   12 |   code" or "      |   ^~~"): never an error line, and
 # not searched by expect-regex.
 SOURCE_EXCERPT = re.compile(r"^\s*\d*\s*\|")
+# Include chains: Clang's "In file included from a.hpp:3:", one line per level, and GCC's
+# "In file included from a.hpp:3," followed by "                 from b.cpp:1:" lines. Each names
+# a file and a line; other text that starts with "from" stays. NFR-07's count leaves them out, and
+# golden.py drops them.
+INCLUDE_CHAIN = re.compile(r"^(?:In file included from |\s+from ).+:\d+[:,]$")
+# A GCC or Clang diagnostic at a location, "file:12:5: ..." or "file:12: ...", whose quoted source,
+# carets and fix-it lines follow it. The file may start with a Windows drive.
+LOCATION = re.compile(r"^(?P<file>(?:[A-Za-z]:)?[^:]+?):\d+(?::\d+)?:(?:\s|$)")
+# The compilers whose output NFR-07's 40 lines bound (plan §3.2), as CMake names them in
+# trellis_compiler.json's compiler_id: expect-max-lines-nfr07 is skipped with any other, such as
+# MSVC's cl.
+NFR07_COMPILERS = ("GNU", "Clang", "AppleClang")
 # A compiler that crashed or ran out of memory, possibly after printing the expected error: an
 # internal compiler error; Clang's crash report; a killed or out-of-memory cc1plus under the GCC
 # driver; LLVM's fatal errors; MSVC's internal error and heap exhaustion.
@@ -155,6 +182,7 @@ class Spec:
         self.expect_id = None
         self.regexes = []
         self.max_lines = DEFAULT_MAX_LINES
+        self.max_lines_nfr07 = None  # expect-max-lines-nfr07, checked only when given
         self.problems = []
 
 
@@ -203,6 +231,12 @@ def parse_directives(text):
                 spec.max_lines = int(value)
             else:
                 spec.problems.append(f"line {number}: expect-max-lines needs a positive number")
+        elif name == "expect-max-lines-nfr07":
+            if value.isdigit() and int(value) > 0:
+                spec.max_lines_nfr07 = int(value)
+            else:
+                spec.problems.append(f"line {number}: expect-max-lines-nfr07 needs a positive "
+                                     f"number")
     if spec.summary is None:
         spec.problems.append("missing the '// compile-fail: <summary>' directive")
     if spec.expect_id is None and not spec.regexes:
@@ -353,6 +387,47 @@ def error_lines(lines):
     return [line for line in diagnostic_lines(lines) if ERROR_LINE.search(line)]
 
 
+def nfr07_applies(config):
+    """Whether expect-max-lines-nfr07 is checked with the build's compiler: NFR-07's 40 lines are
+    GCC's and Clang's (plan §3.2), so it isn't with MSVC's cl."""
+    return config.get("compiler_id") in NFR07_COMPILERS
+
+
+def _comparable(path):
+    """PATH with '/' for separators and '.' and '..' resolved, and a Windows path in lower case, as
+    Windows compares paths."""
+    path = posixpath.normpath(str(path).replace("\\", "/"))
+    return path.lower() if re.match(r"^[A-Za-z]:", path) else path
+
+
+def in_users_code(path, source_dir=ROOT):
+    """Whether the file PATH is the user's code for NFR-07's count: a file of the source tree
+    SOURCE_DIR outside include/trellis, such as the snippet. Trellis's own headers are not, and
+    neither is any file outside the tree, such as the standard library's headers."""
+    path, tree = _comparable(path), _comparable(source_dir)
+    return path.startswith(tree + "/") and not path.startswith(tree + "/include/trellis/")
+
+
+def nfr07_lines(lines, source_dir=ROOT):
+    """The lines that NFR-07's count keeps (see the module docstring): all but the include chain
+    and the quoted source, caret and fix-it lines under a location in the user's code. Quoted
+    lines belong to the line just before them, other quoted lines aside: they go when that line
+    names a location in the user's code, and count when it names any other location, or none."""
+    kept = []
+    location = None  # the file that the line before the next quoted lines names, if any
+    for line in lines:
+        if INCLUDE_CHAIN.match(line):
+            location = None
+        elif SOURCE_EXCERPT.match(line):
+            if location is None or not in_users_code(location, source_dir):
+                kept.append(line)
+        else:
+            kept.append(line)
+            match = LOCATION.match(line)
+            location = match.group("file") if match else None
+    return kept
+
+
 def contains_id(line, error_id):
     """True if LINE has ERROR_ID as a whole token: TRL-E001 is not in TRL-E0012."""
     return re.search(rf"(?<![\w-]){re.escape(error_id)}(?![\w-])", line) is not None
@@ -380,8 +455,9 @@ def compile_problem(result, timeout=DEFAULT_TIMEOUT):
     return None
 
 
-def evaluate(spec, result, timeout=DEFAULT_TIMEOUT):
-    """Every way in which the compile misses the spec; empty when the test passes."""
+def evaluate(spec, result, timeout=DEFAULT_TIMEOUT, check_nfr07=True):
+    """Every way in which the compile misses the spec; empty when the test passes. check_nfr07:
+    whether expect-max-lines-nfr07 applies to the compiler (nfr07_applies)."""
     problem = compile_problem(result, timeout)
     if problem:
         return [problem]
@@ -397,6 +473,12 @@ def evaluate(spec, result, timeout=DEFAULT_TIMEOUT):
     if len(result.lines) > spec.max_lines:
         problems.append(f"{len(result.lines)} lines of output, "
                         f"more than expect-max-lines ({spec.max_lines})")
+    if spec.max_lines_nfr07 is not None and check_nfr07:
+        counted = len(nfr07_lines(result.lines))
+        if counted > spec.max_lines_nfr07:
+            problems.append(f"{counted} lines by NFR-07's count (without the include chain and "
+                            f"the user's excerpts), more than expect-max-lines-nfr07 "
+                            f"({spec.max_lines_nfr07})")
     return problems
 
 
@@ -430,9 +512,15 @@ def run_test(config, source, timeout, memory_mb):
         return False
     result = compile_source(config, source, timeout, memory_mb)
     log = write_log(config, name, result)
-    problems = evaluate(spec, result, timeout)
+    check_nfr07 = nfr07_applies(config)
+    problems = evaluate(spec, result, timeout, check_nfr07)
     if not problems:
-        print(f"PASS {name} ({compiler}, {len(result.lines)} lines): {spec.summary}")
+        counts = f"{len(result.lines)} lines"
+        if spec.max_lines_nfr07 is not None and check_nfr07:
+            counts += f", {len(nfr07_lines(result.lines))} by NFR-07's count"
+        elif spec.max_lines_nfr07 is not None:
+            counts += ", expect-max-lines-nfr07 skipped: NFR-07's 40 lines are GCC's and Clang's"
+        print(f"PASS {name} ({compiler}, {counts}): {spec.summary}")
         return True
     print(f"FAIL {name} ({compiler}): {problems[0]}")
     for problem in problems[1:]:

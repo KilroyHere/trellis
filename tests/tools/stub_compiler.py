@@ -7,7 +7,7 @@ it. Every scenario first prints the error that passes.cpp expects. Most then fai
 way: a crash message, death by a signal, or a hang with a child process (like cc1plus under the
 g++ driver) that must die with it. report-invocation instead reports the arguments, the
 environment and the working directory that the runner gave the compiler, and with --linger
-waits before it exits.
+waits before it exits. two-lines adds a note, a second line that NFR-07's count keeps.
 """
 import argparse
 import os
@@ -21,6 +21,7 @@ EXPECTED_ERROR = "{source}:6:15: error: static assertion failed: fixture: report
 # scenario: (what the compiler prints after the expected error, exit status)
 SCENARIOS = {
     "normal-error": ("", 1),
+    "two-lines": ("{source}:6:15: note: the second line of the output", 1),
     "gcc-killed": ("g++: fatal error: Killed signal terminated program cc1plus\n"
                    "compilation terminated.", 1),
     "gcc-out-of-memory": ("cc1plus: out of memory allocating 1048576 bytes after a total of "

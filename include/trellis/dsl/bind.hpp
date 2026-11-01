@@ -262,7 +262,7 @@ class binding {
   ///
   /// The binding holds the object's address. The caller keeps the object alive for as long as
   /// the injector uses it; the injector never copies or destroys it. A const object can only be
-  /// requested as `const T&`, `const T*` or a copy (plan §6.3).
+  /// requested as `const T&`, `const T*` or, with `.allow_copy()`, a copy (plan §6.3).
   ///
   /// @param object The object: an object of the key's type, or of a class publicly derived from
   ///               it.
@@ -304,6 +304,9 @@ class binding {
     }
   }
 
+  // The deleted to_ref(const T&&) below returns a binding, not void, so that the deleted call is
+  // the one error: given void, MSVC also rejects the variable the call initializes (cl 19.51,
+  // C3313), as in tests/compile_fail/dsl/bind_to_ref_temporary.cpp.
   /// @brief Rejects a temporary: a binding to it would dangle.
   ///
   /// @par Constraints
@@ -316,9 +319,6 @@ class binding {
   /// @code
   /// // trellis::bind<Config>.to_ref(Config{});  // error: deleted function
   /// @endcode
-  // It returns a binding, not void, so that the deleted call is the one error: given void, MSVC
-  // also rejects the variable the call initializes (cl 19.51, C3313), as in
-  // tests/compile_fail/dsl/bind_to_ref_temporary.cpp.
   template <class T>
   [[nodiscard]] binding to_ref(const T&& object) const = delete;
 
@@ -692,6 +692,10 @@ struct binding_access {
 
 }  // namespace detail
 
+// bind<I> below is declared auto, not with its type spelled out: the type is then deduced from
+// the initializer, which is therefore instantiated wherever bind<I> is named, decltype included,
+// and its constructor call checks the key. With the type spelled out, decltype(bind<I>) would
+// never look at it.
 /// @brief Starts a binding of the key `I`: the binding of `I` to itself, unique.
 ///
 /// Chain `.to<C>()`, `.in(lifetime)` and `.allow_copy()`, or `.to_ref(x)`, `.to_ptr(p)`,
@@ -716,9 +720,6 @@ struct binding_access {
 ///     trellis::bind<IClock>.to<SystemClock>(),
 ///     trellis::bind<Config>.to_ref(config));
 /// @endcode
-// auto, not the type spelled out: the type is then deduced from the initializer, which is
-// therefore instantiated wherever bind<I> is named, decltype included, and its constructor call
-// checks the key. With the type spelled out, decltype(bind<I>) would never look at it.
 template <class I>
 inline constexpr auto bind = binding<I, I, unique_t>{};
 
