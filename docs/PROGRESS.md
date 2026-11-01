@@ -63,6 +63,50 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev clang-tools-18 clang-tools-20` (`clang-tools-*` gives `clang-scan-deps`, which the C++20 module build needs, T1.8) so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
 
+## 2026-11-01: T1.6, T1.7 and T1.8 pass; the phase review's findings
+
+- **Passed** on main 8ce2d6f, all three verified on that one tree:
+  - **`verify T1.6`:**
+    - check-full passed 10 of 10 presets in 4,023 s:
+
+      | Preset | Passed | Skipped |
+      |---|---|---|
+      | gcc-13 | 557 | 18 |
+      | gcc-14 | 634 | 18 |
+      | clang-18 | 671 | 26 |
+      | clang-20 | 676 | 20 |
+      | clang-18 + libc++ | 659 | 22 |
+      | gcc-13 release | 557 | 18 |
+      | clang-18 release | 671 | 26 |
+      | ASan/UBSan | 671 | 26 |
+      | TSan | 671 | 26 |
+      | timetrace | 671 | 26 |
+
+    - `-L golden` passed on gcc-13 and clang-18.
+  - **`verify T1.7`:** reused T1.6's check-full, since it ran on the same tree.
+  - **`verify T1.8`:** `-L module` passed on clang-18, and `amalgamate.py --check` passed.
+  - **Linux CI:** ci run 41330765582 on 8ce2d6f passed all six presets.
+- **MSVC parse fix (8ce2d6f):**
+  - Run 41327935786 showed that cl rejects `typename s::impl{...}` inside explain.hpp's requires-expressions (C2760). An alias fixed it.
+  - Run 41330765617 then found the next MSVC problems:
+    - cl 19.51 fails to build `create_test.cpp:721` (C2607);
+    - cl 19.44 promotes a warning at `module.hpp:271` to an error;
+    - cl's depth limit stops the chain test below 200 hops on 19.51 and below 150 on 19.44.
+  - A builder is working on these, together with decision 4a.
+- **Phase-level review (gate step 4, run early):** FAIL, on four blocking items, all docs and tests:
+  1. **`.with_ctor` is missing.** Plan §4 ADR-03, plan §7.2 and ADR-0003 promise `.with_ctor<Args...>()`, and the docs and TRL-E002's page name it. T1.2 built the hook, but no task built the DSL step. Added **T1.15** to build it, so that Phase 1 matches the plan; a builder is working on it.
+  2. **NFR-07 has no test of its amended measure.** No test measures NFR-07 as decision 1A amended it, and the chain that led to 1A, alternating by-value and by-reference requests, isn't tested.
+  3. **Provisional amendments are missing.** The ADR index and "Waiting for owner" omit provisional amendments to ADR-0003, 0004, 0006 and 0010, and about ten plan changes.
+  4. **Decisions 2a and 3a aren't recorded.** The plan doesn't record them, and the nightly would go red every night on the waived Clang budgets.
+  - **Fixes:** a builder is fixing items 2–4 and the review's non-blocking doc findings, and drafting the remaining owner questions for the gate.
+- **Also running:**
+  - A builder is working on Apple Clang's `-Wstack-exhausted` on the 200-hop aggregate chain.
+  - The Phase 2 task list is drafted (17 tasks) for the owner to review with the gate.
+- **Still to pass:**
+  - T1.9, T1.14 and T1.11: on the final tree, with quiet-machine benchmarks and the MSVC chain result;
+  - T1.15;
+  - then T1.10.
+
 ## 2026-11-01: the kit runs a parallel team (the owner's request; not a task)
 
 - **Why:** the owner asked for the kit to allow parallel work and for the team to work as efficiently as possible.
@@ -100,7 +144,7 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
 - **Review:** the code passed. No defect and no behaviour change: event logs are byte-identical before and after under ASan/UBSan/LSan, TSan stress is clean, and a mutation check of the waiter-bit logic is caught. The acceptance failed only on the two Clang budgets. Non-blocking items were fixed: base-class `shared_ptr` tests, the C4324 layout, and the docs set to the quiet numbers.
 - **Not passed:** T1.9 and T1.14 wait for the owner's decisions on NFR-03 and NFR-06 on Clang (see "Waiting for owner").
 
-## 2026-11-01: T1.8 C++20 module and single header (landed; waits for T1.7 to pass)
+## 2026-11-01: T1.8 C++20 module and single header (landed; passed later the same day)
 
 - **What changed** (squashed as 320d5ed):
   - **Modules.** `modules/trellis.cppm` exports the public API from module `trellis`, through using-declarations in `trellis::inline v1`, where GCC 14 can see them. `trellis::error` is exported and `detail` is not. The testing helpers are a second module, `trellis.testing`, which re-exports `trellis`.
@@ -120,7 +164,7 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Module users must include `<trellis/config.hpp>` for macros, and set configuration macros PUBLIC on `trellis_module`.
 - **Follow-ups:** the unit tests that use `detail::` (create, explain, override) can't run through the module. Editing a served unit-test source re-runs CMake.
 
-## 2026-11-01: T1.7 test overrides and testing helpers (landed; waits for T1.6 to pass)
+## 2026-11-01: T1.7 test overrides and testing helpers (landed; passed later the same day)
 
 - **What changed** (squashed as bffb420), in `include/trellis/dsl/override.hpp` and `include/trellis/testing/wiring.hpp`:
   - **`trellis::override<K>`** takes bind's whole vocabulary and replaces K's binding wherever `make_injector`'s arguments hold it, in nested and named modules included. The other arguments are flattened once, and each overridden binding is swapped in place with one `type_map` lookup: no fold, recursion or accumulation.
@@ -138,7 +182,7 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - T1.4's mixed layout (a named module plus other arguments) costs about 3× at 1,000 bindings: 3.9 s → 11 s on clang-18, and 0.6 → 32 MB of object at -O0. It's negligible at 100. For T1.14 and Phase 3's budget at N=1,000.
   - A cheaper path for one module plus overrides would reach each binding through its known base class instead of deducing it.
 
-## 2026-11-01: T1.6 diagnostics in C++20 form (landed; awaiting the owner on NFR-07)
+## 2026-11-01: T1.6 diagnostics in C++20 form (landed; passed later the same day, after decision 1A)
 
 - **What changed** (squashed as 5837eb5), in `include/trellis/diagnostics/explain.hpp` with 30 new compile-fail tests and 60 goldens on four compilers:
   - **One report per root cause.** Every TRL static_assert is in one function template, `detail::raise<Error, Message, Scope>`, instantiated once per report, so one cause reached from several roots is one error. Its note names the error type, which is ADR-0006's MSVC mitigation.

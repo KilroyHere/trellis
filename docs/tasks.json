@@ -382,7 +382,7 @@
       "depends_on": [
         "T1.5"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "T1.7",
@@ -403,7 +403,7 @@
       "depends_on": [
         "T1.6"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "T1.8",
@@ -426,7 +426,7 @@
       "depends_on": [
         "T1.7"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "T1.9",
@@ -816,6 +816,37 @@
       ],
       "depends_on": [
         "T1.5"
+      ],
+      "passes": false
+    },
+    {
+      "id": "T1.15",
+      "phase": 1,
+      "title": "Constructor declared on the binding (.with_ctor)",
+      "description": "The third explicit source of plan §4 ADR-03 item 1, §7.2 and ADR-0003 item 1: a binding declares the constructor Trellis calls for the class it builds, with .with_ctor<Args...>(). T1.2 built the hook (detail::declared_ctor_t<T, BindingCtor> and explicit_ctor_t, where a binding's declaration wins), but no task added the step to the binding DSL, while the doc comments of ctor and ctor_traits, docs/errors/TRL-E002.md and docs/internals/ already point users to it. Found by the Phase 1 phase-level review. Add the step, carry the declaration from the binding to discovery in create<T>() and the explain pass, and document it.",
+      "plan_refs": [
+        "§4 ADR-03",
+        "§6.1",
+        "§7.2",
+        "§8.1",
+        "ADR-0003"
+      ],
+      "interfaces": [
+        "bind<I>.to<C>().with_ctor<Args...>() and bind<C>.with_ctor<Args...>(): each step returns one binding type, and nothing accumulates in a type (plan §8.1); it combines with .in(lifetime) and .allow_copy() in the orders the DSL already accepts"
+      ],
+      "acceptance": [
+        "A binding's .with_ctor<Args...>() declares the constructor of the class the binding builds: create<T>() calls that constructor, for every lifetime and request form the binding allows, and the declaration wins over the class's trellis_ctor alias, a ctor_traits specialization and deduction, with unit tests for each.",
+        "A declaration that doesn't match how the object is built (plan §7.2's rule as amended: braces for an aggregate, is_constructible otherwise) is TRL-E002, reported once per root cause, with compile-fail tests that write the misuse twice; .with_ctor on a binding that builds nothing (to_ref, to_ptr, to_value, to_shared) is a compile error with one static_assert.",
+        "The explain pass follows a binding's declared constructor as it follows the other explicit sources, with a compile-fail test of a failing parameter below a .with_ctor binding.",
+        "The doc comments, docs/errors/TRL-E002.md and docs/internals/ describe the step as available, CHANGELOG.md has a line under Unreleased, and the module and the single header provide it."
+      ],
+      "verify": [
+        "scripts/check-full.sh"
+      ],
+      "depends_on": [
+        "T1.4",
+        "T1.5",
+        "T1.6"
       ],
       "passes": false
     }
