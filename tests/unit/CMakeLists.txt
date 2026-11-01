@@ -25,15 +25,17 @@ set(trellis_per_mode_tests
 
 # Tests whose subject is the same in every language mode, compiled in C++20 only: the
 # explicit constructor declarations (T1.2), and the binding vocabulary, modules and the
-# injector (T1.4), which use no TRELLIS_HAS_* feature, and create<T>() with the injector's storage
-# (T1.5).
+# injector (T1.4), which use no TRELLIS_HAS_* feature, create<T>() with the injector's storage
+# (T1.5), and the explain pass (T1.6).
 set(trellis_cxx20_tests
   bind_test.cpp
   create_test.cpp
   ctor_traits_test.cpp
   deduced_test.cpp
+  explain_test.cpp
   injector_test.cpp
   module_test.cpp
+  opaque_host.cpp
   request_forms_test.cpp
   resolve_forms_test.cpp
   smoke_test.cpp

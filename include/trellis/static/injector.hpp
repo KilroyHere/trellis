@@ -22,6 +22,7 @@
 
 #include <trellis/diagnostics/errors.hpp>
 #include <trellis/discovery/deduced.hpp>
+#include <trellis/dsl/bind.hpp>
 #include <trellis/dsl/lifetimes.hpp>
 #include <trellis/dsl/module.hpp>
 #include <trellis/dsl/options.hpp>
@@ -46,14 +47,20 @@ struct injector_key {
 };
 
 // Resolution, defined in static/resolve.hpp: the context of a request (whose can_resolve<R> is
-// the check and resolve<R>() the creation code), the failure pass, and eager mode's construction
-// of every singleton.
+// the check and resolve<R>() the creation code) and eager mode's construction of every singleton.
 template <class Injector, class Lifetime, slot_access Access = slot_access::checked>
 struct context;
-template <class Injector, class R>
-void explain();
 template <class Injector, class... Bindings>
 void build_eagerly(Injector& owner, type_list<Bindings...> bindings);
+
+// The explain pass, defined in diagnostics/explain.hpp: explain_root_t<Injector, R>::run()
+// reports why request R of the injector can't be served, once, with the path from the root. An
+// alias of a class declared here, so that create<T>() can name it before its definition; run()
+// is the first step itself, so the alias adds no instantiation note to the error.
+template <class Injector, class R>
+struct explain_root;
+template <class Injector, class R>
+using explain_root_t = typename explain_root<Injector, R>::type;
 
 // Gives resolution access to an injector's bindings and storage; the injector befriends it.
 struct injector_access {
@@ -104,10 +111,43 @@ concept returnable = std::is_reference_v<T> || std::is_void_v<T> || std::is_scal
 // create_result_t<R>: what create<R>() returns: request_result_t<R>, or void where a function
 // can't return that type, such as for create<I>() with an abstract I. No such request can be
 // served, and naming its result as the return type would be an error of its own, beside the one
-// the failure pass reports (ADR-0006 item 2).
+// the explain pass reports (ADR-0006 item 2).
 template <class R>
 using create_result_t =
     std::conditional_t<returnable<request_result_t<R>>, request_result_t<R>, void>;
+
+// eager_fails<Eager, Injector>: for options{.eager = true}, whether a singleton of the injector
+// can't be built; then eager_request_t<Injector> is the first such singleton's request, Key&, in
+// binding order, which make_injector runs the explain pass for before the injector exists. So an
+// eager injector's error has make_injector as its only frame outside the explain pass, as
+// create<T>()'s has create<T>(), which keeps it within NFR-07's 40 lines when the explain pass is
+// deep (docs/internals/explain-pass.md); and the constructor's build_eagerly only ever builds.
+// False, without looking at any binding, for an injector that isn't eager. The checks are the
+// memoized can_resolve<Key&> that build_eagerly asks again.
+template <class Injector, class Binding, bool Owned = owns_object<Binding>>
+inline constexpr bool singleton_fails = false;
+template <class Injector, class Binding>
+inline constexpr bool singleton_fails<Injector, Binding, true> =
+    !context<Injector, unique_t>::template can_resolve<typename binding_traits<Binding>::key&>;
+
+template <class Injector, class Bindings = typename injector_traits<Injector>::bindings>
+struct eager_failure;
+template <class Injector, class... Bindings>
+struct eager_failure<Injector, type_list<Bindings...>> {
+  // A flat expansion and a scan, never a fold: an injector may hold more than 256 bindings (plan
+  // §8.1 C3).
+  static constexpr std::size_t index = detail::first_true({singleton_fails<Injector, Bindings>...});
+  static constexpr bool fails = index < sizeof...(Bindings);
+};
+
+template <bool Eager, class Injector>
+inline constexpr bool eager_fails = false;
+template <class Injector>
+inline constexpr bool eager_fails<true, Injector> = eager_failure<Injector>::fails;
+
+template <class Injector>
+using eager_request_t = typename binding_traits<
+    at_t<eager_failure<Injector>::index, typename injector_traits<Injector>::bindings>>::key&;
 
 }  // namespace detail
 
@@ -156,10 +196,11 @@ class injector {
   /// @param parts The arguments of `make_injector`.
   ///
   /// @par Constraints
-  /// - Called by `trellis::make_injector` only, which checks the keys first.
+  /// - Called by `trellis::make_injector` only, which checks the keys first and, with
+  ///   `options{.eager = true}`, that every singleton can be built.
   ///
   /// @par Errors
-  /// None. With `options{.eager = true}`, the errors of `create<T>()` for each singleton.
+  /// None: `trellis::make_injector` reports them before it calls this constructor.
   ///
   /// @par Example
   /// @code
@@ -260,7 +301,11 @@ class injector {
   /// `threading::none`). Constructor parameters are requests too, served the same way.
   ///
   /// The whole graph is checked at compile time. A graph that can't be built instantiates no
-  /// creation code: each mistake is one compile error with a `TRL-` ID (ADR-0006).
+  /// creation code: the first failing request is one compile error with a `TRL-` ID, and an
+  /// instantiation note below it (Clang's second, GCC's first "required from" line) names the
+  /// path from `R` to that request, such as `trellis::error::path<App, Service>`, and the
+  /// parameter that makes it (ADR-0006). A request that several roots fail on is reported once,
+  /// and a dependency cycle gets the compiler's own errors (ADR-0014).
   ///
   /// @tparam R The request, such as `App`, `Service&` or `std::shared_ptr<ILogger>`.
   /// @return `R` for a reference request; otherwise an `R` without top-level `const`, as a
@@ -317,10 +362,11 @@ class injector {
       root ctx{*this};
       return ctx.template resolve<R>();
     } else {
-      // The graph can't be built: report each cause once, and instantiate no creation code
-      // (ADR-0006 item 2). unreachable() stands in for the value; nothing follows the if, which
-      // MSVC would report as unreachable code (C4702).
-      detail::explain<injector, R>();
+      // The graph can't be built: the explain pass reports the first failing request's cause,
+      // once, with the path from the root, and no creation code is instantiated (ADR-0006 items 2
+      // and 5). unreachable() stands in for the value; nothing follows the if, which MSVC would
+      // report as unreachable code (C4702).
+      detail::explain_root_t<injector, R>::run();
       detail::unreachable();
     }
   }
@@ -361,11 +407,14 @@ class injector {
 /// - The bindings of an lvalue argument can be copied; otherwise compilation fails with a
 ///   static_assert that says to pass it with `std::move`.
 /// - `Opts.max_ctor_arity` is at most 32; otherwise compilation fails with a static_assert.
-/// - With `options{.eager = true}`, every singleton can be built, as `create<T>()` checks.
+/// - With `options{.eager = true}`, every singleton can be built, as `create<T>()` checks;
+///   otherwise compilation fails with the error `create<Key&>()` would give for the first
+///   singleton, in binding order, that can't be built, with the path from it.
 ///
 /// @par Errors
 /// - `TRL-E003`: two bindings in `parts`, or in the modules among them, bind the same key.
-/// - With `options{.eager = true}`, the errors of `injector::create<T>()` for each singleton.
+/// - With `options{.eager = true}`, the errors of `injector::create<T>()`, for the first singleton
+///   that can't be built.
 ///
 /// @par Example
 /// @code
@@ -399,13 +448,18 @@ template <options Opts = options{}, class... Parts>
                   "discovery probes; declare longer constructors with trellis::ctor_traits");
     detail::unreachable();
   } else if constexpr (detail::injector_traits<result>::has_duplicate_keys) {
-    // One static_assert, in the function the user called, before anything uses the binding map
+    // One report, from the function the user called, before anything uses the binding map
     // (ADR-0006). The injector type stays complete: its class doesn't build the map.
+    // The call to raise() fits on one line, which GCC 14 quotes in the error.
     using duplicate = detail::first_duplicate<typename detail::injector_traits<result>::bindings>;
-    static_assert(error::E003<typename duplicate::key, typename duplicate::first_binding,
-                              typename duplicate::second_binding>::reported,
-                  "TRL-E003: duplicate binding for a key: each key may be bound only once per "
-                  "injector");
+    using error = trellis::error::E003<typename duplicate::key, typename duplicate::first_binding,
+                                       typename duplicate::second_binding>;
+    detail::raise<error, detail::error_message::duplicate_binding>();
+    detail::unreachable();
+  } else if constexpr (detail::eager_fails<Opts.eager, result>) {
+    // An eager injector builds every singleton here, and one of them can't be built: the explain
+    // pass reports the first, as create<Key&>() would, before the injector exists.
+    detail::explain_root_t<result, detail::eager_request_t<result>>::run();
     detail::unreachable();
   } else {
     return result(detail::injector_key{}, std::forward<Parts>(parts)...);
@@ -415,7 +469,8 @@ template <options Opts = options{}, class... Parts>
 }  // namespace trellis::inline v1
 
 // Resolution needs the injector's class, which is complete here; including it last lets either
-// header be included first (static/resolve.hpp includes this one).
+// header be included first (static/resolve.hpp includes this one). Resolution includes the
+// explain pass at its own end, for the same reason.
 #include <trellis/static/resolve.hpp>  // IWYU pragma: keep
 
 #endif  // TRELLIS_STATIC_INJECTOR_HPP

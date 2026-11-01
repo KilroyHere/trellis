@@ -1,6 +1,6 @@
 # Resolution and storage
 
-How `injector::create<T>()` works (T1.5): the check that decides at compile time whether a request can be served, the creation code that serves it, the failure pass that reports why it can't, and where the injector keeps the objects it owns. Headers: [`include/trellis/static/resolve.hpp`](../../include/trellis/static/resolve.hpp) (resolution), [`include/trellis/static/storage.hpp`](../../include/trellis/static/storage.hpp) (slots and teardown) and [`include/trellis/static/injector.hpp`](../../include/trellis/static/injector.hpp) (the injector, `create<T>()`, eager mode). Decisions: [ADR-0014](../adr/0014-resolution-memoization-and-cycles.md) (memoization, depth per hop), [ADR-0006](../adr/0006-diagnostics-contract.md) (one error per root cause), [ADR-0005](../adr/0005-state-and-storage.md) (storage, teardown) and [ADR-0012](../adr/0012-threading-model.md) (slots, threads); the slot design is spike [S4](../spikes/S4-storage-threading.md)'s.
+How `injector::create<T>()` works (T1.5): the check that decides at compile time whether a request can be served, the creation code that serves it, and where the injector keeps the objects it owns. The explain pass, which reports why a request can't be served, is [explain-pass.md](explain-pass.md)'s (T1.6). Headers: [`include/trellis/static/resolve.hpp`](../../include/trellis/static/resolve.hpp) (resolution), [`include/trellis/static/storage.hpp`](../../include/trellis/static/storage.hpp) (slots and teardown) and [`include/trellis/static/injector.hpp`](../../include/trellis/static/injector.hpp) (the injector, `create<T>()`, eager mode). Decisions: [ADR-0014](../adr/0014-resolution-memoization-and-cycles.md) (memoization, depth per hop), [ADR-0006](../adr/0006-diagnostics-contract.md) (one error per root cause), [ADR-0005](../adr/0005-state-and-storage.md) (storage, teardown) and [ADR-0012](../adr/0012-threading-model.md) (slots, threads); the slot design is spike [S4](../spikes/S4-storage-threading.md)'s.
 
 `create<R>()` is ADR-0006 item 2's structure, with nothing after the `if`, which MSVC would flag as unreachable (C4702):
 
@@ -12,7 +12,7 @@ detail::create_result_t<R> create() {
     root ctx{*this};
     return ctx.template resolve<R>();   // the creation code
   } else {
-    detail::explain<injector, R>();     // the failure pass: one static_assert per cause
+    detail::explain_root_t<injector, R>::run();  // the explain pass (explain-pass.md): one report
     detail::unreachable();
   }
 }
@@ -29,7 +29,7 @@ template <class R>
 static constexpr bool can_resolve = node_v<typename plan<Injector, R>::node>;
 ```
 
-- `plan<Injector, R>` works out, once per (injector, request), everything that doesn't recurse: the binding of R's key through the binding map, or the implicit unique binding of an unbound class (ADR-0004); the verdict of the request-form table (`request_check`, T1.4); strict mode; for a class the injector builds, whether it is complete and not abstract, whether discovery finds its constructor (`discoverable_v`, T1.3) and whether a by-value request can be copied. Its `node` names what is left: `never_node<reason>` (false, with the reason the failure pass reports), `always_node` (an object a binding holds: true), or the construction of a class with every parameter resolved, `deduced_node<Impl, Ctx, Indices, Aggregate>` or `declared_node<Impl, Ctx, Aggregate, Args...>`.
+- `plan<Injector, R>` works out, once per (injector, request), everything that doesn't recurse: the binding of R's key through the binding map, or the implicit unique binding of an unbound class (ADR-0004); the verdict of the request-form table (`request_check`, T1.4); strict mode; for a class the injector builds, whether it is complete and not abstract, whether discovery finds its constructor (`discoverable_v`, T1.3) and whether a by-value request can be copied. Its `node` names what is left: `never_node<reason>` (false, with the reason the explain pass reports), `always_node` (an object a binding holds: true), or the construction of a class with every parameter resolved, `deduced_node<Impl, Ctx, Indices, Aggregate>` or `declared_node<Impl, Ctx, Aggregate, Args...>`.
 - `node_v<Node>` evaluates a construction node directly. A deduced node is `__is_constructible(Impl, any_arg<Impl, Ctx>...)` (with braces in a requires-expression for an aggregate), whose overload resolution checks each placeholder's constraint `Ctx::can_resolve<T>`: the next hop. A declared node scans `Ctx::can_resolve<Args>...` in a braced list (no fold, plan §8.1 C3). `Ctx` is the class's own context: its binding's lifetime is its parameters' consumer lifetime.
 - `select_node<Plan>()`, read through `decltype`, asks each question only once the ones before it are settled, in `if constexpr` branches, so a class with a missing binding is never probed.
 
@@ -104,45 +104,37 @@ The slots are `slot_store<Mode, Indices, Bindings...>`, one base `slot_holder<J,
 
 **Why.** The access is a template parameter of the context, `context<Injector, Lifetime, Access>`, which changes only `resolve`: `can_resolve<R>` evaluates the same node for every access, and the nodes name checked contexts, so the check is memoized once. An eager injector instantiates the singletons' creation code once, in its constructor.
 
-**Tests:** `tests/unit/create_test.cpp`, `EagerModeBuildsEverySingletonInMakeInjector` and `EagerModeGivesTheStrongGuarantee` (S4's case: node 4 throws, nodes 3, 2, 1 and 0 are destroyed in that order); `tests/compile_fail/create/eager_e012.cpp` (a singleton that can't be built fails in `make_injector`, once).
+A singleton that can't be built is found by `make_injector`, before the injector exists: it runs the explain pass for the first such singleton, in binding order (T1.6, [explain-pass.md](explain-pass.md)), so the constructor's `build_eagerly` only ever builds.
 
-## The failure pass
+**Tests:** `tests/unit/create_test.cpp`, `EagerModeBuildsEverySingletonInMakeInjector` and `EagerModeGivesTheStrongGuarantee` (S4's case: node 4 throws, nodes 3, 2, 1 and 0 are destroyed in that order); `tests/compile_fail/create/eager_e012.cpp` (a singleton that can't be built fails in `make_injector`, once) and `tests/compile_fail/explain/eager_singleton_eight_down.cpp`.
 
-**What it does.** `explain<Injector, R>()` reports why request R can't be served, with one `static_assert` per reason, each in its own `if constexpr` branch with its own literal (ADR-0006 items 2 and 3):
+## The failure pass, replaced by the explain pass (T1.6)
+
+T1.5's failure pass, `explain<Injector, R>()`, followed every failing request with three functions per class and asserted where it found a cause, so the compiler's notes traced the path: 26–31 lines one class down, up to 41 on Clang three classes down. T1.6 replaced it with the explain pass, which follows only the first failing request, steps through declared classes without a function of its own, and reports through `detail::raise`, which is unique to the request rather than to the path: [explain-pass.md](explain-pass.md). What T1.5 decided for each of the plan's reasons stands, as `own_report`:
 
 | The plan's reason | Reported |
 |---|---|
 | keys repeat | nothing: `make_injector` has reported TRL-E003 |
-| the table rejects the request | `report_request_form` (T1.4): TRL-E005 or TRL-E012 |
+| the table rejects the request | the request check's report (T1.4): TRL-E005 or TRL-E012 |
 | an abstract type without a binding | TRL-E001 |
 | an owning request of a type without a binding, under `options{.strict = true}` | TRL-E013 (provisional ID); the table's verdict comes first, so a reference to an unbound type stays TRL-E012 |
 | an abstract type bound to itself (`bind<I>` alone) | TRL-E001, before discovery is asked, with or without a declaration |
 | `std::unique_ptr<Key>` of a derived implementation, `Key`'s destructor not virtual | TRL-E014 (provisional ID) |
-| the class's constructor can't be found, or the class is only declared | discovery's own assertion: TRL-E002, TRL-E004 or TRL-E010 |
+| the class's constructor can't be found, or the class is only declared | discovery's own report: TRL-E002, TRL-E004 or TRL-E010 |
 | a by-value request whose copy can't be made | TRL-E002 |
-| the class's node fails | its failing parameters, each through `explain` |
+| the class's node fails | its first failing parameter, explained in turn |
+| the class is on the path already, or its constructor requests a class that is: a dependency cycle | nothing more: the normal pass has reported the cycle with the compiler's errors (ADR-0014 item 2) |
 
-For a declared class, the failing parameters are the declared requests that `can_resolve` rejects. A deduced class's parameter types can't be listed (ADR-0006, "Deduced mode limits the explain pass"), so the pass builds the class from `explain_arg<Impl, Ctx>` placeholders in a function that is instantiated, never called:
-
-```cpp
-::new (static_cast<void*>(storage.data())) Impl(repeat_t<Is, explain_arg<Impl, Ctx>>{}...);
-```
-
-`explain_arg` has the probe's operator shapes, so overload resolution selects, for each parameter, the operator that `any_arg` selects, with the same deduced request; the selected operator's body is instantiated, and it calls `explain` for its request if that fails.
-
-**Why.** Each `explain<Injector, R>` is instantiated once, so a failing request is reported once however many consumers make it, and each distinct failing request, a root cause, is one error. The assertions are in function bodies, which Clang doesn't mark invalid the way it marks a class whose `static_assert` failed, so later uses add no error (T1.2's and T1.4's lesson); every message has a compile-fail test that uses it at least twice. `explain` always reports when `can_resolve<R>` is false: the plan's reasons cover R itself, and a construction node that fails has a parameter that fails, since with every parameter resolvable the discovered constructor is viable and still the best (the placeholders' constraints only remove candidates). So `create<R>()`'s failing branch never compiles silently.
-
-The static_assert fires inside the descent, so the compiler's instantiation notes trace the path back to `create<T>()`, at about 3 lines per note on Clang and 1 on GCC, capped by the default backtrace limit of 10: 26–31 lines for a failure one hop down, and up to 41 (Clang 18) and 40 (GCC 14) for one three hops down or in eager mode. NFR-07's 40-line budget and the path in the error type are T1.6's.
-
-**Tests:** the 23 tests in `tests/compile_fail/create/`, each of which allows exactly one error line; `tests/unit/resolve_forms_test.cpp`, "FailurePassAgrees": for each of S1's 32 deducible forms, building `consumer<P>` from `explain_arg` asks exactly the request S1 recorded, which `any_arg` resolves (`tests/unit/deduced_test.cpp`), and `owner_arg` accepts the form, so the two placeholders can't drift from the probe's shapes.
+**Tests:** the tests in `tests/compile_fail/create/` and `tests/compile_fail/explain/`, each of which allows exactly one error line; `tests/unit/resolve_forms_test.cpp`, "FailurePassAgrees": for each of S1's 32 deducible forms, building `consumer<P>` from `explain_arg` asks exactly the request S1 recorded, which `any_arg` resolves (`tests/unit/deduced_test.cpp`), and the owner check finds no owner of an incomplete class, so the placeholders can't drift from the probe's shapes.
 
 ## One error, not two
 
-T1.5's review found three requests that gave a second error beside the failure pass's one; each is now one error.
+T1.5's review found three requests that gave a second error beside the failure pass's one (now the explain pass's), and T1.6's review a fourth; each is now one error, or none.
 
 - **A by-value request of an abstract class,** such as `create<IShape>()`, unbound, bound to an implementation or bound to itself. A function can't be declared to return an abstract class, so naming `request_result_t<R>` as `create<R>()`'s return type was an error of its own. `create_result_t<R>` is `void` where the result isn't `returnable` (an abstract or incomplete class, an array, a function type, or a `std::unique_ptr` to an incomplete class, which a call can't return as its temporary can't be destroyed); no such request can be served, so the valid ones keep their type. `returnable` asks `std::is_abstract_v` only after `complete_class`, in a concept's conjunction, which checks its second constraint only when the first holds. Tests: `e001_root_abstract_by_value.cpp`, `e002_root_abstract_bound_by_value.cpp` and `e001_root_abstract_bound_to_itself_by_value.cpp`.
 - **A type that is only declared,** such as the pointee of a `database*` parameter. The request check asked `std::is_abstract_v<Key>` of every unbound key, which is an error for an incomplete one, and the cascade reached the plan's `if constexpr` chain. `complete_abstract<Key>` (`static/validate.hpp`) checks completeness first, the same way, so such a request goes on to the table (TRL-E012 for a pointer or reference) or to discovery (its one TRL-E002, "it is incomplete here"). Test: `e012_incomplete_by_pointer.cpp`.
-- **A parameter `std::unique_ptr<X>` of an incomplete `X`.** Building the consumer from `explain_arg` instantiates the parameter's destructor, and `std::default_delete<X>` asserts that `X` is complete: a second error after discovery's. So `explain_node` first asks, in an unevaluated construction, whether the class builds from `owner_arg<Impl, Ctx, false>`, a placeholder with the probe's shapes whose by-value operator refuses such an owner (`owns_incomplete`). If it doesn't, the class has one, and the pass reports through `owner_arg<Impl, Ctx, true>` instead, unevaluated too: that operator's constraint calls `owner_converts`, which takes the address of `explain<Injector, T>` for the owner's request `T`, and the odr-use instantiates it, so the incomplete class is reported once, by the same specialization a by-value parameter would reach, and no destructor is instantiated. The class's other failing parameters are reported once `X` is complete. Test: `e002_incomplete_unique_ptr_parameter.cpp`, with the request at the root, as a parameter and as an aggregate's member.
+- **A parameter `std::unique_ptr<X>` of an incomplete `X`.** Building the consumer from placeholders instantiates the parameter's destructor, and `std::default_delete<X>` asserts that `X` is complete: a second error after discovery's. So the explain pass looks for such a parameter first, with `owner_probe`, a placeholder with the probe's shapes whose by-value operator refuses an owner of an incomplete class (`owns_incomplete`), and reports it rather than the first failing parameter: the class is built only unevaluated, with an `owner_reporter` at that parameter, whose operator's constraint raises the owner's report, discovery's TRL-E002 for `X`, so no destructor is instantiated ([explain-pass.md](explain-pass.md); T1.6 replaced T1.5's `owner_arg`, which did the same in the failure pass). The class's other failing parameters are reported once `X` is complete. Test: `e002_incomplete_unique_ptr_parameter.cpp`, with the request at the root, as a parameter and as an aggregate's member.
+- **A binding of an object whose type is only declared** (`.to_ptr(p)`, `.to_ref(x)`; T1.6's review, T1.7's finding). The plan asked `std::is_constructible_v<Key, const Impl&>` beside `form == value` in one condition, which instantiates both operands, so every request of the binding was an error of its own. Each question now has its own `if constexpr` branch: a reference or pointer request is served, and only a by-value request asks whether the key can be copied, after `complete_class<Key>`: TRL-E002 for an incomplete key (`tests/unit/create_test.cpp`, `IncompleteTypesBoundByPointerOrReference`; `tests/compile_fail/create/e002_copy_of_incomplete_object.cpp`).
 
 ## Choices for types without a constructor to discover
 
@@ -152,7 +144,6 @@ T1.5's review found three requests that gave a second error beside the failure p
 
 ## Open points
 
-- T1.6: the path from the root, NFR-07's 40 lines for deep failures (the notes above), and goldens. Forms of one missing binding, such as `sensor&`, `const sensor&` and `sensor*`, are distinct requests and so distinct errors.
 - A `std::variant<X, int>` parameter is rejected when exactly one alternative resolves: the variant's converting constructor then accepts the placeholder too, and the conversion is ambiguous (`resolve_forms_test.cpp`, row 35 on the injector of singletons). The check and the creation code agree on it; it is a limit of the same kind as S1's rows 20, 33 and 34.
 - Phase 2: R004 in the slot's slow path (the frame stack of ADR-0012 item 5), the captive rule on the consumer lifetime already in the key, and `lazy`, whose re-entry the slots must report.
 - T1.11: the chain test, and the depth on MSVC, where `config.hpp` gives the builtin untested.

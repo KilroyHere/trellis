@@ -1,26 +1,26 @@
 # TRL-E005: Requested form incompatible with the lifetime
 
 - **Detected:** at compile time
-- **Since:** T1.4 (unreleased; v0.1)
-- **Raised by:** `injector::create<T>()`, for its request and for every constructor parameter below it, and `trellis::make_injector` with `options{.eager = true}`, for each singleton (T1.5); both through the request check of the static engine, `trellis::detail::report_request_form` (T1.4)
-- **Tests:** through `create<T>()`: the four `e005_*.cpp` tests in [`tests/compile_fail/create/`](../../tests/compile_fail/create/), at the root, one hop down in a deduced class and in a declared one, each used twice. Through the check's entry point: the seven `e005_*.cpp` tests in [`tests/compile_fail/static/`](../../tests/compile_fail/static/), one per reason below; every cell of the table in [`tests/unit/request_forms_test.cpp`](../../tests/unit/request_forms_test.cpp), and again end to end in [`tests/unit/injector_test.cpp`](../../tests/unit/injector_test.cpp). Golden tests come with T1.6.
+- **Since:** T1.4 (unreleased; v0.1); with the path from the root since T1.6
+- **Raised by:** `injector::create<T>()`, for its request and for every constructor parameter below it, and `trellis::make_injector` with `options{.eager = true}`, for the first singleton it can't build (T1.5); both through the explain pass (T1.6), which raises the request check's report, as `trellis::detail::report_request_form` (T1.4) does
+- **Tests:** through `create<T>()`: the four `e005_*.cpp` tests in [`tests/compile_fail/create/`](../../tests/compile_fail/create/), at the root, one hop down in a deduced class and in a declared one, each used twice, and [`tests/compile_fail/explain/e005_through_declared_two_roots.cpp`](../../tests/compile_fail/explain/e005_through_declared_two_roots.cpp), with the path and NFR-07's 40 lines. Through the check's entry point: the seven `e005_*.cpp` tests in [`tests/compile_fail/static/`](../../tests/compile_fail/static/), one per reason below; every cell of the table in [`tests/unit/request_forms_test.cpp`](../../tests/unit/request_forms_test.cpp), and again end to end in [`tests/unit/injector_test.cpp`](../../tests/unit/injector_test.cpp). The `explain/` tests have goldens for gcc-13, gcc-14, clang-18 and clang-20, in `tests/diagnostics_golden/<compiler>/explain/`.
 
 ## What you see
 
-GCC puts the ID and the reason on the error line, and the error type in the note after it:
+GCC puts the ID and the reason on the error line, and the error type in the note after it (gcc-13, normalized as in the goldens):
 
 ```text
-<src>/include/trellis/static/validate.hpp:L:C: error: static assertion failed: TRL-E005: request form incompatible with the lifetime: nothing would keep the object alive; bind it in trellis::singleton, or request it by value or as std::unique_ptr
-<src>/include/trellis/static/validate.hpp:L:C: note: 'trellis::error::E005<{anonymous}::sensor, trellis::error::request<{anonymous}::sensor&>, trellis::v1::unique_t>::reported' evaluates to false
+<src>/include/trellis/diagnostics/errors.hpp:L:C: error: static assertion failed: TRL-E005: request form incompatible with the lifetime: nothing would keep the object alive; bind it in trellis::singleton, or request it by value or as std::unique_ptr
+<src>/include/trellis/diagnostics/errors.hpp:L:C: note: 'trellis::error::E005<app::timer, trellis::error::request<app::timer&>, trellis::v1::unique_t>::reported' evaluates to false
 ```
 
 Clang puts both on the error line:
 
 ```text
-<src>/include/trellis/static/validate.hpp:L:C: error: static assertion failed due to requirement 'error::E005<(anonymous namespace)::sensor, trellis::error::request<(anonymous namespace)::sensor &>, trellis::unique_t>::reported': TRL-E005: request form incompatible with the lifetime: nothing would keep the object alive; bind it in trellis::singleton, or request it by value or as std::unique_ptr
+<src>/include/trellis/diagnostics/errors.hpp:L:C: error: static assertion failed due to requirement 'trellis::error::E005<app::timer, trellis::error::request<app::timer &>, trellis::unique_t>::reported': TRL-E005: request form incompatible with the lifetime: nothing would keep the object alive; bind it in trellis::singleton, or request it by value or as std::unique_ptr
 ```
 
-The error type is `E005<Key, request<R>, Lifetime>`: the requested key, the request as the consumer spelled it, and the lifetime of the key's binding. Until T1.6 adds the path from the root, the consumer appears only in the compiler's instantiation notes.
+The error type is `E005<Key, request<R>, Lifetime>`: the requested key, the request as the consumer spelled it, and the lifetime of the key's binding. The path from the root to the request is in the instantiation note of `trellis::detail::explain_cause`, the step that reports: Clang's second note, after the error line, and GCC's first "required from" line, before it (T1.6): a `trellis::error::path<...>` of the classes whose constructors lead to it, and the 1-based index of the parameter that makes the request. For the test above, `path<dashboard, scheduler>` and parameter 2: `create<dashboard>()` needs a `scheduler&`, whose declared constructor's second parameter is the `timer&`. A request that several roots or consumers fail on is reported once ([TRL-E001](TRL-E001.md) shows the note).
 
 ## Cause
 

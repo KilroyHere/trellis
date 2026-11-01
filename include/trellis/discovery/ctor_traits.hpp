@@ -256,11 +256,17 @@ template <class T, class... Args>
 inline constexpr bool ctor_matches_v<T, ctor<Args...>> =
     detail::builds_from<std::remove_cv_t<T>, Args...>();
 
+// declaration_message<T>: the TRL-E002 message for a declaration that doesn't match how a T will
+// be built. Aggregates get a message of their own, as ADR-0006 gives each kind of failure its own
+// literal. The explain pass reads it too (diagnostics/explain.hpp), to raise the same report.
+template <class T>
+inline constexpr error_message declaration_message =
+    std::is_aggregate_v<T> ? error_message::declaration_aggregate : error_message::declaration;
+
 // checked_ctor<T, Declared>(): a Declared, once the declaration is known to match how a T will be
-// built. When it doesn't, the static_assert of the branch that applies is the one error, rendered
-// as ADR-0006 item 3 says: the condition names the error type, which carries T and the
-// declaration, and the message starts with the ID. Aggregates get a message of their own, as
-// ADR-0006 gives each kind of failure its own literal.
+// built. When it doesn't, raise() reports TRL-E002, rendered as ADR-0006 item 3 says: the
+// condition names the error type, which carries T and the declaration, and the message starts with
+// the ID (diagnostics/errors.hpp).
 //
 // It is a function with a deduced return type, read through decltype, and not a class template:
 // Clang marks a class template specialization whose static_assert failed as invalid, and then
@@ -272,15 +278,7 @@ inline constexpr bool ctor_matches_v<T, ctor<Args...>> =
 template <class T, class Declared>
 constexpr auto checked_ctor() noexcept {
   if constexpr (!ctor_matches_v<T, Declared>) {
-    if constexpr (std::is_aggregate_v<T>) {
-      static_assert(trellis::error::E002<T, Declared>::reported,
-                    "TRL-E002: type not constructible: its trellis::ctor<...> declaration doesn't "
-                    "brace-initialize the aggregate");
-    } else {
-      static_assert(trellis::error::E002<T, Declared>::reported,
-                    "TRL-E002: type not constructible: its trellis::ctor<...> declaration matches "
-                    "no constructor");
-    }
+    detail::raise<trellis::error::E002<T, Declared>, declaration_message<T>>();
   }
   return Declared{};
 }

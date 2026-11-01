@@ -248,7 +248,7 @@ S1's limits (S1 §3.5, ADR-0003 items 5 and 7), plus the aggregate member check.
 
 The fix for every row is an explicit declaration (a `ctor_traits` specialization, a member alias, or a binding's `.with_ctor<...>()`), or for TRL-E010 a higher `max_ctor_arity`; the error pages give the details.
 
-**Resolution failures, until T1.6.** When a parameter of the discovered constructor can't be resolved, the engine's normal pass sees `deduced_constructible_v` false and doesn't build (T1.5); its explain pass will name the parameter with an ID (T1.6, ADR-0006). Building directly, as the two tests above do, gives the compiler's error on the deleted twin, which names the request: on GCC, `use of deleted function '... any_arg<Consumer, Ctx>::operator T() [with T = int; ...]'`; on Clang, `conversion function from '...any_arg<...>' to 'int' invokes a deleted function`. That is the documented message the two tests check.
+**Resolution failures.** When a parameter of the discovered constructor can't be resolved, the engine's normal pass sees `deduced_constructible_v` false and doesn't build (T1.5); its explain pass finds the first such parameter and reports its request with an ID and the path from the root (T1.6, [explain-pass.md](explain-pass.md)). Building directly, as the two tests above do, gives the compiler's error on the deleted twin, which names the request: on GCC, `use of deleted function '... any_arg<Consumer, Ctx>::operator T() [with T = int; ...]'`; on Clang, `conversion function from '...any_arg<...>' to 'int' invokes a deleted function`. That is the documented message the two tests check.
 
 ## Cost
 

@@ -25,6 +25,8 @@
 
 #include <gtest/gtest.h>
 
+#include "opaque_host.hpp"
+
 namespace {
 
 using trellis::bind;
@@ -171,6 +173,24 @@ TEST_F(Create, ExternalObjectsAreTheCallers) {
   // Constness carries through: a const object is served through references to const only.
   EXPECT_EQ(&injector.create<const value_part&>(), &const_object);
   EXPECT_EQ(injector.create<const value_part*>(), &const_object);
+}
+
+TEST_F(Create, IncompleteTypesBoundByPointerOrReference) {
+  // opaque_host::handle is only declared in this file. A binding of an object of it serves the
+  // requests that need no copy: the plan asks whether the key can be copied for a by-value
+  // request only (its by-value request is TRL-E002, compile_fail/create/
+  // e002_copy_of_incomplete_object.cpp). Before T1.6's review it asked for every request, which
+  // made each one a compiler error (T1.7's finding).
+  opaque_host::handle& object = opaque_host::instance();
+  opaque_host::handle* const address = std::addressof(object);
+  auto by_pointer = make_injector(bind<opaque_host::handle>.to_ptr(address));
+  EXPECT_EQ(by_pointer.create<opaque_host::handle*>(), address);
+  EXPECT_EQ(by_pointer.create<const opaque_host::handle*>(), address);
+  EXPECT_EQ(std::addressof(by_pointer.create<opaque_host::handle&>()), address);
+  EXPECT_EQ(opaque_host::id(by_pointer.create<const opaque_host::handle&>()), 42);
+  auto by_reference = make_injector(bind<opaque_host::handle>.to_ref(object));
+  EXPECT_EQ(std::addressof(by_reference.create<opaque_host::handle&>()), address);
+  EXPECT_EQ(by_reference.create<opaque_host::handle*>(), address);
 }
 
 TEST_F(Create, SharedExternalObjectsAreSharedWithTheCaller) {

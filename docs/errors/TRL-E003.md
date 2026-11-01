@@ -3,26 +3,26 @@
 - **Detected:** at compile time
 - **Since:** T1.4 (unreleased; v0.1)
 - **Raised by:** `trellis::make_injector`
-- **Tests:** [`tests/compile_fail/static/e003_duplicate_across_modules.cpp`](../../tests/compile_fail/static/e003_duplicate_across_modules.cpp), [`e003_same_binding_twice.cpp`](../../tests/compile_fail/static/e003_same_binding_twice.cpp), and [`e003_then_report_request_form.cpp`](../../tests/compile_fail/static/e003_then_report_request_form.cpp) and [`e003_then_request_check.cpp`](../../tests/compile_fail/static/e003_then_request_check.cpp), which use the injector afterwards and still get this one error; the duplicate checks in [`tests/unit/injector_test.cpp`](../../tests/unit/injector_test.cpp). Golden tests come with T1.6.
+- **Tests:** [`tests/compile_fail/static/e003_duplicate_across_modules.cpp`](../../tests/compile_fail/static/e003_duplicate_across_modules.cpp), [`e003_same_binding_twice.cpp`](../../tests/compile_fail/static/e003_same_binding_twice.cpp), and [`e003_then_report_request_form.cpp`](../../tests/compile_fail/static/e003_then_report_request_form.cpp) and [`e003_then_request_check.cpp`](../../tests/compile_fail/static/e003_then_request_check.cpp), which use the injector afterwards and still get this one error; [`tests/compile_fail/explain/e003_two_injectors.cpp`](../../tests/compile_fail/explain/e003_two_injectors.cpp), two injectors of different types that repeat the same two bindings, one error; the duplicate checks in [`tests/unit/injector_test.cpp`](../../tests/unit/injector_test.cpp). The `explain/` tests have goldens for gcc-13, gcc-14, clang-18 and clang-20, in `tests/diagnostics_golden/<compiler>/explain/`.
 
 ## What you see
 
 GCC puts the ID on the error line and the error type, which names the key and both bindings, in the note after it:
 
 ```text
-<src>/include/trellis/static/injector.hpp:L:C: error: static assertion failed: TRL-E003: duplicate binding for a key: each key may be bound only once per injector
-<src>/include/trellis/static/injector.hpp:L:C: note: 'trellis::error::E003<{anonymous}::logger, trellis::v1::binding<{anonymous}::logger, {anonymous}::console_logger, trellis::v1::singleton_t, false>, trellis::v1::binding<{anonymous}::logger, {anonymous}::file_logger, trellis::v1::unique_t, false> >::reported' evaluates to false
+<src>/include/trellis/diagnostics/errors.hpp:L:C: error: static assertion failed: TRL-E003: duplicate binding for a key: each key may be bound only once per injector
+<src>/include/trellis/diagnostics/errors.hpp:L:C: note: 'trellis::error::E003<{anonymous}::logger, trellis::v1::binding<{anonymous}::logger, {anonymous}::console_logger, trellis::v1::singleton_t, false>, trellis::v1::binding<{anonymous}::logger, {anonymous}::file_logger, trellis::v1::unique_t, false> >::reported' evaluates to false
 ```
 
 Clang puts both on the error line:
 
 ```text
-<src>/include/trellis/static/injector.hpp:L:C: error: static assertion failed due to requirement 'error::E003<(anonymous namespace)::logger, trellis::binding<(anonymous namespace)::logger, (anonymous namespace)::console_logger, trellis::singleton_t, false>, trellis::binding<(anonymous namespace)::logger, (anonymous namespace)::file_logger, trellis::unique_t, false>>::reported': TRL-E003: duplicate binding for a key: each key may be bound only once per injector
+<src>/include/trellis/diagnostics/errors.hpp:L:C: error: static assertion failed due to requirement 'trellis::error::E003<(anonymous namespace)::logger, trellis::binding<(anonymous namespace)::logger, (anonymous namespace)::console_logger, trellis::singleton_t, false>, trellis::binding<(anonymous namespace)::logger, (anonymous namespace)::file_logger, trellis::unique_t, false>>::reported': TRL-E003: duplicate binding for a key: each key may be bound only once per injector
 ```
 
 The error type is `E003<Key, First, Second>`: the key bound twice, then its first two bindings, in the order `make_injector` collected them. Each binding shows the key, the implementation and the lifetime, not the module it came from: modules are values without names of their own, and `make_injector` flattens them before it checks the keys. The instantiation note after the error lists `make_injector`'s argument types, so a named module, a struct derived from one, appears there by its name.
 
-Using the injector afterwards adds no error: the engine checks no request against an injector whose keys repeat.
+Using the injector afterwards adds no error: the engine checks no request against an injector whose keys repeat. Two injectors that repeat the same two bindings are one error too: the report is unique to the key and the two bindings (T1.6).
 
 ## Cause
 

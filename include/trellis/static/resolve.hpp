@@ -6,7 +6,7 @@
 // Internal (trellis::detail): the static engine, not user API. docs/internals/
 // resolution-and-storage.md explains each technique and lists its tests.
 //
-// create<R>() is `if constexpr (resolvable) { creation code } else { failure pass }` (ADR-0006
+// create<R>() is `if constexpr (resolvable) { creation code } else { explain pass }` (ADR-0006
 // item 2), from three pieces:
 //
 //   context<Injector, L>::can_resolve<R>  The check: whether request R, made by a consumer whose
@@ -18,8 +18,9 @@
 //   context<Injector, L>::resolve<R>()    The creation code. create<R>() instantiates it only
 //                                          after the check passed, so a graph that fails
 //                                          instantiates none of it, and nothing cascades.
-//   explain<Injector, R>()                The failure pass: follows each failing request to its
-//                                          cause and reports the cause once (T1.6 adds the path).
+//   explain_root_t<Injector, R>::run()    The explain pass (diagnostics/explain.hpp): follows the
+//                                          first failing request down to its cause and reports it
+//                                          once, with the path from the root (T1.6).
 //
 // plan<Injector, R> works out, once per (injector, request), what serves R: its binding, or the
 // implicit unique binding of an unbound class (ADR-0004), the verdict of the request-form table
@@ -38,7 +39,6 @@
 #define TRELLIS_STATIC_RESOLVE_HPP
 
 #include <trellis/config.hpp>
-#include <trellis/diagnostics/errors.hpp>
 #include <trellis/discovery/ctor_traits.hpp>
 #include <trellis/discovery/deduced.hpp>
 #include <trellis/dsl/bind.hpp>
@@ -109,7 +109,8 @@ struct served_binding<unbound<Key>> {
 // ---- nodes: what the check evaluates ----------------------------------------------------------
 
 // Why a request can't be served, as far as its own plan can tell, without looking at the
-// dependencies. explain() reports each reason with its own static_assert.
+// dependencies. The explain pass reports each reason with its own message
+// (diagnostics/explain.hpp, own_report).
 enum class failure : unsigned char {
   none,               // the plan finds nothing wrong; the node decides
   keys_repeat,        // make_injector has reported a key bound twice (TRL-E003)
@@ -212,8 +213,14 @@ constexpr auto select_node() noexcept {
     return never_node<failure::strict_unbound>{};
   } else if constexpr (served::kind != binding_kind::constructed) {
     // The binding holds the object. A by-value request (allowed with .allow_copy(), and always
-    // for a value binding) takes a copy of it, as const.
-    if constexpr (form == request_form::value && !std::is_constructible_v<key, const impl&>) {
+    // for a value binding) takes a copy of it, as const. An incomplete key can't be copied, and
+    // std::is_constructible of one is an error of its own, so std::conjunction asks it only of a
+    // complete key: the operands of && are all instantiated, whatever the first one's value, and
+    // a binding of an incomplete type (.to_ptr(), .to_ref()) would fail every request instead of
+    // serving its references and pointers (T1.6 review, T1.7's finding).
+    if constexpr (form == request_form::value &&
+                  !std::conjunction_v<std::bool_constant<complete_class<key>>,
+                                      std::is_constructible<key, const impl&>>) {
       return never_node<failure::copy>{};
     } else {
       return always_node{};
@@ -475,199 +482,15 @@ struct build<declared_node<Impl, Ctx, true, Args...>, Access> {
 
 TRELLIS_PLACEHOLDER_CONVERSIONS_END
 
-// ---- the failure pass -------------------------------------------------------------------------
-
-// explain_parameter<Ctx, R>(): reports why request R, made in context Ctx, fails, if it does.
-template <class Ctx, class R>
-void explain_parameter() {
-  if constexpr (!Ctx::template can_resolve<R>) {
-    detail::explain<typename Ctx::injector_type, R>();
-  }
-}
-
-// explain_arg<Consumer, Ctx>: the placeholder of the failure pass. It has the shapes of the
-// discovery probe, so overload resolution selects, for each parameter of the deduced constructor,
-// the operator that any_arg selects, and deduces the same request (discovery/deduced.hpp). The
-// selected operator's body is instantiated, because the failure pass builds the class in a function
-// that is instantiated (never called), and it reports the request if it fails. That names a
-// deduced parameter's request without enumerating the parameters, which deduction can't
-// (ADR-0006, "Deduced mode limits the explain pass"). The bodies call explain themselves rather
-// than through explain_parameter, as each function between two explains is one more line of
-// instantiation notes in the error. On GCC 13 it declares the probe's deleted twins too, for the
-// reason config.hpp gives for TRELLIS_PROBE_DECLARES_TWINS.
-template <class Consumer, class Ctx>
-struct explain_arg {
-  template <class T>
-    requires not_self<Consumer, T>
-  operator T() {
-    if constexpr (!Ctx::template can_resolve<T>) {
-      detail::explain<typename Ctx::injector_type, T>();
-    }
-    detail::unreachable();
-  }
-  template <class T>
-    requires not_self<Consumer, T>
-  operator T&() const {
-    if constexpr (!Ctx::template can_resolve<T&>) {
-      detail::explain<typename Ctx::injector_type, T&>();
-    }
-    detail::unreachable();
-  }
-#if TRELLIS_PROBE_DECLARES_TWINS
-  template <class T>
-    requires not_self<Consumer, T> && twin_tag_request<T>
-  operator T() = delete;
-  template <class T>
-    requires not_self<Consumer, T> && twin_tag_request<T>
-  operator T&() const = delete;
-#endif
-};
-
-// owner_converts<Report, Ctx, T>(): whether owner_arg's by-value operator converts to T: to
-// anything but an owner of an incomplete class (owns_incomplete, static/injector.hpp). With
-// Report it converts to that too, after naming the failure pass of the request T: the odr-use
-// instantiates explain<Injector, T>, which reports it (discovery's TRL-E002 for the incomplete
-// class), once, as it is the same specialization a by-value parameter's explain_arg would call.
-template <bool Report, class Ctx, class T>
-constexpr bool owner_converts() noexcept {
-  if constexpr (!owns_incomplete<T>) {
-    return true;
-  } else if constexpr (Report) {
-    static_cast<void>(&detail::explain<typename Ctx::injector_type, T>);
-    return true;
-  } else {
-    return false;
-  }
-}
-
-// owner_arg<Consumer, Ctx, Report>: the placeholder of the failure pass for a class with a
-// parameter that owns an incomplete class, std::unique_ptr<X> by value with X only declared.
-// Building that class from explain_arg would instantiate the parameter's destructor, whose
-// assertion that X is complete is a second error after the request's own (T1.5's review). So
-// explain_node first asks, in an unevaluated construction from owner_arg<..., false>, whose
-// by-value operator refuses such a parameter, whether the class has one; if it has, it reports
-// through owner_arg<..., true>'s constraint instead of building, unevaluated too, so that no
-// destructor is instantiated. Its other failing parameters are reported once X is complete. The
-// operators have the probe's shapes and twins, so that overload resolution deduces the requests
-// explain_arg would (discovery/deduced.hpp); they are only declared.
-template <class Consumer, class Ctx, bool Report>
-struct owner_arg {
-  template <class T>
-    requires not_self<Consumer, T> && (detail::owner_converts<Report, Ctx, T>())
-  operator T();
-  template <class T>
-    requires not_self<Consumer, T>
-  operator T&() const;
-#if TRELLIS_PROBE_DECLARES_TWINS
-  template <class T>
-    requires not_self<Consumer, T> && twin_tag_request<T>
-  operator T() = delete;
-  template <class T>
-    requires not_self<Consumer, T> && twin_tag_request<T>
-  operator T&() const = delete;
-#endif
-};
-
-// explain_node<Node>::run(): reports the failing parameters of a class whose own plan is fine.
-// Each failing parameter is a cause of its own, and explain<Injector, R> is instantiated once per
-// request, so a request that fails on several paths is reported once.
-template <class Node>
-struct explain_node;
-
-TRELLIS_PLACEHOLDER_CONVERSIONS_BEGIN
-
-template <class Impl, class Ctx, std::size_t... Is>
-struct explain_node<deduced_node<Impl, Ctx, std::index_sequence<Is...>, false>> {
-  static void run() {
-    if constexpr (requires { Impl(repeat_t<Is, owner_arg<Impl, Ctx, false>>{}...); }) {
-      alignas(Impl) std::array<std::byte, sizeof(Impl)> storage{};
-      ::new (static_cast<void*>(storage.data())) Impl(repeat_t<Is, explain_arg<Impl, Ctx>>{}...);
-    } else {
-      static_cast<void>(requires { Impl(repeat_t<Is, owner_arg<Impl, Ctx, true>>{}...); });
-    }
-  }
-};
-
-template <class Impl, class Ctx, std::size_t... Is>
-struct explain_node<deduced_node<Impl, Ctx, std::index_sequence<Is...>, true>> {
-  static void run() {
-    if constexpr (requires { Impl{repeat_t<Is, owner_arg<Impl, Ctx, false>>{}...}; }) {
-      alignas(Impl) std::array<std::byte, sizeof(Impl)> storage{};
-      ::new (static_cast<void*>(storage.data())) Impl{repeat_t<Is, explain_arg<Impl, Ctx>>{}...};
-    } else {
-      static_cast<void>(requires { Impl{repeat_t<Is, owner_arg<Impl, Ctx, true>>{}...}; });
-    }
-  }
-};
-
-TRELLIS_PLACEHOLDER_CONVERSIONS_END
-
-template <class Impl, class Ctx, bool Aggregate, class... Args>
-struct explain_node<declared_node<Impl, Ctx, Aggregate, Args...>> {
-  static void run() {
-    [[maybe_unused]] const std::array<bool, sizeof...(Args) + 1> explored{
-        true, (detail::explain_parameter<Ctx, Args>(), true)...};
-  }
-};
-
-// explain<Injector, R>(): reports why request R of the injector can't be served, each cause with
-// its own static_assert in its own if-constexpr branch, whose literal starts with the ID (ADR-0006
-// items 2 and 3). It is a function, instantiated once per (injector, request), so a cause that
-// several requests lead to is reported once; and its assertions are in its body, which Clang,
-// unlike a class whose static_assert failed, doesn't mark invalid, so later uses add no error.
-// It must report something whenever can_resolve<R> is false, as create<R>() then relies on it to
-// stop the compilation: the first branches cover R's own plan, and otherwise the node failed, so
-// one of the class's requests fails, which explain_node finds.
-template <class Injector, class R>
-void explain() {
-  using p = plan<Injector, R>;
-  using node = typename p::node;
-  constexpr failure reason = failure_of<node>;
-  if constexpr (reason == failure::keys_repeat) {
-    // make_injector has reported TRL-E003: nothing more to say.
-  } else if constexpr (reason == failure::request_form) {
-    detail::report_request_form<Injector, R>();
-  } else if constexpr (reason == failure::no_binding) {
-    static_assert(trellis::error::E001<typename p::key, trellis::error::request<R>>::reported,
-                  "TRL-E001: no binding for an abstract type: bind it to an implementation with "
-                  "trellis::bind<I>.to<C>()");
-  } else if constexpr (reason == failure::strict_unbound) {
-    static_assert(trellis::error::E013<typename p::key, trellis::error::request<R>>::reported,
-                  "TRL-E013: unbound concrete type requested in strict mode: options{.strict = "
-                  "true} turns off the implicit unique binding; bind the type, such as "
-                  "trellis::bind<T> for a new object per request");
-  } else if constexpr (reason == failure::no_implementation) {
-    static_assert(trellis::error::E001<typename p::key, trellis::error::request<R>>::reported,
-                  "TRL-E001: no binding for an abstract type: bind<I> alone binds it to itself, "
-                  "and nothing implements it; name the implementation with "
-                  "trellis::bind<I>.to<C>()");
-  } else if constexpr (reason == failure::discovery) {
-    // Discovery's own assertion: TRL-E002, TRL-E004 or TRL-E010, once per class and bound.
-    static_cast<void>(sizeof(discovered_ctor_t<typename p::impl, no_ctor_declared, p::max_arity>));
-  } else if constexpr (reason == failure::copy) {
-    static_assert(trellis::error::E002<typename p::key, trellis::error::request<R>>::reported,
-                  "TRL-E002: type not constructible: a by-value request takes a copy of the bound "
-                  "object, or a new object of the bound class as the key, and the key can't be "
-                  "constructed from it; request a reference or a smart pointer instead");
-  } else if constexpr (reason == failure::unsafe_delete) {
-    static_assert(trellis::error::E014<typename p::key, trellis::error::request<R>,
-                                       typename p::impl>::reported,
-                  "TRL-E014: owning request would delete the implementation through a base class "
-                  "whose destructor isn't virtual: std::unique_ptr<I> deletes through I; give I a "
-                  "virtual destructor, or request std::shared_ptr<I>, which deletes the class it "
-                  "was made for");
-  } else {
-    explain_node<node>::run();
-  }
-}
-
 // ---- eager mode -------------------------------------------------------------------------------
 
 // build_eagerly(injector): builds every singleton of the injector, for options{.eager = true}
 // (plan §7.5, ADR-0012 item 1). Each binding the injector owns is requested by reference, in
 // binding order; a request builds its dependencies first, so the singletons are built in
-// dependency order, and the teardown stack records the order they were built in. A singleton that
-// can't be built is reported as create<Key&>() would report it.
+// dependency order, and the teardown stack records the order they were built in. make_injector
+// has checked that every singleton can be built (eager_fails, static/injector.hpp), and reported
+// the first that can't; the guard below only keeps a failing request's creation code from being
+// instantiated.
 template <class Injector, class Binding>
 bool build_eagerly_one([[maybe_unused]] Injector& owner) {
   if constexpr (owns_object<Binding>) {
@@ -676,8 +499,6 @@ bool build_eagerly_one([[maybe_unused]] Injector& owner) {
     if constexpr (root::template can_resolve<request>) {
       root ctx{owner};
       static_cast<void>(ctx.template resolve<request>());
-    } else {
-      detail::explain<Injector, request>();
     }
   }
   return true;
@@ -693,5 +514,10 @@ void build_eagerly(Injector& owner, type_list<Bindings...> /*bindings*/) {
 }
 
 }  // namespace trellis::inline v1::detail
+
+// The explain pass, which create<T>() and make_injector run when the check fails, needs the plans
+// and nodes above; including it last lets either header be included first
+// (diagnostics/explain.hpp includes this one).
+#include <trellis/diagnostics/explain.hpp>  // IWYU pragma: keep
 
 #endif  // TRELLIS_STATIC_RESOLVE_HPP

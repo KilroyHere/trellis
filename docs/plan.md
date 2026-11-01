@@ -861,8 +861,8 @@ The runtime engine needs dependency lists for classes discovered by deduction. S
 
 **C++20 rendering**
 
-- `create<T>()` checks the memoized analysis. On failure, the branch for the failing graph instantiates exactly one `static_assert(trellis::error::E001<IRepository, request<std::shared_ptr<IRepository>>, path<App, Service>>::reported, "TRL-E001: no binding for an abstract type");` and nothing else (amended by ADR-0006, 2026-10-30: the literal was added).
-- What each compiler prints (amended by ADR-0006, 2026-10-30; the draft said all three print the condition's template arguments on the first lines). Clang puts the condition, with the type, the request and the path, on the first error line. GCC puts the assertion's literal on the error line and the condition in the attached note. MSVC is expected to print only the literal (untested), so the type would appear only in its "see reference" notes. That is why the literal carries the ID.
+- `create<T>()` checks the memoized analysis. On failure, the branch for the failing graph instantiates exactly one `static_assert(trellis::error::E001<IRepository, request<std::shared_ptr<IRepository>>, path<App, Service>>::reported, "TRL-E001: no binding for an abstract type");` and nothing else (amended by ADR-0006, 2026-10-30: the literal was added). (Amended by ADR-0006, 2026-11-01, T1.6, provisional: the condition is `trellis::error::E001<IRepository, request<std::shared_ptr<IRepository>>>::reported`, raised once per injector and request by one function template, `detail::raise`, whatever the root; the path, `path<App, Service>` with the parameter index, is in the instantiation note of the explain step that reports, Clang's second note and GCC's first "required from" line.)
+- What each compiler prints (amended by ADR-0006, 2026-10-30; the draft said all three print the condition's template arguments on the first lines). Clang puts the condition, with the type, the request and the path, on the first error line. GCC puts the assertion's literal on the error line and the condition in the attached note. MSVC is expected to print only the literal (untested), so the type would appear only in its "see reference" notes. That is why the literal carries the ID. (Amended by ADR-0006, 2026-11-01, T1.6, provisional: the condition names the type and the request; the path is in an instantiation note, Clang's second and GCC's first "required from" line, and MSVC's first note names the error type, through `detail::raise`.)
 
 **C++26 rendering** (`__cpp_static_assert >= 202306L`, P2741R3)
 
@@ -883,6 +883,8 @@ error: static assertion failed: trellis [TRL-E001]: no binding for abstract type
 2. For each constructor parameter, look up the memoized `resolvable` result (already computed on the normal pass) to find the first failing parameter.
 3. Descend into it with the path extended, and stop at the deepest failure.
 4. Classify that failure into one of the error IDs above.
+
+(Amended by ADR-0006, 2026-11-01, T1.6.) Step 2 reads the memoized results of a declared constructor's parameters; a deduced constructor's parameters can't be listed, so the pass probes each position with the resolving placeholder and builds the class from placeholders to reach the failing request ([docs/internals/explain-pass.md](internals/explain-pass.md)).
 
 **Golden tests**
 

@@ -1,0 +1,44 @@
+// compile-fail: a trellis_ctor alias that matches no constructor, one class below two roots made with create<T>(); discovery's check reports it once
+// expect-id: TRL-E002
+// expect-regex: TRL-E002: type not constructible: its trellis::ctor<\.\.\.> declaration matches no constructor
+// expect-regex: trellis::error::E002<app::meter, ?trellis::(v1::)?ctor<int> ?>
+// expect-regex: trellis::error::path<app::panel>
+// expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-max-lines: 40
+//
+// meter declares trellis::ctor<int>, but its constructor takes a double and an int. The explain
+// pass reaches meter from create<panel>() as panel's parameter 1, path<panel>, and raises the
+// report that discovery's own check raises for the declaration (TRL-E002 naming it, as
+// detail::explicit_ctor_t reports it), so it is one error: dial takes the same class, by
+// std::shared_ptr where panel takes a reference, and adds none.
+//
+// The regexes accept MSVC's spelling of template arguments, without a space after the comma; the
+// regex that starts with \A accepts only an output with exactly one error line.
+#include <trellis/trellis.hpp>
+
+#include <memory>
+#include <utility>
+
+namespace app {
+
+struct meter {
+  using trellis_ctor = trellis::ctor<int>;
+  meter(double scale, int offset) : value_(scale + offset) {}
+  double value_;
+};
+struct panel {
+  explicit panel(meter& gauge) : gauge_(&gauge) {}
+  meter* gauge_;
+};
+struct dial {
+  explicit dial(std::shared_ptr<meter> gauge) : gauge_(std::move(gauge)) {}
+  std::shared_ptr<meter> gauge_;
+};
+
+}  // namespace app
+
+int main() {
+  auto injector = trellis::make_injector(trellis::bind<app::meter>.in(trellis::singleton));
+  [[maybe_unused]] const app::panel first = injector.create<app::panel>();
+  [[maybe_unused]] const app::dial second = injector.create<app::dial>();
+}

@@ -450,64 +450,74 @@ constexpr ctor<repeat_t<Is, probe_arg<T>>...> deduced_ctor(std::index_sequence<I
   return {};
 }
 
+// deduction_message(status): the message for a deduction that found no constructor: TRL-E004 for
+// an ambiguous constructor, TRL-E010 above the bound, TRL-E002 otherwise; none when it found one.
+constexpr error_message deduction_message(deduction_status status) noexcept {
+  switch (status) {
+    case deduction_status::greedy:
+      return error_message::greedy;
+    case deduction_status::array_member:
+      return error_message::array_member;
+    case deduction_status::undeducible_member:
+      return error_message::undeducible_member;
+    case deduction_status::above_bound:
+      return error_message::above_bound;
+    case deduction_status::abstract:
+      return error_message::abstract;
+    case deduction_status::not_a_class:
+      return error_message::not_a_class;
+    case deduction_status::incomplete:
+      return error_message::incomplete;
+    case deduction_status::not_constructible:
+      return error_message::not_constructible;
+    default:
+      return error_message::none;
+  }
+}
+
+// discovery_report<T, BindingCtor, MaxArity>: what discovery reports for T when it finds no
+// constructor to call: the error type and the message. For a declaration, TRL-E002 naming it (as
+// explicit_ctor_t reports it); for a deduction, the message of its status, with TRL-E004's,
+// TRL-E010's or TRL-E002's error type. discover, below, raises it, and so does the explain pass
+// for a class whose constructor can't be found (diagnostics/explain.hpp): the same arguments, so
+// one report however the class is reached. T has no cv-qualifiers.
+template <class T, class BindingCtor, std::size_t MaxArity,
+          class Declared = typename declared_ctor<T, BindingCtor>::type>
+struct discovery_report {
+  using error = trellis::error::E002<T, Declared>;
+  static constexpr error_message message = declaration_message<T>;
+};
+template <class T, class BindingCtor, std::size_t MaxArity>
+struct discovery_report<T, BindingCtor, MaxArity, no_ctor_declared> {
+  static constexpr deduction_status status = deduction<T, MaxArity>::status;
+  static constexpr error_message message = detail::deduction_message(status);
+  using error = std::conditional_t<
+      message == error_message::greedy || message == error_message::array_member ||
+          message == error_message::undeducible_member,
+      trellis::error::E004<T>,
+      std::conditional_t<message == error_message::above_bound, trellis::error::E010<T, MaxArity>,
+                         trellis::error::E002<T, no_ctor_declared>>>;
+};
+
 // discover<T, BindingCtor, MaxArity>(): the constructor declaration that discovery gives T,
-// checked, with one static_assert per root cause. A declaration (a binding's, a ctor_traits
+// checked, with one report per root cause. A declaration (a binding's, a ctor_traits
 // specialization or a member alias) wins, checked by explicit_ctor_t (TRL-E002); otherwise
-// deduction decides. Its return type is the result, so the entry point reads it through decltype,
-// and the auto return type makes that instantiate the body, which holds the assertions. A failed
-// assertion in a function body, unlike one in a class template, leaves nothing invalid behind:
-// Clang reports a later use of a class whose static_assert failed again, as a second error.
-// Memoized per (T, BindingCtor, MaxArity), so a type is reported once however often it is used.
+// deduction decides, and a deduction that finds no constructor raises its report
+// (discovery_report, above; raise, diagnostics/errors.hpp). Its return type is the result, so the
+// entry point reads it through decltype, and the auto return type makes that instantiate the
+// body, which holds the check. A failed assertion in a function body, unlike one in a class
+// template, leaves nothing invalid behind: Clang reports a later use of a class whose static_assert
+// failed again, as a second error. Memoized per (T, BindingCtor, MaxArity), so a type is reported
+// once however often it is used.
 template <class T, class BindingCtor, std::size_t MaxArity>
 constexpr auto discover() {
   if constexpr (!TRELLIS_IS_SAME(typename declared_ctor<T, BindingCtor>::type, no_ctor_declared)) {
     return explicit_ctor_t<T, BindingCtor>{};
-  } else if constexpr (constexpr deduction_status status = deduction<T, MaxArity>::status;
-                       status == deduction_status::deduced) {
+  } else if constexpr (deduction<T, MaxArity>::status == deduction_status::deduced) {
     return detail::deduced_ctor<T>(std::make_index_sequence<deduction<T, MaxArity>::arity>{});
-  } else if constexpr (status == deduction_status::greedy) {
-    static_assert(trellis::error::E004<T>::reported,
-                  "TRL-E004: ambiguous constructor: a constructor template or variadic constructor "
-                  "accepts any argument, so deduction can't tell what it needs; declare the "
-                  "constructor with trellis::ctor_traits");
-    return no_ctor_declared{};
-  } else if constexpr (status == deduction_status::array_member) {
-    static_assert(trellis::error::E004<T>::reported,
-                  "TRL-E004: ambiguous constructor: an aggregate with an array member, whose "
-                  "elements count as one field or as one each depending on the compiler; declare "
-                  "the fields with trellis::ctor_traits");
-    return no_ctor_declared{};
-  } else if constexpr (status == deduction_status::undeducible_member) {
-    static_assert(trellis::error::E004<T>::reported,
-                  "TRL-E004: ambiguous constructor: deduction can't initialize every member of "
-                  "this aggregate (a std::optional, std::tuple or std::any member is ambiguous); "
-                  "declare the fields with trellis::ctor_traits");
-    return no_ctor_declared{};
-  } else if constexpr (status == deduction_status::above_bound) {
-    static_assert(trellis::error::E010<T, MaxArity>::reported,
-                  "TRL-E010: constructor arity above max_ctor_arity: raise max_ctor_arity or "
-                  "declare the constructor with trellis::ctor_traits");
-    return no_ctor_declared{};
-  } else if constexpr (status == deduction_status::abstract) {
-    static_assert(trellis::error::E002<T, no_ctor_declared>::reported,
-                  "TRL-E002: type not constructible: it is abstract; bind it to an "
-                  "implementation");
-    return no_ctor_declared{};
-  } else if constexpr (status == deduction_status::not_a_class) {
-    static_assert(trellis::error::E002<T, no_ctor_declared>::reported,
-                  "TRL-E002: type not constructible: deduction needs a class type; bind the type "
-                  "to a value");
-    return no_ctor_declared{};
-  } else if constexpr (status == deduction_status::incomplete) {
-    static_assert(trellis::error::E002<T, no_ctor_declared>::reported,
-                  "TRL-E002: type not constructible: it is incomplete here; define the type before "
-                  "the point where Trellis discovers its constructor");
-    return no_ctor_declared{};
   } else {
-    static_assert(trellis::error::E002<T, no_ctor_declared>::reported,
-                  "TRL-E002: type not constructible: deduction found no public, non-deleted, "
-                  "unambiguous constructor (same-arity overloads are ambiguous); declare one with "
-                  "trellis::ctor_traits");
+    using report = discovery_report<T, BindingCtor, MaxArity>;
+    detail::raise<typename report::error, report::message>();
     return no_ctor_declared{};
   }
 }

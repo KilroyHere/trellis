@@ -11,9 +11,14 @@
 //   and the check rejects them.
 // - "FailurePassAgrees": the failure pass's placeholders deduce what discovery's do. explain_arg
 //   selects, for each form, the operator any_arg selects, with the request S1 recorded
-//   (tests/unit/deduced_test.cpp checks any_arg against the same table), and owner_arg, which
-//   explain_node asks first, accepts every form, so the failure pass builds each consumer from
-//   explain_arg. A placeholder whose operators drifted from the probe's would fail here.
+//   (tests/unit/deduced_test.cpp checks any_arg against the same table), and the owner check,
+//   which explain_build asks first, finds no owner of an incomplete class in any form, so the
+//   failure pass builds each consumer from explain_arg. A placeholder whose operators drifted from
+//   the probe's would fail here. (T1.6 replaced T1.5's failure pass, explain_node and owner_arg,
+//   with the explain pass, diagnostics/explain.hpp; the checks are the same.)
+#include <trellis/config.hpp>
+#include <trellis/diagnostics/errors.hpp>
+#include <trellis/diagnostics/explain.hpp>
 #include <trellis/discovery/deduced.hpp>
 #include <trellis/static/resolve.hpp>
 #include <trellis/trellis.hpp>
@@ -23,6 +28,7 @@
 #include <cstddef>
 #include <functional>
 #include <memory>
+#include <new>  // IWYU pragma: keep
 #include <optional>
 #include <span>
 #include <string>
@@ -201,9 +207,12 @@ TEST(NodesAgree, EveryFormTheCheckAcceptsIsBuilt) {
 // ---- FailurePassAgrees ------------------------------------------------------------------------
 
 // expect_ctx<Request>: a context whose check accepts only Request and fails the compilation for
-// any other: explain_arg's selected operator asks Ctx::can_resolve<T> in its body, so building
-// consumer<P> in the failure pass asks exactly the request it deduced. The answer is yes, so the
-// body names no failure pass and needs no injector.
+// any other: explain_arg's selected operator asks Ctx::can_resolve<T> in its body (T1.6's explain
+// pass, diagnostics/explain.hpp), so building consumer<P> from it asks exactly the request it
+// deduced. The answer is yes, so the body continues to nothing. Before it, the body asks the
+// context's injector, an empty one here, for the stop below the request, never can_resolve, and
+// overload resolution evaluates nothing of the candidates, so only the selected operator reaches
+// the check.
 template <class T, class Request>
 consteval bool deduced_as() {
   static_assert(std::is_same_v<T, Request>, "explain_arg deduced another request than any_arg");
@@ -211,41 +220,52 @@ consteval bool deduced_as() {
 }
 template <class Request>
 struct expect_ctx {
-  using injector_type = void;
+  using injector_type = decltype(trellis::make_injector());
   template <class T>
   static constexpr bool can_resolve = deduced_as<T, Request>();
 };
 
-// The failure pass of consumer<P> in expect_ctx<Request>: owner_arg's check must pass, or the pass
-// would take its other branch, and the explain_arg construction is instantiated by taking the
-// function's address (it is never called: its operators end in unreachable()).
+// The explain pass's build of consumer<P> in expect_ctx<Request>, as explain_build builds a
+// deduced class: the owner check must find no parameter that owns an incomplete class, or the
+// pass would build consumer<P> only unevaluated, and the construction is instantiated by taking
+// the function's address (it is never called: the operators end in unreachable()).
 template <class Form>
-using explain_of =
-    trellis::detail::explain_node<trellis::detail::deduced_node<consumer<typename Form::param>,
-                                                                expect_ctx<typename Form::request>,
-                                                                std::index_sequence<0>, false>>;
-template <class Form>
-constexpr bool owner_check_passes = requires {
-  consumer<typename Form::param>(
-      trellis::detail::owner_arg<consumer<typename Form::param>, expect_ctx<typename Form::request>,
-                                 false>{});
-};
+constexpr bool owner_check_passes =
+    !trellis::detail::has_owner<trellis::detail::deduced_node<consumer<typename Form::param>,
+                                                              expect_ctx<typename Form::request>,
+                                                              std::index_sequence<0>, false>>;
 template <class... Forms>
 constexpr bool owner_checks_pass(form_list<Forms...> /*forms*/) {
   return (owner_check_passes<Forms> && ...);
 }
 static_assert(owner_checks_pass(deducible_forms{}));
 
-// The one parameter owner_arg refuses: a std::unique_ptr to a class that is incomplete here,
+// The one parameter the owner check finds: a std::unique_ptr to a class that is incomplete here,
 // whose destructor building the class would instantiate (compile_fail/create/
 // e002_incomplete_unique_ptr_parameter.cpp shows the one error it gives instead).
 struct never_defined;
 static_assert(
     !owner_check_passes<form<std::unique_ptr<never_defined>, std::unique_ptr<never_defined>>>);
 
+TRELLIS_PLACEHOLDER_CONVERSIONS_BEGIN
+
+template <class Form>
+void explain_build_of() {
+  using built = consumer<typename Form::param>;
+  // The last argument is the lookahead's sequence, which only a stop that builds a class reads.
+  using arg =
+      trellis::detail::explain_arg<trellis::error::path<built>, 1,
+                                   expect_ctx<typename Form::request>, std::index_sequence<>>;
+  alignas(built) std::array<std::byte, sizeof(built)> storage{};
+  void* const where = storage.data();
+  ::new (where) built(arg{});
+}
+
+TRELLIS_PLACEHOLDER_CONVERSIONS_END
+
 template <class... Forms>
 std::size_t explained(form_list<Forms...> /*forms*/) {
-  const std::array<void (*)(), sizeof...(Forms)> passes{&explain_of<Forms>::run...};
+  const std::array<void (*)(), sizeof...(Forms)> passes{&explain_build_of<Forms>...};
   std::size_t count = 0;
   for (void (*pass)() : passes) {
     count += pass != nullptr ? 1U : 0U;

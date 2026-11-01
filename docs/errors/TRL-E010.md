@@ -3,24 +3,24 @@
 - **Detected:** at compile time.
 - **Since:** T1.3, by deduced constructor discovery.
 - **Raised by:** constructor discovery, wherever the static engine asks it for a type that declares no constructor: through `injector.create<T>()` (and `trellis::make_injector` with `options{.eager = true}`) since T1.5, with the injector's `max_ctor_arity` as the bound, and through `trellis::detail::discovered_ctor_t`, its entry point into discovery, whose last template argument is the bound.
-- **Tests:** in `tests/compile_fail/discovery/`: [`deduced_above_bound.cpp`](../../tests/compile_fail/discovery/deduced_above_bound.cpp) (17 parameters, the default bound of 16) and [`deduced_above_lowered_bound.cpp`](../../tests/compile_fail/discovery/deduced_above_lowered_bound.cpp) (5 parameters, a bound of 4); through `create<T>()`, [`tests/compile_fail/create/e010_lowered_bound_via_create.cpp`](../../tests/compile_fail/create/e010_lowered_bound_via_create.cpp) (3 parameters, `options{.max_ctor_arity = 2}`). Goldens come with T1.6.
+- **Tests:** in `tests/compile_fail/discovery/`: [`deduced_above_bound.cpp`](../../tests/compile_fail/discovery/deduced_above_bound.cpp) (17 parameters, the default bound of 16) and [`deduced_above_lowered_bound.cpp`](../../tests/compile_fail/discovery/deduced_above_lowered_bound.cpp) (5 parameters, a bound of 4); through `create<T>()`, [`tests/compile_fail/create/e010_lowered_bound_via_create.cpp`](../../tests/compile_fail/create/e010_lowered_bound_via_create.cpp) (3 parameters, `options{.max_ctor_arity = 2}`), and with the path from the root and NFR-07's 40 lines, [`tests/compile_fail/explain/e010_two_roots.cpp`](../../tests/compile_fail/explain/e010_two_roots.cpp). The `explain/` tests have goldens for gcc-13, gcc-14, clang-18 and clang-20, in `tests/diagnostics_golden/<compiler>/explain/`.
 
 ## What you see
 
 GCC puts the ID on the error line, and the type and the bound in the note that follows it (gcc-13, normalized as in the goldens):
 
 ```text
-<src>/include/trellis/discovery/deduced.hpp:L:C: error: static assertion failed: TRL-E010: constructor arity above max_ctor_arity: raise max_ctor_arity or declare the constructor with trellis::ctor_traits
-<src>/include/trellis/discovery/deduced.hpp:L:C: note: 'trellis::error::E010<app::wide, 16>::reported' evaluates to false
+<src>/include/trellis/diagnostics/errors.hpp:L:C: error: static assertion failed: TRL-E010: constructor arity above max_ctor_arity: raise max_ctor_arity or declare the constructor with trellis::ctor_traits
+<src>/include/trellis/diagnostics/errors.hpp:L:C: note: 'trellis::error::E010<app::wide, 16>::reported' evaluates to false
 ```
 
 Clang puts all of it on the error line (clang-18):
 
 ```text
-<src>/include/trellis/discovery/deduced.hpp:L:C: error: static assertion failed due to requirement 'trellis::error::E010<app::wide, 16>::reported': TRL-E010: constructor arity above max_ctor_arity: raise max_ctor_arity or declare the constructor with trellis::ctor_traits
+<src>/include/trellis/diagnostics/errors.hpp:L:C: error: static assertion failed due to requirement 'trellis::error::E010<app::wide, 16>::reported': TRL-E010: constructor arity above max_ctor_arity: raise max_ctor_arity or declare the constructor with trellis::ctor_traits
 ```
 
-The first template argument of `trellis::error::E010` is the type, and the second the bound in effect.
+The first template argument of `trellis::error::E010` is the type, and the second the bound in effect. Through `create<T>()`, the instantiation note of `trellis::detail::explain_cause`, Clang's second and GCC's first "required from" line, names the path from the root to the class, a `trellis::error::path<...>` (T1.6; [TRL-E001](TRL-E001.md) shows it).
 
 ## Cause
 

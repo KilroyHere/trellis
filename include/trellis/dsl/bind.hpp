@@ -71,6 +71,21 @@ struct binding_traits<binding<Key, Impl, Lifetime, AllowCopy>> {
 // Reads the object that an external, shared or value binding holds; the bindings befriend it.
 struct binding_access;
 
+// checked_key<Key>(): reports a key that isn't one (is_bindable_key), with one static_assert.
+// binding's default constructor, which makes every binding object first, reads its return type
+// through decltype, and the auto return type makes that instantiate the body: once per key,
+// however the binding is reached (bind<I>, decltype(bind<I>...), a binding type spelled out).
+// A failed assertion in a function read this way leaves the reader valid, on MSVC too, so
+// nothing that uses the binding afterwards is an error of its own (bind.hpp's constructor;
+// tests/compile_fail/dsl/bind_bad_key_*.cpp).
+template <class Key>
+constexpr auto checked_key() noexcept {
+  static_assert(is_bindable_key<Key>,
+                "trellis: bind<I>: I must be an object type without const, volatile or reference, "
+                "and not an array");
+  return true;
+}
+
 }  // namespace detail
 
 /// @brief A binding of the key `Key` to objects of type `Impl` that the injector constructs, with
@@ -138,10 +153,12 @@ class binding {
   /// constexpr auto clock = trellis::bind<IClock>;  // bind<I> calls this constructor
   /// @endcode
   constexpr binding() noexcept {
-    static_assert(
-        valid_key,
-        "trellis: bind<I>: I must be an object type without const, volatile or reference, "
-        "and not an array");
+    // The check is in detail::checked_key's body, read through decltype, not here (T1.6): with
+    // the static_assert in this constructor, cl 19.51 treats the constant initializer of
+    // bind<const I> as invalid after reporting it, and then reports every use of it again
+    // (C3553, C2516; platforms CI). A constructor that only names checked_key's return type stays
+    // valid, as explicit_ctor_t's readers do there. One instantiation per key, as before.
+    static_cast<void>(sizeof(decltype(detail::checked_key<Key>())));
   }
 
   /// @brief Binds the key to the implementation `C`, which the injector constructs.

@@ -1,26 +1,26 @@
 # TRL-E014: Owning request would delete the implementation through a base class whose destructor isn't virtual
 
 - **Detected:** at compile time
-- **Since:** T1.5 (unreleased; v0.1), without the path from the root, which T1.6 adds. The ID is provisional until the owner confirms it ([ADR-0006](../adr/0006-diagnostics-contract.md), History).
+- **Since:** T1.5 (unreleased; v0.1); with the path from the root since T1.6. The ID is provisional until the owner confirms it ([ADR-0006](../adr/0006-diagnostics-contract.md), History).
 - **Raised by:** `injector::create<T>()`, for its request and for every constructor parameter below it
-- **Tests:** [`tests/compile_fail/create/e014_unique_ptr_without_virtual_destructor.cpp`](../../tests/compile_fail/create/e014_unique_ptr_without_virtual_destructor.cpp), which makes the failing request at the root and as a constructor parameter, with one error line allowed; the forms that stay allowed, in [`tests/unit/create_test.cpp`](../../tests/unit/create_test.cpp) ("NonVirtualBaseFormsDestroyTheDerivedClass"). Golden tests come with T1.6.
+- **Tests:** [`tests/compile_fail/create/e014_unique_ptr_without_virtual_destructor.cpp`](../../tests/compile_fail/create/e014_unique_ptr_without_virtual_destructor.cpp), which makes the failing request at the root and as a constructor parameter, with one error line allowed; the forms that stay allowed, in [`tests/unit/create_test.cpp`](../../tests/unit/create_test.cpp) ("NonVirtualBaseFormsDestroyTheDerivedClass"); with the path and NFR-07's 40 lines, [`tests/compile_fail/explain/e014_parameter_two_roots.cpp`](../../tests/compile_fail/explain/e014_parameter_two_roots.cpp). The `explain/` tests have goldens for gcc-13, gcc-14, clang-18 and clang-20, in `tests/diagnostics_golden/<compiler>/explain/`.
 
 ## What you see
 
 GCC puts the ID on the error line and the error type in the note after it (gcc-13, normalized as in the goldens):
 
 ```text
-<src>/include/trellis/static/resolve.hpp:L:C: error: static assertion failed: TRL-E014: owning request would delete the implementation through a base class whose destructor isn't virtual: std::unique_ptr<I> deletes through I; give I a virtual destructor, or request std::shared_ptr<I>, which deletes the class it was made for
-<src>/include/trellis/static/resolve.hpp:L:C: note: 'trellis::error::E014<{anonymous}::base, trellis::error::request<std::unique_ptr<{anonymous}::base> >, {anonymous}::derived>::reported' evaluates to false
+<src>/include/trellis/diagnostics/errors.hpp:L:C: error: static assertion failed: TRL-E014: owning request would delete the implementation through a base class whose destructor isn't virtual: std::unique_ptr<I> deletes through I; give I a virtual destructor, or request std::shared_ptr<I>, which deletes the class it was made for
+<src>/include/trellis/diagnostics/errors.hpp:L:C: note: 'trellis::error::E014<{anonymous}::base, trellis::error::request<std::unique_ptr<{anonymous}::base> >, {anonymous}::derived>::reported' evaluates to false
 ```
 
 Clang puts both on the error line:
 
 ```text
-<src>/include/trellis/static/resolve.hpp:L:C: error: static assertion failed due to requirement 'trellis::error::E014<(anonymous namespace)::base, trellis::error::request<std::unique_ptr<(anonymous namespace)::base, std::default_delete<(anonymous namespace)::base>>>, (anonymous namespace)::derived>::reported': TRL-E014: owning request would delete the implementation through a base class whose destructor isn't virtual: std::unique_ptr<I> deletes through I; give I a virtual destructor, or request std::shared_ptr<I>, which deletes the class it was made for
+<src>/include/trellis/diagnostics/errors.hpp:L:C: error: static assertion failed due to requirement 'trellis::error::E014<(anonymous namespace)::base, trellis::error::request<std::unique_ptr<(anonymous namespace)::base, std::default_delete<(anonymous namespace)::base>>>, (anonymous namespace)::derived>::reported': TRL-E014: owning request would delete the implementation through a base class whose destructor isn't virtual: std::unique_ptr<I> deletes through I; give I a virtual destructor, or request std::shared_ptr<I>, which deletes the class it was made for
 ```
 
-The error type is `E014<Key, request<R>, Impl>`: the requested base class, the request as the consumer spelled it, and the binding's implementation, the class that would be deleted through the base.
+The error type is `E014<Key, request<R>, Impl>`: the requested base class, the request as the consumer spelled it, and the binding's implementation, the class that would be deleted through the base. The path from the root to the request is in the instantiation note of `trellis::detail::explain_cause`, the step that reports: Clang's second note, after the error line, and GCC's first "required from" line, before it (T1.6; [TRL-E001](TRL-E001.md) shows the note).
 
 ## Cause
 

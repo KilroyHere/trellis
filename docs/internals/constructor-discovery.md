@@ -126,6 +126,6 @@ Deducing the return type makes the compiler instantiate the body, and with it th
 
 ## Open points
 
-- The static engine doesn't exist yet (T1.5), so the compile-fail tests reach the check through `detail::explicit_ctor_t`. Those tests are protected, so if T1.6 moves the assertion into `create<T>()` with the explain pass, `detail::explicit_ctor_t` must keep reporting as it does; T1.6 adds tests through `create<T>()`.
+- The compile-fail tests here reach the check through `detail::explicit_ctor_t`, which T1.6 left reporting as it did: the assertion stays in the check, raised through `detail::raise`, and `create<T>()`'s explain pass raises the same report, with the path from the root, for a class it reaches ([explain-pass.md](explain-pass.md); `tests/compile_fail/explain/e002_declaration_mismatch_two_roots.cpp`).
 - T1.5 builds a declared type by the rule above: braces for an aggregate, parentheses otherwise.
 - An abstract class with a member alias gives TRL-E002 here, where plan §5.3 reports an abstract type as TRL-E001. T1.5 settled it: `create<T>()` looks for the binding, and reports TRL-E001, before it discovers a constructor; discovery's own entry points keep TRL-E002.

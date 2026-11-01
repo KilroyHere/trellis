@@ -3,24 +3,24 @@
 - **Detected:** at compile time.
 - **Since:** T1.3, by deduced constructor discovery. The reflection strategy (Phase 6) will raise it too, for two constructors that tie (plan §7.2).
 - **Raised by:** constructor discovery, wherever the static engine asks it for a type that declares no constructor: through `injector.create<T>()` (and `trellis::make_injector` with `options{.eager = true}`) since T1.5, and through `trellis::detail::discovered_ctor_t`, its entry point into discovery.
-- **Tests:** in `tests/compile_fail/discovery/`: [`deduced_greedy_template.cpp`](../../tests/compile_fail/discovery/deduced_greedy_template.cpp), [`deduced_variadic_template.cpp`](../../tests/compile_fail/discovery/deduced_variadic_template.cpp), [`deduced_c_variadic.cpp`](../../tests/compile_fail/discovery/deduced_c_variadic.cpp), [`deduced_aggregate_array.cpp`](../../tests/compile_fail/discovery/deduced_aggregate_array.cpp) and [`deduced_aggregate_optional_member.cpp`](../../tests/compile_fail/discovery/deduced_aggregate_optional_member.cpp); through `create<T>()`, [`tests/compile_fail/create/e004_greedy_via_create.cpp`](../../tests/compile_fail/create/e004_greedy_via_create.cpp). Goldens come with T1.6.
+- **Tests:** in `tests/compile_fail/discovery/`: [`deduced_greedy_template.cpp`](../../tests/compile_fail/discovery/deduced_greedy_template.cpp), [`deduced_variadic_template.cpp`](../../tests/compile_fail/discovery/deduced_variadic_template.cpp), [`deduced_c_variadic.cpp`](../../tests/compile_fail/discovery/deduced_c_variadic.cpp), [`deduced_aggregate_array.cpp`](../../tests/compile_fail/discovery/deduced_aggregate_array.cpp) and [`deduced_aggregate_optional_member.cpp`](../../tests/compile_fail/discovery/deduced_aggregate_optional_member.cpp); through `create<T>()`, [`tests/compile_fail/create/e004_greedy_via_create.cpp`](../../tests/compile_fail/create/e004_greedy_via_create.cpp), and with the path from the root and NFR-07's 40 lines, [`tests/compile_fail/explain/e004_greedy_equal_roots.cpp`](../../tests/compile_fail/explain/e004_greedy_equal_roots.cpp). The `explain/` tests have goldens for gcc-13, gcc-14, clang-18 and clang-20, in `tests/diagnostics_golden/<compiler>/explain/`.
 
 ## What you see
 
 GCC puts the ID on the error line, and the type in the note that follows it (gcc-13, normalized as in the goldens):
 
 ```text
-<src>/include/trellis/discovery/deduced.hpp:L:C: error: static assertion failed: TRL-E004: ambiguous constructor: a constructor template or variadic constructor accepts any argument, so deduction can't tell what it needs; declare the constructor with trellis::ctor_traits
-<src>/include/trellis/discovery/deduced.hpp:L:C: note: 'trellis::error::E004<app::greedy>::reported' evaluates to false
+<src>/include/trellis/diagnostics/errors.hpp:L:C: error: static assertion failed: TRL-E004: ambiguous constructor: a constructor template or variadic constructor accepts any argument, so deduction can't tell what it needs; declare the constructor with trellis::ctor_traits
+<src>/include/trellis/diagnostics/errors.hpp:L:C: note: 'trellis::error::E004<app::greedy>::reported' evaluates to false
 ```
 
 Clang puts all of it on the error line (clang-18):
 
 ```text
-<src>/include/trellis/discovery/deduced.hpp:L:C: error: static assertion failed due to requirement 'trellis::error::E004<app::greedy>::reported': TRL-E004: ambiguous constructor: a constructor template or variadic constructor accepts any argument, so deduction can't tell what it needs; declare the constructor with trellis::ctor_traits
+<src>/include/trellis/diagnostics/errors.hpp:L:C: error: static assertion failed due to requirement 'trellis::error::E004<app::greedy>::reported': TRL-E004: ambiguous constructor: a constructor template or variadic constructor accepts any argument, so deduction can't tell what it needs; declare the constructor with trellis::ctor_traits
 ```
 
-The template argument of `trellis::error::E004` is the type. The rest of the message says which of the four causes below it is; for an aggregate it reads `an aggregate with an array member, ...` or `deduction can't initialize every member of this aggregate ...`.
+The template argument of `trellis::error::E004` is the type. Through `create<T>()`, the instantiation note of `trellis::detail::explain_cause`, Clang's second and GCC's first "required from" line, names the path from the root to the class, a `trellis::error::path<...>` (T1.6; [TRL-E001](TRL-E001.md) shows it); discovery's report is unique to the class, so a class that several consumers or roots need is one error. The rest of the message says which of the four causes below it is; for an aggregate it reads `an aggregate with an array member, ...` or `deduction can't initialize every member of this aggregate ...`.
 
 ## Cause
 

@@ -6,29 +6,36 @@
 // Internal (trellis::detail): the entry points that create<T>() (T1.5) and the explain pass
 // (T1.6) call, not user API.
 //
-//   request_check<Injector, R>          finds the binding that serves request R and its verdict
-//                                       from the table (dsl/request_forms.hpp). No errors: it
-//                                       is what resolution asks, memoized per (injector,
-//                                       request).
-//   report_request_form<Injector, R>()  raises the one static_assert for a rejected request:
-//                                       TRL-E005 or TRL-E012. For an allowed request it does
-//                                       nothing, and so it does for an unbound abstract type,
-//                                       which is TRL-E001 and create<T>()'s failure pass's
-//                                       (T1.5), and for an injector whose keys repeat, which
-//                                       make_injector has reported (TRL-E003).
+//   request_check<Injector, R>           finds the binding that serves request R and its verdict
+//                                        from the table (dsl/request_forms.hpp). No errors: it
+//                                        is what resolution asks, memoized per (injector,
+//                                        request).
+//   request_form_report<Injector, R>     what the table's rejection of R reports: TRL-E005 or
+//                                        TRL-E012, the error type and the message, which the
+//                                        explain pass raises (diagnostics/explain.hpp).
+//   report_request_form<Injector, R>()   raises that report for a rejected request, and nothing
+//                                        for an allowed one, an unbound abstract type (TRL-E001,
+//                                        the explain pass's) or an injector whose keys repeat
+//                                        (TRL-E003, which make_injector has reported). T1.4's
+//                                        entry point, which its tests drive.
+//   report_override_target<Bindings, O>  raises TRL-E009 for an override whose key no other
+//                                        binding binds: T1.7's entry point.
 //
-// Each rejection reason has its own static_assert, in its own `if constexpr` branch, with its own
-// literal starting with the ID (ADR-0006 item 2), so exactly one fires. The consumer's lifetime,
-// which the captive-dependency rule needs (E006, Phase 2), joins the key in Phase 2 (plan §7.3).
+// Each rejection reason has its own message, and so its own static_assert with its own literal
+// starting with the ID (ADR-0006 item 2), in detail::raise (diagnostics/errors.hpp). The
+// consumer's lifetime, which the captive-dependency rule needs (E006, Phase 2), joins the key in
+// Phase 2 (plan §7.3).
 #ifndef TRELLIS_STATIC_VALIDATE_HPP
 #define TRELLIS_STATIC_VALIDATE_HPP
 
+#include <trellis/config.hpp>
 #include <trellis/diagnostics/errors.hpp>
 #include <trellis/discovery/deduced.hpp>
 #include <trellis/dsl/bind.hpp>
 #include <trellis/dsl/lifetimes.hpp>
 #include <trellis/dsl/module.hpp>
 #include <trellis/dsl/request_forms.hpp>
+#include <trellis/meta/type_list.hpp>
 #include <trellis/static/binding_map.hpp>
 #include <trellis/static/injector_traits.hpp>
 
@@ -101,64 +108,84 @@ struct request_check<Injector, R, false> {
   static constexpr bool allowed = false;
 };
 
-// Raises TRL-E005 or TRL-E012 when the table rejects request R of the injector, and nothing
-// otherwise: not for an allowed request, an unbound abstract type (TRL-E001, which create<T>()
-// reports itself) or an injector whose keys repeat (TRL-E003, reported already). create<T>()'s
-// failure pass calls it for each failing request (static/resolve.hpp, explain); T1.6 adds the
-// path from the root.
+// The message for a verdict of the table: one of TRL-E005's, one of TRL-E012's, or none for a
+// verdict that the table doesn't reject on its own (allowed, no_binding, keys_repeat). A reference
+// or pointer to a smart pointer, such as const std::shared_ptr<T>&, names the smart pointer type
+// as its key: binding that key in a lifetime would give an empty pointer, and taking the smart
+// pointer by value lets the injector make it from T's binding, which TRL-E012 says in a message
+// of its own.
+constexpr error_message request_form_message(form_verdict verdict,
+                                             bool smart_pointer_key) noexcept {
+  switch (verdict) {
+    case form_verdict::copies_hide_sharing:
+      return error_message::copies_hide_sharing;
+    case form_verdict::nothing_keeps_it_alive:
+      return error_message::nothing_keeps_it_alive;
+    case form_verdict::ambiguous_ownership:
+      return error_message::ambiguous_ownership;
+    case form_verdict::duplicates_ownership:
+      return error_message::duplicates_ownership;
+    case form_verdict::not_heap_owned:
+      return error_message::not_heap_owned;
+    case form_verdict::caller_owns_it:
+      return error_message::caller_owns_it;
+    case form_verdict::const_object:
+      return error_message::const_object;
+    case form_verdict::unbound_shared:
+      return smart_pointer_key ? error_message::smart_pointer_key : error_message::unbound_shared;
+    default:
+      return error_message::none;
+  }
+}
+
+// request_form_report<Injector, R>: what the table's rejection of request R reports: its message,
+// and its error type, TRL-E012's for an unbound key and TRL-E005's otherwise. The explain pass
+// reads it for a request whose plan fails on the table (diagnostics/explain.hpp), and so does
+// report_request_form, below, so that both raise the same report, once.
 template <class Injector, class R>
-constexpr void report_request_form() noexcept {
+struct request_form_report {
   using check = request_check<Injector, R>;
   using key = typename check::key;
-  using request = error::request<R>;
-  using lifetime = typename check::served::lifetime;
-  constexpr form_verdict verdict = check::verdict;
-  if constexpr (verdict == form_verdict::copies_hide_sharing) {
-    static_assert(error::E005<key, request, lifetime>::reported,
-                  "TRL-E005: request form incompatible with the lifetime: copies hide sharing; "
-                  "request a reference, or opt in with .allow_copy()");
-  } else if constexpr (verdict == form_verdict::nothing_keeps_it_alive) {
-    static_assert(error::E005<key, request, lifetime>::reported,
-                  "TRL-E005: request form incompatible with the lifetime: nothing would keep the "
-                  "object alive; bind it in trellis::singleton, or request it by value or as "
-                  "std::unique_ptr");
-  } else if constexpr (verdict == form_verdict::ambiguous_ownership) {
-    static_assert(error::E005<key, request, lifetime>::reported,
-                  "TRL-E005: request form incompatible with the lifetime: ambiguous ownership; "
-                  "request std::unique_ptr, or bind it in trellis::singleton");
-  } else if constexpr (verdict == form_verdict::duplicates_ownership) {
-    static_assert(error::E005<key, request, lifetime>::reported,
-                  "TRL-E005: request form incompatible with the lifetime: std::unique_ptr would "
-                  "duplicate ownership of a shared object; request a reference");
-  } else if constexpr (verdict == form_verdict::not_heap_owned) {
-    static_assert(
-        error::E005<key, request, lifetime>::reported,
-        "TRL-E005: request form incompatible with the lifetime: the object is not "
-        "heap-owned, so there is no std::shared_ptr to it; bind it in trellis::singleton");
-  } else if constexpr (verdict == form_verdict::caller_owns_it) {
-    static_assert(error::E005<key, request, lifetime>::reported,
-                  "TRL-E005: request form incompatible with the lifetime: the caller owns the "
-                  "object, so there is no std::shared_ptr to it; bind it with .to_shared()");
-  } else if constexpr (verdict == form_verdict::const_object) {
-    static_assert(error::E005<key, request, lifetime>::reported,
-                  "TRL-E005: request form incompatible with the lifetime: the bound object is "
-                  "const; request it through a reference or pointer to const, such as const T& "
-                  "or std::shared_ptr<const T>");
-  } else if constexpr (verdict == form_verdict::unbound_shared &&
-                       is_smart_pointer_form(request_traits<key>::form)) {
-    // A reference or pointer to a smart pointer, such as const std::shared_ptr<T>&, names the
-    // smart pointer type as its key. Binding that key in a lifetime would give an empty
-    // pointer; taking the smart pointer by value lets the injector make it from T's binding.
-    static_assert(error::E012<key, request>::reported,
-                  "TRL-E012: unbound concrete type requested by reference, pointer or shared_ptr: "
-                  "a reference or pointer to a smart pointer asks for the smart pointer itself, "
-                  "which nothing binds; take it by value, such as std::shared_ptr<T>, and the "
-                  "injector makes it from T's binding");
-  } else if constexpr (verdict == form_verdict::unbound_shared) {
-    static_assert(error::E012<key, request>::reported,
-                  "TRL-E012: unbound concrete type requested by reference, pointer or shared_ptr: "
-                  "nothing would own it; bind it with an owning lifetime such as "
-                  "trellis::singleton");
+  static constexpr error_message message = detail::request_form_message(
+      check::verdict, is_smart_pointer_form(request_traits<key>::form));
+  using error = std::conditional_t<
+      check::verdict == form_verdict::unbound_shared,
+      trellis::error::E012<key, trellis::error::request<R>>,
+      trellis::error::E005<key, trellis::error::request<R>, typename check::served::lifetime>>;
+};
+
+// Raises TRL-E005 or TRL-E012 when the table rejects request R of the injector, and nothing
+// otherwise: not for an allowed request, an unbound abstract type (TRL-E001, which create<T>()
+// reports itself) or an injector whose keys repeat (TRL-E003, reported already). T1.4's entry
+// point, which its tests drive; create<T>()'s explain pass raises the same report with the path
+// from the root (diagnostics/explain.hpp).
+template <class Injector, class R>
+constexpr void report_request_form() noexcept {
+  using report = request_form_report<Injector, R>;
+  detail::raise<typename report::error, report::message, Injector>();
+}
+
+// report_override_target<Bindings, Override>(): raises TRL-E009 when no binding of Bindings, the
+// type_list of the bindings an override would replace one of, binds Override's key, and nothing
+// otherwise. The entry point for T1.7's trellis::override<K> (plan §6.10), which make_injector
+// will call for each override; T1.6 adds it with the error, and its test drives it directly.
+// The binding types may be cv-qualified, as decltype(trellis::bind<K>) is. A flat expansion and a
+// scan (plan §8.1 C3).
+template <class Bindings, class Override>
+struct override_target;
+template <class... Bindings, class Override>
+struct override_target<type_list<Bindings...>, Override> {
+  using key = typename binding_traits<std::remove_cv_t<Override>>::key;
+  static constexpr bool found =
+      detail::first_true({TRELLIS_IS_SAME(typename binding_traits<std::remove_cv_t<Bindings>>::key,
+                                          key)...}) < sizeof...(Bindings);
+};
+template <class Bindings, class Override>
+constexpr void report_override_target() noexcept {
+  using target = override_target<Bindings, Override>;
+  if constexpr (!target::found) {
+    using error = trellis::error::E009<typename target::key, Override>;
+    detail::raise<error, error_message::override_without_binding>();
   }
 }
 
