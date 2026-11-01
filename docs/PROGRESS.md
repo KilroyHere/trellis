@@ -68,6 +68,24 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev clang-tools-18 clang-tools-20` (`clang-tools-*` gives `clang-scan-deps`, which the C++20 module build needs, T1.8) so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
 
+## 2026-11-01: T1.14 v0.1 budgets, with T1.9's benchmarks (landed; two Clang budgets await the owner)
+
+- **What changed:** T1.9's benchmarks landed as 91ddbdf (the Trellis variants, the oracle, docs/benchmarks/v0.1.md). T1.14's optimization landed as ef5b6e9:
+  - **Slots:** S4's state machine moved into two non-template classes, with retry cleanup in a destructor, a cold slow path and trivially destructible slots.
+  - **Storage:** one control-block type per object size; a `shared_ptr<void>` slot with aliased requests that adjust for non-first and virtual bases; a holder with its aligned bytes first, so nothing is padded (no C4324 on MSVC).
+  - **Creation:** one function per singleton.
+  
+  Behaviour is unchanged. 0788aa9 fixes a C++23 bug the work found: `make_unexpected` broke when result.hpp followed the injector, because an unqualified `failure` found resolve.hpp's enum. Include-order tests in C++20/23/26 now cover it.
+- **Results** (quiet machine, load 0.78–1.00; gcc-13 / clang-18):
+  - **NFR-04:** 0.94× / 0.93× bench, 0.98× / 1.08× interleaved CPU. Was 1.68× / 1.78×. Met.
+  - **NFR-05:** 0.88× / 1.11×. Met.
+  - **NFR-03:** +0.24 s / +0.38 s median CPU (bench +0.63 s on Clang) against +0.3 s. **Clang missed.** Main was +0.35 s on Clang. Header trimming couldn't help, because the scenario's own includes pull in the same headers. A `<variant>`-free result fallback would cut the header alone by 3%, but it changes 13 protected gcc-13 goldens, so it was reverted: a patch for the owner is in the T1.14 scratch directory.
+  - **NFR-06:** +4,096 B / +8,240 B against +8 KB. **Clang missed by 48 B**, which is the floor of libstdc++'s inline `atomic::wait` (dynamic tables plus GOT). With `threading::none` the binary doesn't grow.
+  - **Depth:** unchanged, 295 / 252 hops.
+  - **NFR-01:** a warm resolve runs the same instructions as T1.5.
+- **Review:** the code passed. No defect and no behaviour change: event logs are byte-identical before and after under ASan/UBSan/LSan, TSan stress is clean, and a mutation check of the waiter-bit logic is caught. The acceptance failed only on the two Clang budgets. Non-blocking items were fixed: base-class `shared_ptr` tests, the C4324 layout, and the docs set to the quiet numbers.
+- **Not passed:** T1.9 and T1.14 wait for the owner's decisions on NFR-03 and NFR-06 on Clang (see "Waiting for owner").
+
 ## 2026-11-01: T1.8 C++20 module and single header (landed; waits for T1.7 to pass)
 
 - **What changed** (squashed as 320d5ed):
