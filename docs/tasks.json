@@ -459,7 +459,7 @@
         "T1.6",
         "T0.3"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "T1.10",
