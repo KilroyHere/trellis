@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Self-test of tools/compile_fail.py: run it on fixtures whose outcome is known.
 
-Seven kinds of case:
+Eight kinds of case:
   - CASES compile each fixture in compile_fail_fixtures/ with the build's compiler. Each fixture
     breaks one rule of the runner (passes.cpp and nfr07_passes.cpp break none), so a file that
     compiles, or one that misses an expectation or has a bad directive, must be reported as a
     failure for that reason. With a compiler whose output NFR-07 doesn't bound, such as MSVC's cl,
     the two fixtures with an expect-max-lines-nfr07 budget pass and say it was skipped
-    (NFR07_SKIPPED).
+    (NFR07_SKIPPED). CL_CASES do the same for the fixtures of expect-regex-msvc, whose verdict
+    depends on whether the compiler is cl, so that each build checks its own side: GCC and Clang
+    ignore the directive, and on cl it replaces every expect-regex line.
   - The NFR-07 checks run in process, without a compiler: NFR-07's count (owner decision 1A) on
     outputs shaped as GCC, Clang and MSVC print them, where the include chain and the quoted
     lines of the user's code go, and those of Trellis's headers and the standard library stay;
@@ -16,6 +18,9 @@ Seven kinds of case:
   - The NFR-07 skip check runs a fixture with expect-max-lines-nfr07: 1 on the stub that prints two
     lines, with the compiler ID of Clang, where it fails, and of MSVC, where the verdict says the
     budget was skipped.
+  - The selection check runs the runner's evaluate() on synthetic GCC and cl output, with either
+    compiler ID, so that every build checks cl's rules for expect-regex-msvc too: the cl lines
+    replace the expect-regex lines on cl only, and expect-id and expect-max-lines apply on both.
   - STUB_CASES compile passes.cpp with stub_compiler.py, through a temporary config. The stub prints
     the error passes.cpp expects and then crashes, dies by a signal or hangs, and the runner must
     still report a failure. For the hang, neither the stub nor its own child process (playing
@@ -31,8 +36,8 @@ Seven kinds of case:
     of its own, which the runner removes afterwards.
   - The concurrency check starts two runners at once, on that stub lingering after its report, so
     that the two compiles overlap; their working directories must differ.
-CASES and STUB_CASES are checked against the runner's verdict (its first output line) and exit
-status. CTest runs this as tools.compile_fail_selftest with the build's --config.
+CASES, CL_CASES and STUB_CASES are checked against the runner's verdict (its first output line)
+and exit status. CTest runs this as tools.compile_fail_selftest with the build's --config.
 """
 import argparse
 import json
@@ -181,6 +186,14 @@ NFR07_MSVC = [
            "instantiation 'app::c0 trellis::v1::injector<>::create<app::c0>(void)' being compiled"),
 ]
 
+# (fixture, (expected exit status, verdict text) on cl, the same on any other compiler): the
+# fixtures of expect-regex-msvc, which replaces the expect-regex lines on cl only.
+NEVER = "this text never appears in the compiler output"
+CL_CASES = [
+    ("msvc_regex_ignored.cpp", (1, f"expect-regex-msvc did not match: {NEVER}"), (0, "PASS ")),
+    ("msvc_regex_replaces.cpp", (0, "PASS "), (1, f"expect-regex did not match: {NEVER}")),
+]
+
 # (stub scenario, expected exit status, text the runner's verdict line must contain)
 STUB_CASES = [
     ("normal-error", 0, "PASS "),
@@ -302,6 +315,70 @@ def check(label, status, report, expected_status, expected_text):
     for line in report.splitlines()[:20]:
         print(f"     {line}")
     return False
+
+
+def check_regex_selection():
+    """expect-regex-msvc on synthetic output, for cl (compiler ID "MSVC") and for GCC and Clang:
+    on cl the expect-regex-msvc lines replace the expect-regex lines, elsewhere they are ignored,
+    and expect-id and expect-max-lines apply on both. No compiler runs, so every build checks
+    cl's rules. Then the parser: the directive repeats, its regex must compile, and it doesn't
+    count as the expectation that every test needs, since GCC and Clang would then check none."""
+    header = "// compile-fail: selection\n// expect-id: TRL-E000\n// expect-max-lines: 3\n"
+    both = compile_fail.parse_directives(
+        header + "// expect-regex: E000<a, b>\n// expect-regex: one error\n"
+        "// expect-regex-msvc: E000<a,b>\n// expect-regex-msvc: one error\n")
+    gnu_only = compile_fail.parse_directives(header + "// expect-regex: E000<a, b>\n")
+    gnu = ("x.cpp:1:1: error: static assertion failed: TRL-E000: one error\n"
+           "x.cpp:1:1: note: in E000<a, b>")
+    cl = ("x.cpp(1): error C2338: static assertion failed: 'TRL-E000: one error'\n"
+          "x.cpp(1): note: see reference to E000<a,b>")
+    # (label, spec, output, compiler ID, the problems evaluate() must give, as prefixes)
+    cases = [
+        ("GCC's output on GCC", both, gnu, "GNU", []),
+        ("Clang's output on Clang", both, gnu, "Clang", []),
+        ("cl's output on cl", both, cl, "MSVC", []),
+        ("GCC's output on cl", both, gnu, "MSVC", ["expect-regex-msvc did not match: E000<a,b>"]),
+        ("cl's output on Clang", both, cl, "Clang", ["expect-regex did not match: E000<a, b>"]),
+        ("cl's output on cl, without expect-regex-msvc", gnu_only, cl, "MSVC",
+         ["expect-regex did not match: E000<a, b>"]),
+        ("the wrong ID on cl", both, cl.replace("TRL-E000", "TRL-E001"), "MSVC",
+         ["the first error line does not contain TRL-E000"]),
+        ("four lines on cl", both, cl + "\nx.cpp(1): note: a\nx.cpp(1): note: b", "MSVC",
+         ["4 lines of output, more than expect-max-lines (3)"]),
+    ]
+    results = []
+    for label, spec, output, compiler_id, expected in cases:
+        result = compile_fail.Result(["cc"], returncode=1, output=output)
+        problems = compile_fail.evaluate(spec, result, compiler_id=compiler_id)
+        if len(problems) == len(expected) and all(
+                problem.startswith(prefix) for problem, prefix in zip(problems, expected)):
+            print(f"ok   selection, {label}: {problems or 'passes'}")
+            results.append(True)
+        else:
+            print(f"FAIL selection, {label}: expected {expected or 'no problem'}, got {problems}")
+            results.append(False)
+    # (label, directives after the summary, the first problem parse_directives must give, or
+    # None, and how many expect-regex-msvc lines it must keep)
+    parses = [
+        ("two lines", "// expect-regex: a\n// expect-regex-msvc: b\n// expect-regex-msvc: c\n",
+         None, 2),
+        ("a bad regex", "// expect-regex: a\n// expect-regex-msvc: (\n",
+         "line 3: invalid regex '('", 0),
+        ("no other expectation", "// expect-regex-msvc: b\n",
+         "a compile-fail test needs an expect-id or an expect-regex", 1),
+    ]
+    for label, directives, problem, kept in parses:
+        spec = compile_fail.parse_directives("// compile-fail: parse\n" + directives)
+        first = spec.problems[0] if spec.problems else None
+        if (first is None if problem is None else first is not None and first.startswith(problem)) \
+                and len(spec.msvc_regexes) == kept:
+            print(f"ok   parse, {label}: {first or 'no problem'}, {kept} kept")
+            results.append(True)
+        else:
+            print(f"FAIL parse, {label}: expected {problem or 'no problem'} and {kept} kept, got "
+                  f"{spec.problems} and {len(spec.msvc_regexes)} kept")
+            results.append(False)
+    return results
 
 
 def stub_config(real_config, scratch, scenario, pid_file=None, linger=None, compiler_id=None):
@@ -483,9 +560,9 @@ def main():
 
     results = []
     fixtures = sorted(path.name for path in FIXTURES.glob("*.cpp"))
-    covered = sorted(case[0] for case in CASES)
+    covered = sorted(case[0] for case in CASES + CL_CASES)
     if fixtures != covered:
-        print(f"FAIL fixtures and CASES differ: fixtures {fixtures}, cases {covered}")
+        print(f"FAIL fixtures and cases differ: fixtures {fixtures}, cases {covered}")
         results.append(False)
     build = json.loads(config.read_text(encoding="utf-8"))
     nfr07 = compile_fail.nfr07_applies(build)
@@ -494,7 +571,12 @@ def main():
             expected_status, expected_text = NFR07_SKIPPED[fixture]
         status, report = run_runner(config, FIXTURES / fixture)
         results.append(check(fixture, status, report, expected_status, expected_text))
+    on_cl = build.get("compiler_id") == "MSVC"
+    for fixture, cl_expected, other_expected in CL_CASES:
+        status, report = run_runner(config, FIXTURES / fixture)
+        results.append(check(fixture, status, report, *(cl_expected if on_cl else other_expected)))
     results.extend(check_nfr07_count())
+    results.extend(check_regex_selection())
 
     binary_dir = Path(build["binary_dir"])
     binary_dir.mkdir(parents=True, exist_ok=True)

@@ -22,6 +22,7 @@ Directives, in the comment block at the top of the file:
   // compile-fail: <summary>      required: the misuse the snippet shows, in one line
   // expect-id: TRL-E001          the first error line must contain this ID, as a whole token
   // expect-regex: <regex>        repeatable: each Python regex must match the diagnostics
+  // expect-regex-msvc: <regex>   repeatable: MSVC's alternatives to the expect-regex lines
   // expect-max-lines: <n>        optional, default 60: the output may have at most n lines
   // expect-max-lines-nfr07: <n>  optional: at most n lines by NFR-07's count (below)
 
@@ -41,6 +42,16 @@ A test needs an expect-id or at least one expect-regex; otherwise any error, eve
 header, would pass it. A comment anywhere in the file that looks like a directive (it starts with
 "compile" or "expect", in any case, with "-" or "_", and has a colon) must be a known directive in
 the top comment block: a misspelt or misplaced one is an error, never silently ignored.
+
+expect-regex-msvc is for diagnostics that cl words or spells differently, such as template
+arguments without the space after the comma (E002<int,trellis::v1::detail::no_ctor_declared>), or
+a type that GCC and Clang print in the static_assert's condition and cl only in a note. On cl (the
+build's compiler_id is MSVC), a test that has any expect-regex-msvc lines is checked against those
+instead of its expect-regex lines, so they replace all of them: repeat an expect-regex that cl
+matches too (the message, the one-error regex) as an expect-regex-msvc line, or the test is less
+strict on cl. GCC and Clang, clang-cl included, ignore them and check every expect-regex line.
+expect-id and expect-max-lines apply on every compiler, and expect-max-lines-nfr07 on GCC and
+Clang (above).
 
 A test passes only when the compiler reports an error, without crashing, running out of memory,
 dying by a signal or timing out, and every expectation holds. Regexes are searched (re.MULTILINE)
@@ -73,8 +84,9 @@ DEFAULT_MEMORY_MB = 6000  # address-space cap per compile (POSIX only), as CLAUD
 # Anything that looks like a directive, anywhere on a line: "//", then a word starting with
 # "compile" or "expect" in any case and spelling ("expect_regex", "Expect-ID"), then a colon.
 DIRECTIVE_LIKE = re.compile(r"//\s*((?:compile|expect)[\w-]*)\s*:(.*)$", re.IGNORECASE)
-KNOWN_DIRECTIVES = ("compile-fail", "expect-id", "expect-regex", "expect-max-lines",
-                    "expect-max-lines-nfr07")
+KNOWN_DIRECTIVES = ("compile-fail", "expect-id", "expect-regex", "expect-regex-msvc",
+                    "expect-max-lines", "expect-max-lines-nfr07")
+REPEATABLE_DIRECTIVES = ("expect-regex", "expect-regex-msvc")
 ERROR_ID = re.compile(r"^TRL-[ER]\d{3}$")
 # Terminal escapes: colors and other CSI sequences (ESC [ params final, as in GCC's ESC[01m ESC[K),
 # and OSC-8 hyperlinks (ESC ] 8 ; params ; URL, then BEL, GCC's default, or ESC \), which GCC puts
@@ -181,9 +193,18 @@ class Spec:
         self.summary = None
         self.expect_id = None
         self.regexes = []
+        self.msvc_regexes = []
         self.max_lines = DEFAULT_MAX_LINES
         self.max_lines_nfr07 = None  # expect-max-lines-nfr07, checked only when given
         self.problems = []
+
+    def regexes_for(self, compiler_id):
+        """(directive, regexes): what the compiler whose CMake compiler ID (compiler_id in
+        trellis_compiler.json) this is gets checked against. On cl, "MSVC", the expect-regex-msvc
+        lines replace the expect-regex lines when the test has any; elsewhere they are ignored."""
+        if compiler_id == "MSVC" and self.msvc_regexes:
+            return "expect-regex-msvc", self.msvc_regexes
+        return "expect-regex", self.regexes
 
 
 def parse_directives(text):
@@ -208,7 +229,7 @@ def parse_directives(text):
             spec.problems.append(f"line {number}: '{name}' must be in the comment block at the "
                                  f"top of the file, before the first line of code")
             continue
-        if name in seen and name != "expect-regex":
+        if name in seen and name not in REPEATABLE_DIRECTIVES:
             spec.problems.append(f"line {number}: '{name}' appears more than once")
             continue
         seen.add(name)
@@ -221,11 +242,13 @@ def parse_directives(text):
                 spec.expect_id = value
             else:
                 spec.problems.append(f"line {number}: '{value}' is not an error ID like TRL-E001")
-        elif name == "expect-regex":
+        elif name in REPEATABLE_DIRECTIVES:
             try:
-                spec.regexes.append(re.compile(value, re.MULTILINE))
+                regex = re.compile(value, re.MULTILINE)
             except re.error as error:
                 spec.problems.append(f"line {number}: invalid regex '{value}': {error}")
+            else:
+                (spec.msvc_regexes if name == "expect-regex-msvc" else spec.regexes).append(regex)
         elif name == "expect-max-lines":
             if value.isdigit() and int(value) > 0:
                 spec.max_lines = int(value)
@@ -455,9 +478,11 @@ def compile_problem(result, timeout=DEFAULT_TIMEOUT):
     return None
 
 
-def evaluate(spec, result, timeout=DEFAULT_TIMEOUT, check_nfr07=True):
+def evaluate(spec, result, timeout=DEFAULT_TIMEOUT, check_nfr07=True, compiler_id=None):
     """Every way in which the compile misses the spec; empty when the test passes. check_nfr07:
-    whether expect-max-lines-nfr07 applies to the compiler (nfr07_applies)."""
+    whether expect-max-lines-nfr07 applies to the compiler (nfr07_applies). compiler_id is the
+    build's, from trellis_compiler.json: on cl, "MSVC", expect-regex-msvc lines replace the
+    expect-regex lines (Spec.regexes_for)."""
     problem = compile_problem(result, timeout)
     if problem:
         return [problem]
@@ -467,9 +492,10 @@ def evaluate(spec, result, timeout=DEFAULT_TIMEOUT, check_nfr07=True):
         problems.append(f"the first error line does not contain {spec.expect_id}: "
                         f"{first_error.strip()[:200]}")
     diagnostics = "\n".join(diagnostic_lines(result.lines))
-    for regex in spec.regexes:
+    directive, regexes = spec.regexes_for(compiler_id)
+    for regex in regexes:
         if not regex.search(diagnostics):
-            problems.append(f"expect-regex did not match: {regex.pattern}")
+            problems.append(f"{directive} did not match: {regex.pattern}")
     if len(result.lines) > spec.max_lines:
         problems.append(f"{len(result.lines)} lines of output, "
                         f"more than expect-max-lines ({spec.max_lines})")
@@ -513,7 +539,7 @@ def run_test(config, source, timeout, memory_mb):
     result = compile_source(config, source, timeout, memory_mb)
     log = write_log(config, name, result)
     check_nfr07 = nfr07_applies(config)
-    problems = evaluate(spec, result, timeout, check_nfr07)
+    problems = evaluate(spec, result, timeout, check_nfr07, config.get("compiler_id"))
     if not problems:
         counts = f"{len(result.lines)} lines"
         if spec.max_lines_nfr07 is not None and check_nfr07:
