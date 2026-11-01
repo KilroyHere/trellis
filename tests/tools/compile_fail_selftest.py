@@ -14,9 +14,10 @@ Four kinds of case:
     runs in its own process group, which these signals don't reach, so the runner must take the
     stub and its child down before it exits.
   - The invocation check runs the runner, with stub_compiler.INHERITED in its environment, on the
-    stub that reports its arguments and environment. The compiler must get LC_ALL=C and none of
-    the inherited variables, and the output users see (colors off, but quoted source and carets
-    kept, as expect-max-lines counts them).
+    stub that reports its arguments, environment and working directory. The compiler must get
+    LC_ALL=C and none of the inherited variables, and the output users see (colors off, but quoted
+    source and carets kept, as expect-max-lines counts them). It must run in a scratch directory
+    of its own, which the runner removes afterwards.
 CASES and STUB_CASES are checked against the runner's verdict (its first output line) and exit
 status. CTest runs this as tools.compile_fail_selftest with the build's --config.
 """
@@ -168,9 +169,10 @@ def check_invocation(config, scratch):
     if not check(label, status, report, 0, "PASS "):
         return False
     log = compile_fail.log_path({"binary_dir": scratch}, compile_fail.snippet_name(source))
-    arguments, environment = stub_compiler.read_report(
-        log.read_text(encoding="utf-8") if log.is_file() else "")
-    if arguments is None or environment is None:
+    text = log.read_text(encoding="utf-8") if log.is_file() else ""
+    arguments, environment = stub_compiler.read_report(text)
+    directory = stub_compiler.read_directory(text)
+    if arguments is None or environment is None or directory is None:
         print(f"FAIL {label}: the stub's report is missing from {log}")
         return False
     names = {entry.split("=", 1)[0] for entry in environment}
@@ -182,6 +184,14 @@ def check_invocation(config, scratch):
     problems += [f"{flag} must stay off: expect-max-lines counts the lines users see"
                  for flag in ("-fdiagnostics-plain-output", "-fno-caret-diagnostics")
                  if flag in arguments]
+    # Each compile runs in a scratch directory of its own, removed afterwards, so that compiles in
+    # parallel never share one (MSVC's vc140.pdb: compile_fail.compile_source).
+    work_root = (Path(scratch) / "compile_fail" / "work").resolve()
+    if Path(directory).parent != work_root:
+        problems.append(f"the compiler ran in {directory}, not in a directory of its own under "
+                        f"{work_root}")
+    elif Path(directory).exists():
+        problems.append(f"the compile's scratch directory {directory} was left behind")
     if problems:
         print(f"FAIL {label}: {'; '.join(problems)}")
         print(f"     arguments: {' '.join(arguments)}")
