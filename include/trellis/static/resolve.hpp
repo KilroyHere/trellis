@@ -249,7 +249,11 @@ constexpr auto select_node() noexcept {
                        !detail::value_buildable<key, impl, served::owned>()) {
     return never_node<failure::copy>{};
   } else {
-    return detail::construction_node<impl, typename Plan::next, Plan::max_arity,
+    // Plan::impl, not the alias above: cl names a type made from an alias local to a function
+    // template by the alias, so the node's class, and the path that the explain pass builds from
+    // it, printed as select_node::impl on MSVC (platforms run 41332426822). GCC and Clang print
+    // the class either way.
+    return detail::construction_node<typename Plan::impl, typename Plan::next, Plan::max_arity,
                                      typename served::binding_ctor>();
   }
 }

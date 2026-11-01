@@ -3,6 +3,9 @@
 // expect-regex: TRL-E010: constructor arity above max_ctor_arity
 // expect-regex: E010<app::service, 4(UL)?>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E010: constructor arity above max_ctor_arity
+// expect-regex-msvc: E010<T,4>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +T=app::service(?:,|$)
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 20
 //
 // The bound is the injector's max_ctor_arity, which T1.5 will pass as the last argument of

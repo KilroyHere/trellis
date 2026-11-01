@@ -4,6 +4,10 @@
 // expect-regex: trellis::error::E012<app::sensor, ?trellis::error::request<const app::sensor ?&> ?>
 // expect-regex: trellis::error::path<app::c0, ?app::c1, ?app::c2, ?app::c3, ?app::c4, ?app::c5, ?app::c6, ?app::c7, ?app::c8, ?app::c9, ?app::c10, ?app::c11, ?app::c12, ?app::c13>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E012: unbound concrete type requested by reference, pointer or shared_ptr
+// expect-regex-msvc: trellis::error::E012<app::sensor,trellis::error::request<R>>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +R=const app::sensor &(?:,|$)
+// expect-regex-msvc: trellis::error::path<app::c0, ?app::c1, ?app::c2, ?app::c3, ?app::c4, ?app::c5, ?app::c6, ?app::c7, ?app::c8, ?app::c9, ?app::c10, ?app::c11, ?app::c12, ?app::c13>
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
 //
 // Each deduced class on the failing path costs the error one instantiation note, from one line of

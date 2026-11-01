@@ -4,6 +4,10 @@
 // expect-regex: trellis::error::E001<app::repository, ?trellis::error::request<std::shared_ptr<app::repository> ?> ?>
 // expect-regex: trellis::error::path<app::front, ?app::store>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E001: no binding for an abstract type: bind it to an implementation
+// expect-regex-msvc: trellis::error::E001<app::repository,trellis::error::request<R>>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +R=std::shared_ptr<app::repository>(?:,|$)
+// expect-regex-msvc: trellis::error::path<app::back,app::store>
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
 //
 // The explain pass (T1.6) follows the first failing request from create<front>() down: front's

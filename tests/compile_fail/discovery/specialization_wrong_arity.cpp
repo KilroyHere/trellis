@@ -4,6 +4,10 @@
 // expect-regex: E002<app::service,
 // expect-regex: trellis::(v1::)?ctor<const app::config ?&, int> ?>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E002: type not constructible
+// expect-regex-msvc: E002<app::service,
+// expect-regex-msvc: E002<app::service,trellis::v1::ctor<const app::config &,int>>
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 20
 //
 // The first parameter type is right, but the only constructor takes one parameter, not two. The

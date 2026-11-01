@@ -37,8 +37,9 @@ flags set -ftemplate-depth, -fconstexpr-depth or /templateDepth is refused: they
 the recorded result if there is one, otherwise from the length the test uses, up by doubling, then
 by bisection, each compile as the test compiles. Only a compiler limit counts as the end: the
 template depth limit, Clang's warning that its stack is nearly exhausted (an error with the
-warnings, and what stops Clang 20's aggregate chain), cl's stack and heap limits, a crash, a timeout
-or the memory cap; any other error stops the search with a failure. --record writes the results
+warnings, and what stops Clang 20's aggregate chain), cl's stack and heap limits and its limit on
+nested initializers (C1054, which cl 19.51 meets in the aggregate chain), a crash, a timeout or the
+memory cap; any other error stops the search with a failure. --record writes the results
 into RECORD (tests/chain_depth/deepest.json), under the preset's name (and cl's version on MSVC),
 with the commit and the tree id of include/, which a rebase keeps; run it for one preset at a time.
 Re-measure after changing the static engine or discovery (include/trellis/static/,
@@ -417,8 +418,9 @@ DEPTH_LIMIT = re.compile(r"template instantiation depth exceeds maximum"
                          r"|\bC1202\b|\bC2999\b")
 # The compilers' other limits, which deep instantiation can reach: Clang's warning that its stack
 # is nearly exhausted (-Wstack-exhausted, an error here with the warnings), and cl's stack, heap and
-# internal errors.
-COMPILER_LIMIT = re.compile(r"stack nearly exhausted|\bC10(?:01|04|60|63)\b")
+# internal errors, and its "compiler limit: initializers nested too deeply" (C1054), which stopped
+# cl 19.51's aggregate chain at 200 hops (platforms run 41330765617).
+COMPILER_LIMIT = re.compile(r"stack nearly exhausted|\bC10(?:01|04|54|60|63)\b")
 MEMORY_ERROR = re.compile(r"out of memory|memory exhausted|Cannot allocate memory|bad_alloc|"
                           r"Killed signal|LLVM ERROR", re.IGNORECASE)
 # The flags that only add debug information: dropped from cl's compiles (module documentation).

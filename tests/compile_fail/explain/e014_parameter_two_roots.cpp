@@ -4,6 +4,10 @@
 // expect-regex: trellis::error::E014<app::base, ?trellis::error::request<std::unique_ptr<app::base(, ?std::default_delete<app::base> ?)?> ?>, ?app::derived>
 // expect-regex: trellis::error::path<app::owner>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E014: owning request would delete the implementation through a base class whose destructor isn't virtual
+// expect-regex-msvc: trellis::error::E014<app::base,trellis::error::request<R>,app::derived>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +R=std::unique_ptr<app::base,std::default_delete<app::base>>(?:,|$)
+// expect-regex-msvc: trellis::error::path<app::keeper>
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
 //
 // std::unique_ptr<base> would delete the derived object through base's destructor, which isn't

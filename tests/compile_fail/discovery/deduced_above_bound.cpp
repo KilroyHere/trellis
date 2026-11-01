@@ -3,6 +3,9 @@
 // expect-regex: TRL-E010: constructor arity above max_ctor_arity
 // expect-regex: E010<app::wide, 16(UL)?>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E010: constructor arity above max_ctor_arity
+// expect-regex-msvc: E010<T,16>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +T=app::wide(?:,|$)
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 20
 //
 // The constructor takes 17 parameters; deduction probes 16 at most by default (ADR-0003 item 5),

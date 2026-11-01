@@ -4,6 +4,10 @@
 // expect-regex: trellis::error::E012<app::sensor, ?trellis::error::request<app::sensor ?&> ?>
 // expect-regex: trellis::error::path<app::station, ?app::reader>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E012: unbound concrete type requested by reference, pointer or shared_ptr: nothing would own it
+// expect-regex-msvc: trellis::error::E012<app::sensor,trellis::error::request<R>>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +R=app::sensor &(?:,|$)
+// expect-regex-msvc: trellis::error::path<app::station, ?app::reader>
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
 //
 // sensor has no binding, so reader's sensor&, logger's const sensor& and probe's sensor* are three

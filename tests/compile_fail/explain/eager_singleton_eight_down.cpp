@@ -4,6 +4,10 @@
 // expect-regex: trellis::error::E012<app::sensor, ?trellis::error::request<app::sensor ?&> ?>
 // expect-regex: trellis::error::path<app::hub, ?app::d1, ?app::d2, ?app::d3, ?app::d4, ?app::d5, ?app::d6, ?app::d7>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E012: unbound concrete type requested by reference, pointer or shared_ptr
+// expect-regex-msvc: trellis::error::E012<app::sensor,trellis::error::request<R>>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +R=app::sensor &(?:,|$)
+// expect-regex-msvc: trellis::error::path<app::hub, ?app::d1, ?app::d2, ?app::d3, ?app::d4, ?app::d5, ?app::d6, ?app::d7>
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
 //
 // An eager injector builds its singletons in make_injector, and hub can't be built. make_injector

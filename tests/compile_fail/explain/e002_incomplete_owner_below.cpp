@@ -4,6 +4,10 @@
 // expect-regex: trellis::error::E002<app::database, ?trellis::(v1::)?detail::no_ctor_declared ?>
 // expect-regex: trellis::error::path<app::server, ?app::store>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E002: type not constructible: it is incomplete here
+// expect-regex-msvc: trellis::error::E002<T,trellis::v1::detail::no_ctor_declared>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +T=app::database(?:,|$)
+// expect-regex-msvc: trellis::error::path<app::server, ?app::store>
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
 //
 // database is only declared, so store's parameter std::unique_ptr<database> can't be served, and

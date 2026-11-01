@@ -645,6 +645,27 @@ struct slot_holder<J, binding<Key, Impl, singleton_inline_t, AllowCopy>, Mode> {
 // so that the slot of the binding at position J is a static_cast away: the binding map gives J
 // and the binding type together (static/binding_map.hpp). One class per injector type, built by a
 // flat expansion, never a recursive std::tuple.
+#if TRELLIS_STORES_ARE_PRIMARY_TEMPLATES
+// On MSVC, slot_store names a primary template over the holders, slot_holders: cl applies
+// TRELLIS_EMPTY_BASES in full only to a primary template, and gave the partial specialization
+// below a byte for each empty holder after the second (config.hpp,
+// TRELLIS_STORES_ARE_PRIMARY_TEMPLATES).
+template <threading Mode, class... Holders>
+struct TRELLIS_EMPTY_BASES slot_holders : Holders... {
+  template <std::size_t I, class Binding>
+  auto& at() noexcept {
+    return static_cast<slot_holder<I, Binding, Mode>&>(*this).cell;
+  }
+};
+template <threading Mode, class Indices, class... Bindings>
+struct slot_store_of;
+template <threading Mode, std::size_t... J, class... Bindings>
+struct slot_store_of<Mode, std::index_sequence<J...>, Bindings...> {
+  using type = slot_holders<Mode, slot_holder<J, Bindings, Mode>...>;
+};
+template <threading Mode, class Indices, class... Bindings>
+using slot_store = typename slot_store_of<Mode, Indices, Bindings...>::type;
+#else
 template <threading Mode, class Indices, class... Bindings>
 struct slot_store;
 template <threading Mode, std::size_t... J, class... Bindings>
@@ -655,6 +676,7 @@ struct TRELLIS_EMPTY_BASES slot_store<Mode, std::index_sequence<J...>, Bindings.
     return static_cast<slot_holder<I, Binding, Mode>&>(*this).cell;
   }
 };
+#endif
 
 // storage_for<Mode, type_list<B...>>: the storage types of an injector whose flattened bindings
 // are B..., under the threading mode Mode: its slots, its teardown stack, sized to the number of

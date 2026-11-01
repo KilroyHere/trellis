@@ -2,6 +2,9 @@
 // expect-regex: (use of deleted function|invokes a deleted function)
 // expect-regex: (T = const app::store|to 'const (app::)?store')
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: error C2280: 'trellis::v1::detail::any_arg<app::consumer,Ctx>::operator T &\(void\) const<const app::store>': attempting to reference a deleted function
+// expect-regex-msvc: error C2280: [^\n]*[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +T=const app::store(?:,|$)
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 30
 //
 // Discovery fixes the arity at 1 before any resolution (ADR-0003 item 2), so a const store& that

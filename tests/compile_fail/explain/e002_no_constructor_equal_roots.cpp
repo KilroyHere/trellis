@@ -4,6 +4,10 @@
 // expect-regex: trellis::error::E002<app::vault, ?trellis::(v1::)?detail::no_ctor_declared ?>
 // expect-regex: trellis::error::path<app::bank, ?app::teller>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E002: type not constructible: deduction found no public, non-deleted, unambiguous constructor
+// expect-regex-msvc: trellis::error::E002<T,trellis::v1::detail::no_ctor_declared>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +T=app::vault(?:,|$)
+// expect-regex-msvc: trellis::error::path<app::bank, ?app::teller>
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
 //
 // Discovery can't find vault's constructor. The explain pass reaches it from create<bank>()

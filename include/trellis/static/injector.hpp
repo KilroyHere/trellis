@@ -94,6 +94,20 @@ template <options Opts>
 inline constexpr std::size_t effective_max_ctor_arity =
     Opts.max_ctor_arity < deduced_arity_limit ? Opts.max_ctor_arity : deduced_arity_limit;
 
+// duplicate_error<Duplicate>: the TRL-E003 error types for the key that Duplicate, a
+// first_duplicate<...>, found bound twice: by two bindings, or by two overrides. Members of a
+// class template, not aliases local to the function that raises them: cl names a type made from
+// such a local alias by the alias, so its note named make_injector::error instead of the type
+// (platforms run 41332426822). GCC and Clang print the same type either way.
+template <class Duplicate>
+struct duplicate_error {
+  using bindings = trellis::error::E003<typename Duplicate::key, typename Duplicate::first_binding,
+                                        typename Duplicate::second_binding>;
+  using overrides = trellis::error::E003<typename Duplicate::key,
+                                         override_binding<typename Duplicate::first_binding>,
+                                         override_binding<typename Duplicate::second_binding>>;
+};
+
 // report_overrides<Layout>(missing): why the overrides among make_injector's arguments don't apply
 // (overrides_apply, dsl/override.hpp), given their override_layout and its missing_bindings, the
 // overrides with no binding to replace: two overrides of one key, TRL-E003, with the error type
@@ -106,11 +120,8 @@ inline constexpr std::size_t effective_max_ctor_arity =
 template <class Layout, class... Overrides>
 void report_overrides(type_list<Overrides...> /*missing*/) noexcept {
   if constexpr (Layout::keys_repeat) {
-    using duplicate = first_duplicate<typename Layout::override_bindings>;
-    using error = trellis::error::E003<typename duplicate::key,
-                                       override_binding<typename duplicate::first_binding>,
-                                       override_binding<typename duplicate::second_binding>>;
-    detail::raise<error, error_message::duplicate_override>();
+    using duplicate = duplicate_error<first_duplicate<typename Layout::override_bindings>>;
+    detail::raise<typename duplicate::overrides, error_message::duplicate_override>();
   } else {
     [[maybe_unused]] const std::array<bool, sizeof...(Overrides) + 1> reported{
         true,
@@ -506,10 +517,9 @@ template <options Opts = options{}, class... Parts>
     // One report, from the function the user called, before anything uses the binding map
     // (ADR-0006). The injector type stays complete: its class doesn't build the map.
     // The call to raise() fits on one line, which GCC 14 quotes in the error.
-    using duplicate = detail::first_duplicate<typename detail::injector_traits<result>::bindings>;
-    using error = trellis::error::E003<typename duplicate::key, typename duplicate::first_binding,
-                                       typename duplicate::second_binding>;
-    detail::raise<error, detail::error_message::duplicate_binding>();
+    using duplicate = detail::duplicate_error<
+        detail::first_duplicate<typename detail::injector_traits<result>::bindings>>;
+    detail::raise<typename duplicate::bindings, detail::error_message::duplicate_binding>();
     detail::unreachable();
   } else if constexpr (detail::eager_fails<Opts.eager, result>) {
     // An eager injector builds every singleton here, and one of them can't be built: the explain

@@ -4,6 +4,10 @@
 // expect-regex: trellis::error::E004<app::greedy>
 // expect-regex: trellis::error::path<app::shell, ?app::engine>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E004: ambiguous constructor: a constructor template or variadic constructor accepts any argument
+// expect-regex-msvc: trellis::error::E004<T>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +T=app::greedy(?:,|$)
+// expect-regex-msvc: trellis::error::path<app::shell, ?app::engine>
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
 //
 // Deduction can't tell what greedy's constructor template needs (TRL-E004). The explain pass

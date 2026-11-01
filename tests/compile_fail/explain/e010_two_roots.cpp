@@ -4,6 +4,10 @@
 // expect-regex: trellis::error::E010<app::mixer, ?2(UL)?>
 // expect-regex: trellis::error::path<app::studio>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E010: constructor arity above max_ctor_arity
+// expect-regex-msvc: trellis::error::E010<T,2>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +T=app::mixer(?:,|$)
+// expect-regex-msvc: trellis::error::path<app::stage>
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
 //
 // Deduction finds mixer's constructor only above the injector's bound (TRL-E010). The explain pass

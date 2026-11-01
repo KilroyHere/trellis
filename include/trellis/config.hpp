@@ -383,4 +383,24 @@
 #define TRELLIS_MODULE_SYSTEM_HEADER
 #endif
 
+// TRELLIS_STORES_ARE_PRIMARY_TEMPLATES is 1 on MSVC, and on clang-cl, which follows its layout. A
+// module keeps its bindings, and an injector its singletons' slots, as the bases of one store
+// class, binding_store (dsl/module.hpp) and slot_store (static/storage.hpp), mostly empty ones,
+// which TRELLIS_EMPTY_BASES lays out at offset 0. cl applies __declspec(empty_bases) in full only
+// to a class template's primary definition: on the stores' partial specializations over
+// std::index_sequence<J...>, N empty bases took N - 1 bytes for N from 3 to 6, with or without
+// constructors, and a module of three empty bindings took 2 bytes, while a primary template over
+// the same bases took 1 (cl 19.44 and 19.51, platforms run 41336542701;
+// tests/unit/create_test.cpp). Where this is 1, each store's name is an alias of a primary template
+// over its holders, stored_binding<J, B>... or slot_holder<J, B, Mode>..., so that no use of it
+// changes; elsewhere the partial specializations stay. No upstream report found; godbolt.org and
+// the GCC/LLVM/MSVC trackers are unreachable here. The gate covers every cl from NFR-13's 19.38,
+// and clang-cl so that both lay a module out alike; clang-cl is untested. create_test.cpp checks
+// the sizes on MSVC.
+#if defined(_MSC_VER)
+#define TRELLIS_STORES_ARE_PRIMARY_TEMPLATES 1
+#else
+#define TRELLIS_STORES_ARE_PRIMARY_TEMPLATES 0
+#endif
+
 #endif  // TRELLIS_CONFIG_HPP

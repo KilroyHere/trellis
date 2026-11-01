@@ -4,6 +4,10 @@
 // expect-regex: trellis::error::E005<app::timer, ?trellis::error::request<app::timer ?&>, ?trellis::(v1::)?unique_t>
 // expect-regex: trellis::error::path<app::dashboard, ?app::scheduler>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E005: request form incompatible with the lifetime: nothing would keep the object alive
+// expect-regex-msvc: trellis::error::E005<app::timer,trellis::error::request<R>,trellis::v1::unique_t>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +R=app::timer &(?:,|$)
+// expect-regex-msvc: trellis::error::path<app::alarm,app::scheduler>
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
 //
 // scheduler declares a constructor that takes timer&, and timer is bound as unique: each request
