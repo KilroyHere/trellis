@@ -167,8 +167,9 @@ constexpr void report_request_form() noexcept {
 
 // report_override_target<Bindings, Override>(): raises TRL-E009 when no binding of Bindings, the
 // type_list of the bindings an override would replace one of, binds Override's key, and nothing
-// otherwise. The entry point for T1.7's trellis::override<K> (plan §6.10), which make_injector
-// will call for each override; T1.6 adds it with the error, and its test drives it directly.
+// otherwise. The entry point for T1.7's trellis::override<K> (plan §6.10): make_injector calls it
+// for each override with no binding to replace (static/injector.hpp, report_overrides); T1.6
+// added it with the error, and its test drives it directly.
 // The binding types may be cv-qualified, as decltype(trellis::bind<K>) is. A flat expansion and a
 // scan (plan §8.1 C3).
 template <class Bindings, class Override>

@@ -6,7 +6,9 @@
 // make_injector<options{...}>(bindings_and_modules...) flattens its arguments once into one list
 // of bindings (dsl/module.hpp), checks that no key is bound twice (TRL-E003), and returns an
 // injector that holds the bindings. The injector's binding map (static/binding_map.hpp) finds the
-// binding for a key in one overload resolution.
+// binding for a key in one overload resolution. Overrides among the arguments, override<K>,
+// replace the binding of their key in that list (dsl/override.hpp); make_injector checks that no
+// two name one key (TRL-E003) and that each has a binding to replace (TRL-E009).
 //
 // The injector's type is injector<Opts, Parts...>, where Parts are make_injector's argument types,
 // not the flattened bindings. A named module (struct app : decltype(make_module(...)) {}) thus
@@ -26,12 +28,15 @@
 #include <trellis/dsl/lifetimes.hpp>
 #include <trellis/dsl/module.hpp>
 #include <trellis/dsl/options.hpp>
+#include <trellis/dsl/override.hpp>
 #include <trellis/dsl/request_forms.hpp>
 #include <trellis/meta/type_list.hpp>
 #include <trellis/static/binding_map.hpp>
 #include <trellis/static/injector_traits.hpp>
 #include <trellis/static/storage.hpp>
+#include <trellis/static/validate.hpp>
 
+#include <array>
 #include <cstddef>
 #include <memory>
 #include <type_traits>
@@ -88,6 +93,30 @@ struct injector_access {
 template <options Opts>
 inline constexpr std::size_t effective_max_ctor_arity =
     Opts.max_ctor_arity < deduced_arity_limit ? Opts.max_ctor_arity : deduced_arity_limit;
+
+// report_overrides<Layout>(missing): why the overrides among make_injector's arguments don't apply
+// (overrides_apply, dsl/override.hpp), given their override_layout and its missing_bindings, the
+// overrides with no binding to replace: two overrides of one key, TRL-E003, with the error type
+// naming the key and both overrides; or else each override with no binding to replace, TRL-E009,
+// one error per override, through report_override_target (static/validate.hpp). Called by
+// make_injector only when the overrides don't apply, and instantiated once per argument list, so
+// a repeated make_injector call reports once. The expansion is a flat braced list, never a fold
+// (plan §8.1 C3), here rather than in a function of its own, so that the error has as few
+// instantiation notes as can be.
+template <class Layout, class... Overrides>
+void report_overrides(type_list<Overrides...> /*missing*/) noexcept {
+  if constexpr (Layout::keys_repeat) {
+    using duplicate = first_duplicate<typename Layout::override_bindings>;
+    using error = trellis::error::E003<typename duplicate::key,
+                                       override_binding<typename duplicate::first_binding>,
+                                       override_binding<typename duplicate::second_binding>>;
+    detail::raise<error, error_message::duplicate_override>();
+  } else {
+    [[maybe_unused]] const std::array<bool, sizeof...(Overrides) + 1> reported{
+        true,
+        (detail::report_override_target<typename Layout::regular_bindings, Overrides>(), true)...};
+  }
+}
 
 // owns_incomplete<T>: T is std::unique_ptr<X> with an X that is incomplete here. No object of T
 // can be destroyed here, as std::default_delete<X> asserts that X is complete, so no call can
@@ -154,8 +183,9 @@ using eager_request_t = typename binding_traits<
 /// @brief A static injector: the bindings of a composition root, flattened once, with the
 ///        options `Opts`. Made by `trellis::make_injector`; `create<T>()` builds objects from it.
 ///
-/// `Parts` are the types of the arguments that `make_injector` received: bindings and modules.
-/// Passing one named module keeps the type short, `injector<options{}, app_module>` (ADR-0010):
+/// `Parts` are the types of the arguments that `make_injector` received: bindings, modules and
+/// overrides. Passing one named module keeps the type short, `injector<options{}, app_module>`
+/// (ADR-0010):
 ///
 ///     struct app_module : decltype(make_app_module(std::declval<const Config&>())) {};
 ///     auto injector = trellis::make_injector(app_module{make_app_module(config)});
@@ -175,8 +205,8 @@ using eager_request_t = typename binding_traits<
 ///   Otherwise the behaviour is undefined.
 ///
 /// @par Errors
-/// None for the class itself. `trellis::make_injector` reports `TRL-E003`, and `create<T>()`
-/// the errors it lists.
+/// None for the class itself. `trellis::make_injector` reports `TRL-E003` and `TRL-E009`, and
+/// `create<T>()` the errors it lists.
 ///
 /// @par Example
 /// @code
@@ -186,7 +216,10 @@ using eager_request_t = typename binding_traits<
 /// @endcode
 template <options Opts, class... Parts>
 class injector {
-  using storage = detail::storage_for<Opts.threading, typename detail::flatten<Parts...>::bindings>;
+  // The bindings, as make_injector composed them from Parts: flattened, with the overrides among
+  // them applied (dsl/override.hpp).
+  using bindings_list = typename detail::compose<Parts...>::bindings;
+  using storage = detail::storage_for<Opts.threading, bindings_list>;
 
  public:
   /// @brief Takes the bindings out of `parts`: moved from rvalues, copied from lvalues. With
@@ -208,12 +241,13 @@ class injector {
   /// @endcode
   template <class... Args>
   explicit injector([[maybe_unused]] detail::injector_key key, Args&&... parts)
-      : bindings_(trellis::make_module(std::forward<Args>(parts)...)) {
+      : bindings_(detail::compose<Parts...>::template make<detail::composed_module_t<Parts...>>(
+            std::forward<Args>(parts)...)) {
     if constexpr (Opts.eager) {
       // Each singleton, in binding order, its dependencies first. If a constructor throws, the
       // exception leaves this constructor, and the members' destructors tear down what was built,
       // in reverse order: make_injector's strong guarantee (plan §7.5, ADR-0005 item 5).
-      detail::build_eagerly(*this, typename detail::flatten<Parts...>::bindings{});
+      detail::build_eagerly(*this, bindings_list{});
     }
   }
 
@@ -377,7 +411,7 @@ class injector {
   // The flattened bindings, as one module: the stored_binding<J, B> bases that the binding map's
   // values name. They hold the objects of .to_value() and .to_shared() bindings, which singletons
   // may refer to, so they are destroyed last.
-  detail::flat_module_t<Parts...> bindings_;
+  detail::composed_module_t<Parts...> bindings_;
   // What the slots share for blocking: nothing, except without atomic::wait (ADR-0012 item 3).
   typename storage::sync sync_;
   // One slot per singleton and singleton_inline binding.
@@ -387,23 +421,29 @@ class injector {
   typename storage::teardown teardown_;
 };
 
-/// @brief Builds a static injector from bindings and modules, with the options `Opts`.
+/// @brief Builds a static injector from bindings, modules and overrides, with the options `Opts`.
 ///
 /// The arguments are flattened once into one binding map keyed by type, qualifiers included
 /// (plan §5.3, ADR-0010): a module contributes its bindings, in order. A key bound twice is
-/// TRL-E003. Bindings are moved out of rvalue arguments and copied from lvalues. With
-/// `options{.eager = true}`, every singleton is built here, in dependency order, and a constructor
-/// that throws leaves nothing built (the strong guarantee).
+/// TRL-E003. An override, `trellis::override<K>`, replaces the binding of `K` that the other
+/// arguments provide, in its place (plan §6.10). Bindings are moved out of rvalue arguments and
+/// copied from lvalues. With `options{.eager = true}`, every singleton is built here, in
+/// dependency order, and a constructor that throws leaves nothing built (the strong guarantee).
 ///
 /// @tparam Opts The options (plan §6.13), such as `trellis::options{.eager = true}`.
-/// @param parts Bindings, such as `trellis::bind<IClock>.to<SystemClock>()`, and modules made with
-///              `trellis::make_module`, in any order.
+/// @param parts Bindings, such as `trellis::bind<IClock>.to<SystemClock>()`, modules made with
+///              `trellis::make_module`, and overrides, such as
+///              `trellis::override<IClock>.to<FixedClock>()`, in any order.
 /// @return The injector, by value (it is neither copyable nor movable, so bind it to a variable).
 ///
 /// @par Constraints
-/// - Each key is bound at most once across `parts`; otherwise compilation fails with TRL-E003.
-/// - Every argument is a binding or a module; otherwise compilation fails with a static_assert
-///   naming `make_injector`.
+/// - Each key is bound at most once across `parts`, overrides aside; otherwise compilation fails
+///   with TRL-E003.
+/// - Each key is overridden at most once; otherwise compilation fails with TRL-E003.
+/// - Each override's key is bound by another argument, or a module among them; otherwise
+///   compilation fails with TRL-E009, once per such override.
+/// - Every argument is a binding, a module or an override; otherwise compilation fails with a
+///   static_assert naming `make_injector`.
 /// - The bindings of an lvalue argument can be copied; otherwise compilation fails with a
 ///   static_assert that says to pass it with `std::move`.
 /// - `Opts.max_ctor_arity` is at most 32; otherwise compilation fails with a static_assert.
@@ -411,8 +451,12 @@ class injector {
 ///   otherwise compilation fails with the error `create<Key&>()` would give for the first
 ///   singleton, in binding order, that can't be built, with the path from it.
 ///
+/// After a TRL-E003 or TRL-E009, the injector's uses, such as `create<T>()`, add no error.
+///
 /// @par Errors
-/// - `TRL-E003`: two bindings in `parts`, or in the modules among them, bind the same key.
+/// - `TRL-E003`: two bindings in `parts`, or in the modules among them, bind the same key; or two
+///   overrides name the same key.
+/// - `TRL-E009`: an override names a key that no other argument binds.
 /// - With `options{.eager = true}`, the errors of `injector::create<T>()`, for the first singleton
 ///   that can't be built.
 ///
@@ -421,21 +465,24 @@ class injector {
 /// auto injector = trellis::make_injector(storage_module(config),
 ///                                        trellis::bind<IClock>.to<SystemClock>());
 /// auto strict = trellis::make_injector<trellis::options{.strict = true}>(app_module(config));
+/// auto test = trellis::make_injector(app_module(config),
+///                                    trellis::override<IClock>.to<FixedClock>());
 /// @endcode
 template <options Opts = options{}, class... Parts>
 [[nodiscard]] injector<Opts, std::remove_cvref_t<Parts>...> make_injector(
     [[maybe_unused]] Parts&&... parts) {
   using result = injector<Opts, std::remove_cvref_t<Parts>...>;
-  if constexpr (!detail::bindings_and_modules<std::remove_cvref_t<Parts>...>) {
-    // The same check and literal as make_module's: a static_assert needs a literal, and an
-    // assertion in a shared helper would add instantiation notes (ADR-0006 item 2).
-    static_assert(detail::bindings_and_modules<std::remove_cvref_t<Parts>...>,
+  if constexpr (!detail::injector_parts<std::remove_cvref_t<Parts>...>) {
+    // make_module's check and literal, which overrides extend: a static_assert needs a literal,
+    // and an assertion in a shared helper would add instantiation notes (ADR-0006 item 2).
+    static_assert(detail::injector_parts<std::remove_cvref_t<Parts>...>,
                   "trellis: make_module and make_injector take bindings, such as "
-                  "trellis::bind<I>.to<C>(), and modules made with trellis::make_module");
+                  "trellis::bind<I>.to<C>(), and modules made with trellis::make_module; "
+                  "make_injector also takes overrides, such as trellis::override<I>.to<C>()");
     detail::unreachable();
-  } else if constexpr (!detail::bindings_can_be_taken<Parts...>) {
+  } else if constexpr (!detail::injector_parts_can_be_taken<Parts...>) {
     static_assert(
-        detail::bindings_can_be_taken<Parts...>,
+        detail::injector_parts_can_be_taken<Parts...>,
         "trellis: make_module and make_injector copy the bindings of an lvalue argument, and "
         "one of them can't be copied, such as a .to_value() of a move-only type; "
         "pass that argument with std::move");
@@ -446,6 +493,14 @@ template <options Opts = options{}, class... Parts>
     static_assert(Opts.max_ctor_arity <= detail::deduced_arity_limit,
                   "trellis: options::max_ctor_arity is at most 32, the largest arity deduced "
                   "discovery probes; declare longer constructors with trellis::ctor_traits");
+    detail::unreachable();
+  } else if constexpr (!detail::overrides_apply<std::remove_cvref_t<Parts>...>) {
+    // Before the duplicate check below: injector_traits counts overrides that don't apply as a
+    // mistake in the binding set, so that the injector resolves nothing more, and this branch
+    // reports it (TRL-E003 for two overrides of one key, TRL-E009 for one with nothing to
+    // replace). With the overrides applied, the check below sees the bindings as written.
+    using layout = detail::override_layout<std::remove_cvref_t<Parts>...>;
+    detail::report_overrides<layout>(typename layout::missing_bindings{});
     detail::unreachable();
   } else if constexpr (detail::injector_traits<result>::has_duplicate_keys) {
     // One report, from the function the user called, before anything uses the binding map

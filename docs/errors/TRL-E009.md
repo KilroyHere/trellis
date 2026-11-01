@@ -1,9 +1,9 @@
 # TRL-E009: Override without an existing binding
 
 - **Detected:** at compile time
-- **Since:** T1.6 (unreleased; v0.1): the error type and its report, through the internal entry point `trellis::detail::report_override_target<Bindings, Override>()`, which `trellis::make_injector` calls for each `trellis::override<K>` from T1.7. No public entity raises it before T1.7.
-- **Raised by:** `trellis::make_injector`, once per `override<K>` whose key no other argument (modules included) binds; the injector then reports nothing more. `override<const K>` gets `bind`'s key error instead. (T1.7)
-- **Tests:** T1.7's `tests/compile_fail/override/e009_*.cpp`, through `make_injector`. Before them, [`tests/compile_fail/explain/e009_override_without_binding.cpp`](../../tests/compile_fail/explain/e009_override_without_binding.cpp) drives the entry point twice and gets one error, with goldens for gcc-13, gcc-14, clang-18 and clang-20 in `tests/diagnostics_golden/<compiler>/explain/`; the found case is in [`tests/unit/explain_test.cpp`](../../tests/unit/explain_test.cpp).
+- **Since:** T1.6 (unreleased; v0.1): the error type and its report, through the internal entry point `trellis::detail::report_override_target<Bindings, Override>()`; T1.7: `trellis::make_injector` calls it for each `trellis::override<K>`.
+- **Raised by:** `trellis::make_injector`, once per `override<K>` whose key no other argument (modules included) binds; the injector then reports nothing more. `override<const K>` gets `bind`'s key error instead, and so does `bind<const K>` beside an `override<K>`, which counts as the binding the override replaces. (T1.7)
+- **Tests:** [`tests/compile_fail/override/e009_override_without_binding.cpp`](../../tests/compile_fail/override/e009_override_without_binding.cpp), two identical `make_injector` calls and `create<T>()` afterwards, one error; [`e009_one_error_per_override.cpp`](../../tests/compile_fail/override/e009_one_error_per_override.cpp), one error for each override without a binding to replace; [`override_of_a_bad_key_binding.cpp`](../../tests/compile_fail/override/override_of_a_bad_key_binding.cpp), no TRL-E009 after `bind`'s key error. The entry point's own test, [`tests/compile_fail/explain/e009_override_without_binding.cpp`](../../tests/compile_fail/explain/e009_override_without_binding.cpp), drives it twice and gets one error, with goldens for gcc-13, gcc-14, clang-18 and clang-20 in `tests/diagnostics_golden/<compiler>/explain/`; the found case is in [`tests/unit/explain_test.cpp`](../../tests/unit/explain_test.cpp).
 
 ## What you see
 
@@ -28,7 +28,7 @@ An override replaces the binding of its key that the injector's other arguments,
 
 ## Minimal example
 
-With `trellis::override<K>` (T1.7), nothing binds `clock` for the override to replace:
+Nothing binds `clock` for the override to replace:
 
 ```cpp
 #include <trellis/trellis.hpp>
@@ -46,7 +46,7 @@ int main() {
 }
 ```
 
-Before T1.7, the test drives the check through its entry point:
+The entry point's own test drives the check directly:
 
 ```cpp
 using bindings = trellis::detail::type_list<decltype(trellis::bind<app::logger>)>;

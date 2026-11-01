@@ -1,9 +1,9 @@
 # TRL-E003: Duplicate binding for a key
 
 - **Detected:** at compile time
-- **Since:** T1.4 (unreleased; v0.1)
+- **Since:** T1.4 (unreleased; v0.1); for two overrides of one key, T1.7
 - **Raised by:** `trellis::make_injector`
-- **Tests:** [`tests/compile_fail/static/e003_duplicate_across_modules.cpp`](../../tests/compile_fail/static/e003_duplicate_across_modules.cpp), [`e003_same_binding_twice.cpp`](../../tests/compile_fail/static/e003_same_binding_twice.cpp), and [`e003_then_report_request_form.cpp`](../../tests/compile_fail/static/e003_then_report_request_form.cpp) and [`e003_then_request_check.cpp`](../../tests/compile_fail/static/e003_then_request_check.cpp), which use the injector afterwards and still get this one error; [`tests/compile_fail/explain/e003_two_injectors.cpp`](../../tests/compile_fail/explain/e003_two_injectors.cpp), two injectors of different types that repeat the same two bindings, one error; the duplicate checks in [`tests/unit/injector_test.cpp`](../../tests/unit/injector_test.cpp). The `explain/` tests have goldens for gcc-13, gcc-14, clang-18 and clang-20, in `tests/diagnostics_golden/<compiler>/explain/`.
+- **Tests:** [`tests/compile_fail/static/e003_duplicate_across_modules.cpp`](../../tests/compile_fail/static/e003_duplicate_across_modules.cpp), [`e003_same_binding_twice.cpp`](../../tests/compile_fail/static/e003_same_binding_twice.cpp), and [`e003_then_report_request_form.cpp`](../../tests/compile_fail/static/e003_then_report_request_form.cpp) and [`e003_then_request_check.cpp`](../../tests/compile_fail/static/e003_then_request_check.cpp), which use the injector afterwards and still get this one error; [`tests/compile_fail/explain/e003_two_injectors.cpp`](../../tests/compile_fail/explain/e003_two_injectors.cpp), two injectors of different types that repeat the same two bindings, one error; the duplicate checks in [`tests/unit/injector_test.cpp`](../../tests/unit/injector_test.cpp). The `explain/` tests have goldens for gcc-13, gcc-14, clang-18 and clang-20, in `tests/diagnostics_golden/<compiler>/explain/`. For overrides, [`tests/compile_fail/override/e003_two_overrides_of_one_key.cpp`](../../tests/compile_fail/override/e003_two_overrides_of_one_key.cpp) and [`e003_bound_twice_and_overridden.cpp`](../../tests/compile_fail/override/e003_bound_twice_and_overridden.cpp).
 
 ## What you see
 
@@ -24,9 +24,17 @@ The error type is `E003<Key, First, Second>`: the key bound twice, then its firs
 
 Using the injector afterwards adds no error: the engine checks no request against an injector whose keys repeat. Two injectors that repeat the same two bindings are one error too: the report is unique to the key and the two bindings (T1.6).
 
+Two overrides of one key give the same ID with their own message, and the error type names the two overrides, `trellis::override_binding<...>`, in argument order (Clang 18):
+
+```text
+<src>/include/trellis/diagnostics/errors.hpp:L:C: error: static assertion failed due to requirement 'trellis::error::E003<app::clock, trellis::override_binding<trellis::binding<app::clock, app::fixed_clock, trellis::unique_t, false>>, trellis::override_binding<trellis::binding<app::clock, app::slow_clock, trellis::unique_t, false>>>::reported': TRL-E003: duplicate binding for a key: two overrides name the same key; each key may be overridden only once per injector
+```
+
 ## Cause
 
 `make_injector` flattens its arguments, bindings and the bindings of every module among them, into one binding map in which each key appears once (plan §5.3, step 1). A key is the bound type, qualifiers included. Two bindings of the same key leave the injector with no way to choose, so Trellis rejects them instead of letting one silently win. The same binding passed twice counts too.
+
+An override, `trellis::override<K>`, replaces the binding of its key in place, so it never counts as a second binding of the key (plan §6.10). Two overrides of one key leave the same choice open, and are this error too. An override doesn't settle two bindings of one key either: the error then names the two bindings as written, not the override.
 
 ## Minimal example
 
@@ -56,7 +64,8 @@ int main() { auto injector = trellis::make_injector(console_module(), file_modul
 
 - **Remove one of the bindings,** the one the composition root doesn't want. The two bindings in the error type, with their implementations and lifetimes, tell them apart; the instantiation note names `make_injector`'s arguments, which identifies named modules.
 - **Use two keys** when both implementations are needed. Qualifiers, which tell two bindings of one interface apart, arrive in Phase 3 (plan §6.5): contextual bindings with `.when_injected_into<C>()`, and annotated keys such as `trellis::annotated<Primary, logger>`.
-- **In a test,** replace a binding with `trellis::override<K>` (task T1.7) instead of binding the key again.
+- **In a test,** replace a binding with `trellis::override<K>` instead of binding the key again: `make_injector(app_module(config), trellis::override<logger>.to<file_logger>())`.
+- **For two overrides,** keep the one the test needs.
 
 ## Related
 

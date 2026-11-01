@@ -13,6 +13,7 @@
 
 #include <trellis/dsl/module.hpp>
 #include <trellis/dsl/options.hpp>
+#include <trellis/dsl/override.hpp>
 #include <trellis/meta/type_map.hpp>
 #include <trellis/static/binding_map.hpp>
 
@@ -26,17 +27,23 @@ class injector;
 namespace detail {
 
 // injector_traits<Injector>: what the engine needs to know about an injector type. Its bindings
-// are its arguments' bindings, flattened once (the same flatten<...> instantiation as the
-// injector's own), and map is their binding map. When a key repeats, make_injector has reported
-// TRL-E003, and map is an empty type_map instead: a lookup in a map with a repeated key would be
-// the map's own error, a second one for the same mistake. request_check doesn't look up then.
+// are its arguments' bindings, flattened once, with the overrides among the arguments applied (the
+// same compose<...> instantiation as the injector's own, dsl/override.hpp), and map is their
+// binding map.
+//
+// has_duplicate_keys says that make_injector has reported a mistake in the set of bindings: a key
+// bound twice (TRL-E003), or overrides that don't apply, two of one key (TRL-E003) or one with no
+// binding to replace (TRL-E009). Then map is an empty type_map: a lookup in a map with a repeated
+// key would be the map's own error, a second one for the same mistake. request_check doesn't look
+// up then, and resolution resolves nothing, so the injector's later uses add no error.
 template <class Injector>
 struct injector_traits;
 template <options Opts, class... Parts>
 struct injector_traits<injector<Opts, Parts...>> {
   static constexpr options opts = Opts;
-  using bindings = typename flatten<Parts...>::bindings;
-  static constexpr bool has_duplicate_keys = binding_map<bindings>::has_duplicate_keys;
+  using bindings = typename compose<Parts...>::bindings;
+  static constexpr bool has_duplicate_keys =
+      binding_map<bindings>::has_duplicate_keys || !overrides_apply<Parts...>;
   using map =
       std::conditional_t<has_duplicate_keys, type_map<>, typename binding_map<bindings>::type>;
 };

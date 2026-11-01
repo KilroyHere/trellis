@@ -637,6 +637,7 @@ static_assert(di::testing::wireable<decltype(make_app_injector(std::declval<cons
 - **Isolation.** Each test's injector owns its own singletons, so tests can't leak state into each other (R6).
 - **`di::testing::create_all(injector)`** constructs every singleton. It suits a smoke test that fails fast.
 - **`di::testing::unused_bindings<Roots...>()`** lists bindings no root reaches. It works in the explicit and reflection modes.
+- **Overrides** (amended by ADR-0010, 2026-11-01, T1.7, provisional: awaits the owner's confirmation). `di::override<K>` has `di::bind<K>`'s vocabulary and is an argument of `make_injector` only, never of `make_module`. It replaces the binding of `K` in place, wherever the other arguments hold it, modules included. Two overrides of one key are E003. An override is a binding like any other for the request-form table: `.to_ref()` serves references and pointers, so the example's `Service` takes `IRepository&`; one that takes a `std::shared_ptr<IRepository>`, as §6.1's does, needs `.to_shared()`. `wireable` and `create_all` live in `<trellis/testing/wiring.hpp>`, which tests include themselves.
 
 ### 6.11 Runtime container and plugins
 

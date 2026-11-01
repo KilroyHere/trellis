@@ -43,6 +43,8 @@ using binding_at = typename std::remove_reference_t<decltype(detail::stored_at<p
 
 Each deduction is one overload resolution: the index is unique among the bases, so exactly one base matches ([temp.deduct.call]/4.3). The same lookups, on the value-level `argument_refs` of forwarding references, move each binding out of an rvalue argument or copy it from an lvalue (`flat_layout::extract<J>`).
 
+`make_injector` also takes overrides, `override<K>`, which `make_module` rejects: it flattens the other arguments this way, then replaces each overridden binding in place ([overrides-and-testing.md](overrides-and-testing.md)).
+
 An rvalue argument gives its bindings up by moving them, an lvalue or a const argument by copying them. A binding that holds a move-only value can't be copied, so `make_module` and `make_injector` check that first (`detail::bindings_can_be_taken`) and report it as one error that says to pass the argument with `std::move`, instead of the copy constructor's errors deep in the store.
 
 A module stores its bindings as the bases `stored_binding<J, B_J>` of one struct (`binding_store`), with members declared `TRELLIS_NO_UNIQUE_ADDRESS` (`[[no_unique_address]]`, or `[[msvc::no_unique_address]]` on MSVC, which ignores the standard spelling) and the store declared `TRELLIS_EMPTY_BASES` (`__declspec(empty_bases)` on MSVC), so a module of empty bindings takes one byte (T1.5 added the MSVC spellings; untested there). The injector holds the flattened bindings as one module. A struct derived from a module counts as a module, because `module_bindings` deduces `module<B...>` from a pointer to the struct.

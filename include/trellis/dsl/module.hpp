@@ -4,9 +4,11 @@
 //
 // A module is a set of bindings, as a value: make_module(bindings_or_modules...) flattens its
 // arguments into one module<B1, ..., Bn>, so a module never holds another module, and
-// make_injector flattens its own arguments the same way (static/injector.hpp). Flattening is
-// linear in the number of bindings, without recursing or folding over a pack (plan §8.1 C3, C4;
-// ADR-0010). flatten<Parts...> picks one of three shapes:
+// make_injector flattens its own arguments the same way (static/injector.hpp). make_injector also
+// takes overrides, which dsl/override.hpp applies to the flattened list; make_module rejects them,
+// so a module holds only bindings. Flattening is linear in the number of bindings, without
+// recursing or folding over a pack (plan §8.1 C3, C4; ADR-0010). flatten<Parts...> picks one of
+// three shapes:
 //
 //   - Only bindings: the arguments are the list, in order, and each is moved or copied into place.
 //   - One module, possibly a struct derived from one: its list, and its bindings are moved or
@@ -44,12 +46,28 @@ namespace trellis::inline v1 {
 template <class... Bindings>
 class module;
 
+// An override, trellis::override<K> (dsl/override.hpp): an argument of make_injector, which
+// make_module rejects with a message of its own.
+template <class Binding>
+class override_binding;
+
 namespace detail {
 
 // Stands in for a value after a failed static_assert, so that a branch that reports an error
 // needs no value of the type it would return (ADR-0006 item 2). It never runs: the translation
 // unit doesn't compile.
 [[noreturn]] inline void unreachable() noexcept { std::abort(); }
+
+// is_override<Part>: whether an argument is an override, which make_injector takes and
+// make_module doesn't; no_overrides<Parts...>: whether none is. One flat expansion and a scan, not
+// a fold, so any number of arguments works (meta/type_list.hpp).
+template <class Part>
+inline constexpr bool is_override = false;
+template <class Binding>
+inline constexpr bool is_override<override_binding<Binding>> = true;
+
+template <class... Parts>
+inline constexpr bool no_overrides = first_true({is_override<Parts>...}) == sizeof...(Parts);
 
 // ---- storage ----------------------------------------------------------------------------------
 
@@ -412,6 +430,8 @@ class module {
 /// @return The module.
 ///
 /// @par Constraints
+/// - No argument is an override, `trellis::override<I>`, which only `trellis::make_injector`
+///   takes; otherwise compilation fails with a static_assert that says so.
 /// - Every argument is a binding or a module (or a struct derived from one); otherwise
 ///   compilation fails with a static_assert naming `make_module`.
 /// - The bindings of an lvalue argument can be copied; otherwise compilation fails with a
@@ -432,7 +452,13 @@ class module {
 template <class... Parts>
 [[nodiscard]] constexpr auto make_module([[maybe_unused]] Parts&&... parts)
     -> detail::flat_module_t<std::remove_cvref_t<Parts>...> {
-  if constexpr (!detail::bindings_and_modules<std::remove_cvref_t<Parts>...>) {
+  if constexpr (!detail::no_overrides<std::remove_cvref_t<Parts>...>) {
+    // Before the check below, which an override fails too, so that this message is the one.
+    static_assert(detail::no_overrides<std::remove_cvref_t<Parts>...>,
+                  "trellis: make_module takes bindings and modules, not overrides: pass "
+                  "trellis::override<I> to make_injector, where it replaces the binding of I");
+    detail::unreachable();
+  } else if constexpr (!detail::bindings_and_modules<std::remove_cvref_t<Parts>...>) {
     static_assert(detail::bindings_and_modules<std::remove_cvref_t<Parts>...>,
                   "trellis: make_module and make_injector take bindings, such as "
                   "trellis::bind<I>.to<C>(), and modules made with trellis::make_module");

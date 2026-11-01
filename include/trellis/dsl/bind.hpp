@@ -320,7 +320,7 @@ class binding {
   // also rejects the variable the call initializes (cl 19.51, C3313), as in
   // tests/compile_fail/dsl/bind_to_ref_temporary.cpp.
   template <class T>
-  binding to_ref(const T&& object) const = delete;
+  [[nodiscard]] binding to_ref(const T&& object) const = delete;
 
   /// @brief Binds the key to an object that the caller owns, through a pointer.
   ///

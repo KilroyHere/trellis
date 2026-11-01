@@ -108,11 +108,13 @@ struct request {};
 /// @brief The error type of `TRL-E003`: two bindings for the same key.
 ///
 /// `make_injector` raises it when two of the bindings it collects, from its arguments and the
-/// modules among them, bind the same key (plan §5.3, step 1).
+/// modules among them, bind the same key (plan §5.3, step 1), and when two overrides,
+/// `trellis::override<K>`, name the same key (plan §6.10, T1.7).
 ///
 /// @tparam Key The key bound twice: the bound type, qualifiers included.
-/// @tparam First The first binding of the key, in argument order.
-/// @tparam Second The second binding of the key.
+/// @tparam First The first binding of the key, in argument order, or for two overrides the first
+///               override, `trellis::override_binding<...>`.
+/// @tparam Second The second binding of the key, or the second override.
 ///
 /// @par Constraints
 /// None.
@@ -520,6 +522,7 @@ enum class error_message : unsigned char {
   copy,                   // a by-value request whose copy the key can't be constructed from
   // TRL-E003, from make_injector
   duplicate_binding,
+  duplicate_override,  // two overrides of one key (T1.7)
   // TRL-E004, from deduction
   greedy,              // a constructor template or variadic constructor accepts anything
   array_member,        // an aggregate with an array member
@@ -641,6 +644,11 @@ constexpr void raise() noexcept {
                                        typename args::third>::reported,
                   "TRL-E003: duplicate binding for a key: each key may be bound only once per "
                   "injector");
+  } else if constexpr (Message == error_message::duplicate_override) {
+    static_assert(trellis::error::E003<typename args::first, typename args::second,
+                                       typename args::third>::reported,
+                  "TRL-E003: duplicate binding for a key: two overrides name the same key; each "
+                  "key may be overridden only once per injector");
   } else if constexpr (Message == error_message::greedy) {
     static_assert(trellis::error::E004<typename args::first>::reported,
                   "TRL-E004: ambiguous constructor: a constructor template or variadic constructor "

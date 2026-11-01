@@ -2,7 +2,7 @@
 
 A header-only C++20 dependency injection library. It builds and connects the objects in a C++ program for you, checks the wiring when the program compiles, and aims to cost no more at run time than wiring by hand.
 
-> **Status: pre-alpha.** Phase 0 (foundations) is complete. Phase 1 (the core injector, v0.1) is in progress: bindings, modules, lifetimes and `create<T>()` work, as in the example below, and the API may still change before v0.1. Diagnostics with the path from the root, test overrides and packaging are next.
+> **Status: pre-alpha.** Phase 0 (foundations) is complete. Phase 1 (the core injector, v0.1) is in progress: bindings, modules, lifetimes, `create<T>()` with its diagnostics, and test overrides work, as in the example below, and the API may still change before v0.1. Packaging is next.
 
 ## Goals
 
@@ -69,13 +69,15 @@ int main() {
 
 `create<App>()` builds the App, its Service and everything they need, once per singleton, and the injector destroys its singletons in reverse order of construction when it goes. Any constructor parameter form works that the binding's lifetime allows: by value, by reference or pointer, or as `std::unique_ptr`, `std::shared_ptr` or `std::weak_ptr` ([plan §6.3](docs/plan.md#63-the-request-form-compatibility-table)).
 
+A test keeps the same wiring and swaps one piece: passed to `make_injector` beside the production bindings, `di::override<ILogger>.to_ref(fake_logger)` replaces the `ILogger` binding wherever the other arguments hold it, modules included, and each test's injector owns its own singletons. `<trellis/testing/wiring.hpp>` adds `trellis::testing::wireable<Injector, App>`, for a `static_assert` that the graph can be built, and `trellis::testing::create_all(injector)`, which builds every singleton ([plan §6.10](docs/plan.md#610-testing)).
+
 Trellis checks the wiring at compile time, and each mistake is one error with an ID. Delete the `di::bind<Service>` line, and nothing owns the Service that App takes by reference; Clang 18 says:
 
 ```text
-error: static assertion failed due to requirement 'error::E012<Service, trellis::error::request<Service &>>::reported': TRL-E012: unbound concrete type requested by reference, pointer or shared_ptr: nothing would own it; bind it with an owning lifetime such as trellis::singleton
+error: static assertion failed due to requirement 'trellis::error::E012<Service, trellis::error::request<Service &>>::reported': TRL-E012: unbound concrete type requested by reference, pointer or shared_ptr: nothing would own it; bind it with an owning lifetime such as trellis::singleton
 ```
 
-The ID leads to a page in [`docs/errors/`](docs/errors/README.md). The path from the root, such as `App -> Service`, is planned next (task T1.6), and on GCC 14+ and Clang 20+ a multi-line message like this one (Phase 4):
+The ID leads to a page in [`docs/errors/`](docs/errors/README.md). The instantiation note below the error names the path from the root, `trellis::error::path<App>` here, and the parameter that makes the request. On GCC 14+ and Clang 20+, a multi-line message like this one is planned (Phase 4):
 
 ```text
 error: static assertion failed: trellis [TRL-E001]: no binding for abstract type 'IRepository'
