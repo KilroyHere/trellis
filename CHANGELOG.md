@@ -44,3 +44,7 @@ Phase 0 (foundations) is complete. The injector API is being built for v0.1: bin
   - 0013: governance and release discipline.
   - 0014: resolution memoized per key, request form and consumer lifetime; how dependency cycles are reported in deduced mode.
 - **Documentation:** the error catalog in [`docs/errors/`](docs/errors/README.md), with a check that every error ID used in `include/` has a page; maintainer notes and the doc-comment convention for public headers in [`docs/internals/`](docs/internals/README.md); and this changelog.
+
+### Fixed
+
+- **Compile-fail tests in parallel:** each compile runs in a scratch directory of its own. On MSVC, parallel compiles in one directory failed with C1041 on its shared `vc140.pdb`, which made most compile-fail tests fail, and a snippet that compiles pass.

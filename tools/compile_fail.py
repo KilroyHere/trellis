@@ -42,9 +42,11 @@ import argparse
 import json
 import os
 import re
+import shutil
 import signal
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -276,10 +278,21 @@ def compile_source(config, source, timeout=DEFAULT_TIMEOUT, memory_mb=DEFAULT_ME
     plain: the plainest output the compiler offers, for golden runs (see compile_command)."""
     source = Path(source).resolve()  # the compiler runs in a scratch directory
     command = compile_command(config, source, plain)
-    # Run in a scratch directory, so that stray outputs (such as -ftime-trace files) stay there.
-    work_dir = Path(config["binary_dir"]) / "compile_fail" / "work"
-    work_dir.mkdir(parents=True, exist_ok=True)
-    env = compiler_environment(config)
+    # Run in a scratch directory of this compile's own, so that stray outputs (such as -ftime-trace
+    # files) stay there, and so that compiles running in parallel, as CTest runs them, never share
+    # one: MSVC's debug flags (/Zi) make even a syntax-only cl open vc140.pdb in its working
+    # directory, and a second cl that finds it open fails with C1041 instead of compiling.
+    work_root = Path(config["binary_dir"]) / "compile_fail" / "work"
+    work_root.mkdir(parents=True, exist_ok=True)
+    work_dir = Path(tempfile.mkdtemp(prefix=f"{source.stem}-", dir=work_root))
+    try:
+        return _run_compiler(command, work_dir, compiler_environment(config), timeout, memory_mb)
+    finally:
+        shutil.rmtree(work_dir, ignore_errors=True)
+
+
+def _run_compiler(command, work_dir, env, timeout, memory_mb):
+    """Run one compile in WORK_DIR and collect its output (see compile_source)."""
     # A new session makes the compiler the leader of its own process group, so that a timeout can
     # kill the driver together with the cc1plus or clang -cc1 it started (POSIX only).
     session = {"start_new_session": True} if os.name == "posix" else {}

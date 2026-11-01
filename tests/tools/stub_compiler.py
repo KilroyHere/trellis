@@ -52,13 +52,14 @@ SHOWN_VALUES = ("LANG", "LC_ALL", "VSLANG")
 
 
 def report_invocation(compiler_args):
-    """Two lines, which a self-test reads back: the compiler arguments after the stub's own, without
-    the source file, and the environment. Each fits on one line, so that passes.cpp's line budget
-    holds."""
+    """Three lines, which a self-test reads back: the compiler arguments after the stub's own,
+    without the source file, the environment, and the working directory. Each fits on one line, so
+    that passes.cpp's line budget holds."""
     print("stub arguments: " + " ".join(compiler_args[:-1]))
     print("stub environment: " + " ".join(
         f"{name}={value}" if name in SHOWN_VALUES else name
-        for name, value in sorted(os.environ.items())), flush=True)
+        for name, value in sorted(os.environ.items())))
+    print("stub directory: " + os.getcwd(), flush=True)
 
 
 def read_report(text):
@@ -70,6 +71,14 @@ def read_report(text):
             if line.startswith(f"stub {key}: "):
                 found[key] = line.split(": ", 1)[1].split()
     return found.get("arguments"), found.get("environment")
+
+
+def read_directory(text):
+    """The working directory that report_invocation wrote into TEXT, or None when it is missing."""
+    for line in text.splitlines():
+        if line.startswith("stub directory: "):
+            return line.split(": ", 1)[1]
+    return None
 
 
 def main():
