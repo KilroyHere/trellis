@@ -7,9 +7,10 @@ Eight kinds of case:
     compiles, or one that misses an expectation or has a bad directive, must be reported as a
     failure for that reason. With a compiler whose output NFR-07 doesn't bound, such as MSVC's cl,
     the two fixtures with an expect-max-lines-nfr07 budget pass and say it was skipped
-    (NFR07_SKIPPED). CL_CASES do the same for the fixtures of expect-regex-msvc, whose verdict
-    depends on whether the compiler is cl, so that each build checks its own side: GCC and Clang
-    ignore the directive, and on cl it replaces every expect-regex line.
+    (NFR07_SKIPPED). CL_CASES do the same for the fixtures of expect-regex-msvc and
+    expect-max-lines-msvc, whose verdict depends on whether the compiler is cl, so that each build
+    checks its own side: GCC and Clang ignore the directives, and on cl the first replaces every
+    expect-regex line and the second expect-max-lines.
   - The NFR-07 checks run in process, without a compiler: NFR-07's count (owner decision 1A) on
     outputs shaped as GCC, Clang and MSVC print them, where the include chain and the quoted
     lines of the user's code go, and those of Trellis's headers and the standard library stay;
@@ -21,6 +22,7 @@ Eight kinds of case:
   - The selection check runs the runner's evaluate() on synthetic GCC and cl output, with either
     compiler ID, so that every build checks cl's rules for expect-regex-msvc too: the cl lines
     replace the expect-regex lines on cl only, and expect-id and expect-max-lines apply on both.
+    Then the same for expect-max-lines-msvc, which replaces expect-max-lines on cl only.
   - STUB_CASES compile passes.cpp with stub_compiler.py, through a temporary config. The stub prints
     the error passes.cpp expects and then crashes, dies by a signal or hangs, and the runner must
     still report a failure. For the hang, neither the stub nor its own child process (playing
@@ -187,11 +189,14 @@ NFR07_MSVC = [
 ]
 
 # (fixture, (expected exit status, verdict text) on cl, the same on any other compiler): the
-# fixtures of expect-regex-msvc, which replaces the expect-regex lines on cl only.
+# fixtures of expect-regex-msvc, which replaces the expect-regex lines on cl only, and of
+# expect-max-lines-msvc, which replaces expect-max-lines on cl only.
 NEVER = "this text never appears in the compiler output"
 CL_CASES = [
     ("msvc_regex_ignored.cpp", (1, f"expect-regex-msvc did not match: {NEVER}"), (0, "PASS ")),
     ("msvc_regex_replaces.cpp", (0, "PASS "), (1, f"expect-regex did not match: {NEVER}")),
+    ("msvc_max_lines_ignored.cpp", (1, "more than expect-max-lines-msvc (1)"), (0, "PASS ")),
+    ("msvc_max_lines_replaces.cpp", (0, "PASS "), (1, "more than expect-max-lines (1)")),
 ]
 
 # (stub scenario, expected exit status, text the runner's verdict line must contain)
@@ -377,6 +382,67 @@ def check_regex_selection():
         else:
             print(f"FAIL parse, {label}: expected {problem or 'no problem'} and {kept} kept, got "
                   f"{spec.problems} and {len(spec.msvc_regexes)} kept")
+            results.append(False)
+    return results + check_budget_selection(header, cl)
+
+
+def check_budget_selection(header, cl):
+    """expect-max-lines-msvc on synthetic output, as check_regex_selection does for the regexes:
+    on cl it replaces expect-max-lines, elsewhere it is ignored, and a budget at the line count
+    passes where one line less fails. Then the parser: a positive number, once, and not the
+    expectation that every test needs."""
+    spec = compile_fail.parse_directives(
+        header + "// expect-regex: one error\n// expect-max-lines-msvc: 5\n")
+    four = cl + "\nx.cpp(1): note: a\nx.cpp(1): note: b"
+    five = four + "\nx.cpp(1): note: c"
+    six = five + "\nx.cpp(1): note: d"
+    # (label, output, compiler ID, the problems evaluate() must give, as prefixes)
+    cases = [
+        ("four lines on cl, budget 5", four, "MSVC", []),
+        ("five lines on cl, budget 5", five, "MSVC", []),
+        ("six lines on cl, budget 5", six, "MSVC",
+         ["6 lines of output, more than expect-max-lines-msvc (5)"]),
+        ("four lines on GCC, which ignores it", four, "GNU",
+         ["4 lines of output, more than expect-max-lines (3)"]),
+        ("four lines on Clang, which ignores it", four, "Clang",
+         ["4 lines of output, more than expect-max-lines (3)"]),
+    ]
+    results = []
+    for label, output, compiler_id, expected in cases:
+        result = compile_fail.Result(["cc"], returncode=1, output=output)
+        problems = compile_fail.evaluate(spec, result, compiler_id=compiler_id)
+        if len(problems) == len(expected) and all(
+                problem.startswith(prefix) for problem, prefix in zip(problems, expected)):
+            print(f"ok   budget selection, {label}: {problems or 'passes'}")
+            results.append(True)
+        else:
+            print(f"FAIL budget selection, {label}: expected {expected or 'no problem'}, got "
+                  f"{problems}")
+            results.append(False)
+    # (label, directives after the summary, the first problem parse_directives must give, or
+    # None, and the cl budget it must keep)
+    parses = [
+        ("a budget", "// expect-id: TRL-E000\n// expect-max-lines-msvc: 120\n", None, 120),
+        ("not a number", "// expect-id: TRL-E000\n// expect-max-lines-msvc: many\n",
+         "line 3: expect-max-lines-msvc needs a positive number", None),
+        ("zero", "// expect-id: TRL-E000\n// expect-max-lines-msvc: 0\n",
+         "line 3: expect-max-lines-msvc needs a positive number", None),
+        ("twice", "// expect-id: TRL-E000\n// expect-max-lines-msvc: 9\n"
+         "// expect-max-lines-msvc: 9\n", "line 4: 'expect-max-lines-msvc' appears more than once",
+         9),
+        ("no other expectation", "// expect-max-lines-msvc: 9\n",
+         "a compile-fail test needs an expect-id or an expect-regex", 9),
+    ]
+    for label, directives, problem, kept in parses:
+        spec = compile_fail.parse_directives("// compile-fail: parse\n" + directives)
+        first = spec.problems[0] if spec.problems else None
+        if (first is None if problem is None else first is not None and first.startswith(problem)) \
+                and spec.max_lines_msvc == kept:
+            print(f"ok   parse, {label}: {first or 'no problem'}, budget {kept}")
+            results.append(True)
+        else:
+            print(f"FAIL parse, {label}: expected {problem or 'no problem'} and budget {kept}, got "
+                  f"{spec.problems} and budget {spec.max_lines_msvc}")
             results.append(False)
     return results
 
