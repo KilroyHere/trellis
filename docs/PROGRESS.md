@@ -40,10 +40,61 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - (a) keep NFR-13's minimum, 19.38, and use a 150-hop bound on MSVC before 19.50: the provisional text, measured to give exactly one TRL-E007 on cl 19.44;
   - (b) raise NFR-13's MSVC minimum to 19.51. 19.45 to 19.50 can't be measured on GitHub's image, so 19.50 is only an assumed boundary.
   Not blocking until the cycle check lands in Phase 2.
-- **New error IDs TRL-E013 and TRL-E014 (T1.5), provisional.** ADR-0006 says an ID never changes meaning, and the catalog's process gives a new mistake the next free number. So these are new IDs, not wider meanings for E001 and E005:
-  - TRL-E013: an unbound concrete type requested under `options{.strict = true}`;
-  - TRL-E014: a `unique_ptr<I>` request that would delete an implementation through a non-virtual `~I`.
-  Both are recorded in plan §7.8 and ADR-0006's History. Confirm them, or rename or fold them.
+- **ADR-0006's T1.6 amendments (provisional).**
+  - Every TRL `static_assert` is in one function template, `detail::raise<Error, Message, Scope>`, so a cause that several roots, consumers or entry points reach is one error.
+  - The path from the root is in the instantiation note of the explain step that reports it, not in the condition.
+  - Options:
+    - (a) confirm both, as implemented and tested on GCC and Clang;
+    - (b) put the path back in the condition: one error per failing root, as S3 designed. That changes two protected tests' expectations and the order of E005's arguments.
+  - Recommendation: (a). Whether cl's notes name the error type is being checked under 4a.
+- **ADR-0010's overrides amendment (T1.7, provisional).**
+  - `trellis::override<K>` has `bind<K>`'s vocabulary.
+  - Only `make_injector` takes it; `make_module` rejects it.
+  - It replaces the binding of `K` in place while `make_injector` flattens its arguments, with no fold or recursion over the pack.
+  - Two overrides of one key are TRL-E003; an override with nothing to replace is TRL-E009.
+  - Options:
+    - (a) confirm;
+    - (b) let modules carry overrides too, so a test module can bundle them.
+  - Recommendation: (a).
+- **ADR-0003's MSVC workarounds (platform fixes, provisional).**
+  - `TRELLIS_REPEAT_THROUGH_CLASS`: cl 19.51 loses a one-element pack in `ctor<repeat_t<Is, A>...>` (C3546).
+  - `TRELLIS_ARRAY_CHECK_WITH_BRACES`: cl's parenthesized aggregate initialization refuses members of aggregate class type.
+  - Both apply to every cl from NFR-13's 19.38, but the unit tests ran on 19.51 only.
+  - Options:
+    - (a) confirm both;
+    - (b) confirm both, and run the unit tests on cl 19.44 in CI too.
+  - Recommendation: (b). Not blocking.
+- **`options::cycle_check` is accepted and ignored in v0.1,** as its doc comment says. Phase 2 implements the opt-in check (ADR-0014, one TRL-E007). A dependency cycle doesn't compile either way.
+  - Options:
+    - (a) keep it as documented;
+    - (b) reject `.cycle_check = true` with a static_assert until Phase 2;
+    - (c) remove the field until Phase 2.
+  - Recommendation: (a).
+- **`make_unique_injector` (plan §7.5)** isn't implemented, and no task has it.
+  - Two forms work without it, through guaranteed copy elision (checked on clang-18 and gcc-13):
+    - a member initialized from `make_injector(...)`;
+    - `std::unique_ptr<I>(new auto(make_injector(...)))`.
+  - Options:
+    - (a) schedule it in Phase 2; the T2.0 draft puts it in T2.2;
+    - (b) add it to v0.1;
+    - (c) drop it from the plan and document the two forms.
+  - Recommendation: (a), with the two forms documented meanwhile.
+- **The public `trellis::module` and C++20's module directive.**
+  - In C++20, a line that starts with `module` and an identifier is a module directive (P1857R3).
+  - So after `using namespace trellis;`, `module m = make_module(...);` at global namespace scope is rejected by Clang 18 and 20. GCC accepts it, except with `-fmodules-ts`.
+  - `trellis::module m = ...` and `auto` work everywhere, and the docs use `auto`.
+  - Options:
+    - (a) rename the class before v0.1 fixes the name (about 28 mentions);
+    - (b) keep it, and document that it is written qualified.
+  - Recommendation: (a) if a good name comes up at the gate; otherwise (b), revisited at the API review.
+- **TRL-E013 and TRL-E014 become stable with v0.1** (replaces "New error IDs TRL-E013 and TRL-E014 (T1.5), provisional").
+  - TRL-E013: an unbound concrete type requested by value or as `std::unique_ptr` under `options{.strict = true}`.
+  - TRL-E014: a `std::unique_ptr<I>` request that would delete the implementation through a non-virtual `~I`.
+  - Once v0.1 ships, ADR-0006's "an ID never changes meaning" binds them.
+  - Options:
+    - (a) confirm both as new IDs;
+    - (b) fold them into TRL-E001 and TRL-E005, widening those IDs.
+  - Recommendation: (a), before the v0.1 tag.
 - **T1.3's amendments to ADR-0003, provisional.**
   - An abstract type is TRL-E002 at discovery; E001 stays with the engine for an unbound abstract key.
   - An aggregate member that no placeholder can initialize is TRL-E004, where S1 silently value-initialized the rest.
@@ -53,7 +104,17 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   Each keeps the one-error contract and the accepted operator set's intent. Confirm them, or say which to revisit.
 - **`const std::shared_ptr<T>&` parameters (ADR-0004's open question, T1.4).** Such a parameter asks for a `shared_ptr<T>` object by reference. Today it is TRL-E012, unless `shared_ptr<T>` itself is bound, with a message saying to take `std::shared_ptr<T>` by value. Allowing it, by holding a temporary until the constructor returns, would dangle if the constructor kept the reference. Recommendation: keep the error for v0.1, and revisit at the API review. Not blocking.
 - **Construction rule for explicit declarations (T1.2, ADR-0003, amended).** An aggregate is checked and built with braces, which rejects narrowing and allows brace elision; every other type is checked with `is_constructible` and built with parentheses. This refines the accepted ADR-0003, which said `is_constructible` for every type. Confirm it, or say otherwise before T1.5 builds on it.
-- **Error IDs for misuse asserts (T1.1, T1.2).** Some static_asserts report misuse of Trellis's own vocabulary rather than a wiring mistake, and carry no TRL ID, because plan §7.8 lists none for them: a `type_list` or `type_map` given a non-list, an out-of-range index, a missing key, and a `trellis_ctor` alias that doesn't name a `ctor<...>`. ADR-0006 says every mistake Trellis reports has a stable ID. Recommendation: give an ID (the next free numbers after TRL-E012) to misuse a user can make through the public API, such as the malformed alias, and leave the internal meta-toolkit guards without IDs. Not blocking.
+- **Misuse errors without a TRL ID** (replaces "Error IDs for misuse asserts (T1.1, T1.2)").
+  - 31 of the 58 `static_assert`s in `include/` carry no ID:
+    - 22 report misuse of the public API: 13 for `bind<I>` and its steps, 5 for the arguments of `make_module` and `make_injector`, 2 for `max_ctor_arity` above 32, 1 for a malformed `trellis_ctor`, and 1 for `result<T>` of a reference, function or array;
+    - 8 guard internal templates;
+    - 1 checks the compiler's function signatures.
+  - docs/errors/README.md:3 says "Every mistake Trellis reports has a stable ID"; ADR-0006 promises stable IDs, not one per mistake.
+  - Options:
+    - (a) give the public-API misuse IDs now;
+    - (b) narrow the catalog's sentence to wiring mistakes for v0.1, and number the misuse in Phase 4's full catalog;
+    - (c) leave both as they are.
+  - Recommendation: (b).
 - **The ADR set (T0.8)** is owner-reviewable: `docs/adr/README.md` indexes ADR-0001 to ADR-0014 with their statuses.
 - **CI on a private repo:** Linux runs on every push; macOS and Windows run weekly or on demand to save Actions minutes. Making the repository public would allow the full matrix on every push.
 - **Stale branches on GitHub:** `wip/t0.1-scaffold`, `t0.2-ci`, `t0.9-ci-polish`, `t0.10-goldens` and `t1.13-msvc-probe` can be deleted; their content is on `main`. The proxy here refuses branch deletion.
