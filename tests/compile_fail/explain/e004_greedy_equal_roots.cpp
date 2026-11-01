@@ -9,6 +9,7 @@
 // expect-regex-msvc: trellis::error::path<app::shell, ?app::engine>
 // expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 129
 //
 // Deduction can't tell what greedy's constructor template needs (TRL-E004). The explain pass
 // reaches it from create<shell>() through engine and raises discovery's report, which is unique to

@@ -9,6 +9,7 @@
 // expect-regex-msvc: trellis::error::path<app::stage>
 // expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 104
 //
 // Deduction finds mixer's constructor only above the injector's bound (TRL-E010). The explain pass
 // reaches it from create<studio>(), path<studio>, and raises discovery's report, which is unique

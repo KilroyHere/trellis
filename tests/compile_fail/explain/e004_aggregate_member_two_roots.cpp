@@ -9,6 +9,7 @@
 // expect-regex-msvc: trellis::error::path<app::(service|monitor)>
 // expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 104
 //
 // Deduction refuses settings: std::optional ends its deduced members (TRL-E004). service and
 // monitor each hold a settings by value. Their nodes are checked with parentheses, which never

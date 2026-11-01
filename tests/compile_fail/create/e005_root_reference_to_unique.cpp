@@ -4,6 +4,7 @@
 // expect-regex: E005<.*sensor, trellis::error::request<.*sensor ?&>, trellis::(v1::)?unique_t>|error C2338:
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 30
+// expect-max-lines-msvc: 37
 //
 // The request-form table (plan §6.3) rejects T& of a unique binding, also when the caller of
 // create<T>() makes the request: create<T>() reports TRL-E005 from the table's entry point

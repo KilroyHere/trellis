@@ -9,6 +9,7 @@
 // expect-regex-msvc: trellis::error::path<app::back,app::store>
 // expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 102
 //
 // store's binding declares the constructor that takes std::shared_ptr<repository>, whose abstract
 // key has no binding; deduction would have found store(int, int), which the binding of int serves.

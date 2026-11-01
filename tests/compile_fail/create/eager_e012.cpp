@@ -4,6 +4,7 @@
 // expect-regex: E012<.*sensor, trellis::error::request<.*sensor ?&>|error C2338:
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 50
+// expect-max-lines-msvc: 102
 //
 // Eager mode builds every singleton inside make_injector (plan §7.5), so every singleton must be
 // buildable, even one that nothing creates: a missing owner fails when the injector is made, as

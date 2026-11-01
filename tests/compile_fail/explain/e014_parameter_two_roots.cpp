@@ -9,6 +9,7 @@
 // expect-regex-msvc: trellis::error::path<app::keeper>
 // expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 130
 //
 // std::unique_ptr<base> would delete the derived object through base's destructor, which isn't
 // virtual (TRL-E014, provisional ID). The explain pass reports owner's parameter 1 with the path

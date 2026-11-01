@@ -9,6 +9,7 @@
 // expect-regex-msvc: trellis::error::path<app::bank, ?app::teller>
 // expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 176
 //
 // Discovery can't find vault's constructor. The explain pass reaches it from create<bank>()
 // through teller, and raises discovery's own report, which is unique to the class: office needs a

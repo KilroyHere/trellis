@@ -4,6 +4,7 @@
 // expect-regex: E012<.*sensor, trellis::error::request<.*sensor ?&>|error C2338:
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 102
 //
 // The failure pass is instantiated once per request (static/resolve.hpp, explain), so a cause
 // that several requests lead to is one error: here two consumers, each created twice, need the

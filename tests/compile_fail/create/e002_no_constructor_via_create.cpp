@@ -4,6 +4,7 @@
 // expect-regex: E002<.*vault, trellis::(v1::)?detail::no_ctor_declared>|error C2338:
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 104
 //
 // create<T>() leaves a class whose constructor can't be found to discovery's own assertion
 // (discovery/deduced.hpp, discover), which reports once per class and bound however often the

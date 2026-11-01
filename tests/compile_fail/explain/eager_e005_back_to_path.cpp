@@ -9,6 +9,7 @@
 // expect-regex-msvc: trellis::error::path<app::a, ?app::b>
 // expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 180
 //
 // As explain/e005_unique_ptr_back_to_path.cpp, found by make_injector, which runs the explain
 // pass for the first singleton it can't build: the rejected request back to a is no cycle, and

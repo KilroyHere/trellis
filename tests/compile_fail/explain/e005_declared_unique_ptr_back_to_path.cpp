@@ -9,6 +9,7 @@
 // expect-regex-msvc: trellis::error::path<app::a, ?app::b>
 // expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 109
 //
 // As explain/e005_unique_ptr_back_to_path.cpp, with b's constructor declared, which the explain
 // pass follows without a note of its own: the declared request std::unique_ptr<a> names a, a

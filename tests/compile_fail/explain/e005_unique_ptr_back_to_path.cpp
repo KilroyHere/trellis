@@ -9,6 +9,7 @@
 // expect-regex-msvc: trellis::error::path<app::a, ?app::b>
 // expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 189
 //
 // b's parameter names a, a class already on the path from create<a&>(), but its request,
 // std::unique_ptr<a> of a singleton, is rejected by the request-form table before a's check

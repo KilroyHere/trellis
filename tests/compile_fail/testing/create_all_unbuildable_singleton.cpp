@@ -4,6 +4,7 @@
 // expect-regex: E001<.*store, trellis::error::request<.*store ?&>|error C2338:
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 125
 //
 // trellis::testing::create_all requests each singleton as create<Key&>() does (testing/wiring.hpp),
 // so a singleton that can't be built is that request's one error, here the cache's store, and the

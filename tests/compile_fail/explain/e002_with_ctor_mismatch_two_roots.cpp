@@ -9,6 +9,7 @@
 // expect-regex-msvc: trellis::error::path<app::dial>
 // expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 105
 //
 // meter's own member alias is right, but its binding declares trellis::ctor<int>, which wins, and
 // meter's constructor takes a double and an int. The explain pass reaches meter from

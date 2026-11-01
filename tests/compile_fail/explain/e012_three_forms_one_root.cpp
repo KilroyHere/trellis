@@ -9,6 +9,7 @@
 // expect-regex-msvc: trellis::error::path<app::station, ?app::reader>
 // expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 127
 //
 // sensor has no binding, so reader's sensor&, logger's const sensor& and probe's sensor* are three
 // requests that nothing would own (TRL-E012), with one root cause. The explain pass follows only

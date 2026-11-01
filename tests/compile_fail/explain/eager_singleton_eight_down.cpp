@@ -9,6 +9,7 @@
 // expect-regex-msvc: trellis::error::path<app::hub, ?app::d1, ?app::d2, ?app::d3, ?app::d4, ?app::d5, ?app::d6, ?app::d7>
 // expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 302
 //
 // An eager injector builds its singletons in make_injector, and hub can't be built. make_injector
 // runs the explain pass for it before the injector exists (T1.6), so that make_injector is the

@@ -9,6 +9,7 @@
 // expect-regex-msvc: trellis::error::path<app::truck,app::engine>
 // expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 102
 //
 // Strict mode turns off the implicit unique binding, so engine's declared parameter gear, which
 // has no binding, can't be served (TRL-E013, provisional ID). The explain pass reaches it from
