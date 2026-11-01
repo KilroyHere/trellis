@@ -25,7 +25,7 @@ The project runs across many sessions. The task list, the progress log and the g
 - Full local matrix, every preset one at a time (gcc-13, gcc-14, clang-18, clang-20 and clang-18 + libc++ debug; gcc-13 and clang-18 release; ASan/UBSan; TSan; timetrace): `scripts/check-full.sh`, or `scripts/check-full.sh <preset>...` for some
 - One preset: `cmake --preset clang-18-debug && cmake --build --preset clang-18-debug && ctest --preset clang-18-debug`
 - One test: `ctest --preset clang-18-debug -R <regex>`
-- By label: `ctest --preset clang-18-debug -L compile_fail` (or `-L unit`, `-L golden`, `-L tools`, `-L examples`, `-L property`, `-L single_header`). `-L module` selects tests only in the Clang presets, which build the C++20 module; elsewhere it fails, because a label that selects no tests is an error.
+- By label: `ctest --preset clang-18-debug -L compile_fail` (or `-L unit`, `-L golden`, `-L tools`, `-L examples`, `-L property`, `-L single_header`, `-L chain_depth`). `-L module` selects tests only in the Clang presets, which build the C++20 module; elsewhere it fails, because a label that selects no tests is an error.
 - Single header: `python3 -I tools/amalgamate.py` writes `single_include/trellis.hpp`; `--check` checks it. A new public entity also needs a line in the module that includes its header (`modules/trellis.cppm`, or `trellis.testing.cppm` for `<trellis/testing/...>`); the test `module.exports` names the line and the file.
 - Compile-time budgets: `scripts/bench-compile.sh --quick`. Runtime: `scripts/bench-runtime.sh`
 - CI status and the first errors of failed jobs: `scripts/ci-status.sh`. MSVC and macOS run only in CI.
@@ -69,7 +69,7 @@ The skeletons for these arrive with T1.12.
 - Memoize per (key, request form, consumer lifetime). Never put a path or a depth into a type on the normal resolution pass.
 - Use flat pack expansions and inheritance-based maps and sets, not recursive variadic templates or linear searches. Use fold expressions only over packs that can't exceed 256 operands: Clang rejects longer ones (plan §8.1 C3, ADR-0010).
 - No fluent APIs that accumulate the binding set in a type.
-- After changing anything under `include/trellis/static/` or `include/trellis/discovery/`, run `scripts/bench-compile.sh --quick` and compare with the last numbers in `docs/PROGRESS.md`.
+- After changing anything under `include/trellis/static/` or `include/trellis/discovery/`, run `scripts/bench-compile.sh --quick` and compare with the last numbers in `docs/PROGRESS.md`, and re-measure the deepest chains with `python3 -I tests/chain_depth/check_chain_depth.py --deepest --record` (NFR-09 needs 200 hops).
 
 ## Environment
 
