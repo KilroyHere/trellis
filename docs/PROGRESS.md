@@ -68,6 +68,24 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev clang-tools-18 clang-tools-20` (`clang-tools-*` gives `clang-scan-deps`, which the C++20 module build needs, T1.8) so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
 
+## 2026-11-01: T1.7 test overrides and testing helpers (landed; waits for T1.6 to pass)
+
+- **What changed** (squashed as bffb420), in `include/trellis/dsl/override.hpp` and `include/trellis/testing/wiring.hpp`:
+  - **`trellis::override<K>`** takes bind's whole vocabulary and replaces K's binding wherever `make_injector`'s arguments hold it, in nested and named modules included. The other arguments are flattened once, and each overridden binding is swapped in place with one `type_map` lookup: no fold, recursion or accumulation.
+  - **Errors:** nothing to replace is one TRL-E009 (through T1.6's entry point); two overrides of one key are one TRL-E003. Neither cascades into `create`, `create_all`, `wireable` or eager mode.
+  - **`testing::wireable<Injector, Root>`** is true exactly when `create<Root>()` compiles and `make_injector` could make the injector, without firing an assertion.
+  - **`testing::create_all`** builds every singleton.
+  - **Tests and docs:** a gMock StrictMock example, a per-injector isolation test and 15 compile-fail tests.
+- **Review:** failed once on a missing decltype test for `override<const K>`. The same round fixed the `bind<const K>` + `override<K>` cascade, made wireable reject injectors that `make_injector` can't make, and removed a duplicated deduction that made an override cost 1.41× (now 1.06×) at 1,000 bindings. The recheck passed after the rebase onto T1.6 removed the stub.
+- **Evidence:** `scripts/tasks.py verify T1.7` on main: `[PASS] scripts/check-full.sh`, `check-full: 10 of 10 presets passed, 0 failed, 2759s`, `T1.7: all verify commands passed`. Earlier, `scripts/init.sh`: `clang-18-debug: 396 tests: 385 passed, 11 skipped`. `tasks.py pass T1.7` waits for T1.6 to pass.
+- **[NEEDS CLARIFICATION]**
+  - Overrides go to `make_injector` only, not modules.
+  - Plan §6.10's `.to_ref(repo)` can't serve §6.1's `std::shared_ptr<IRepository>` parameter (TRL-E005). The example takes `IRepository&`, and §6.10 is amended, provisionally.
+  - Override errors are reported before a plain duplicate-key E003.
+- **Follow-ups:**
+  - T1.4's mixed layout (a named module plus other arguments) costs about 3× at 1,000 bindings: 3.9 s → 11 s on clang-18, and 0.6 → 32 MB of object at -O0. It's negligible at 100. For T1.14 and Phase 3's budget at N=1,000.
+  - A cheaper path for one module plus overrides would reach each binding through its known base class instead of deducing it.
+
 ## 2026-11-01: T1.6 diagnostics in C++20 form (landed; awaiting the owner on NFR-07)
 
 - **What changed** (squashed as 5837eb5), in `include/trellis/diagnostics/explain.hpp` with 30 new compile-fail tests and 60 goldens on four compilers:
