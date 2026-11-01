@@ -673,9 +673,13 @@ struct explain_arg<Path, Parameter, Ctx, std::index_sequence<Js...>> {
         if constexpr (s::reports) {
           s::type::run();
         } else if constexpr (s::owner && s::aggregate) {
-          static_cast<void>(requires { typename s::impl{owner<s, Js>{}...}; });
+          // An alias rather than typename s::impl{...}: cl rejects a typename-specifier used as
+          // a functional cast inside a requires-expression (C2760, 19.44 and 19.51).
+          using impl = typename s::impl;
+          static_cast<void>(requires { impl{owner<s, Js>{}...}; });
         } else if constexpr (s::owner) {
-          static_cast<void>(requires { typename s::impl(owner<s, Js>{}...); });
+          using impl = typename s::impl;
+          static_cast<void>(requires { impl(owner<s, Js>{}...); });
         } else {
           using impl = typename s::impl;
           alignas(impl) std::array<std::byte, sizeof(impl)> storage{};
@@ -702,9 +706,13 @@ struct explain_arg<Path, Parameter, Ctx, std::index_sequence<Js...>> {
         if constexpr (s::reports) {
           s::type::run();
         } else if constexpr (s::owner && s::aggregate) {
-          static_cast<void>(requires { typename s::impl{owner<s, Js>{}...}; });
+          // An alias rather than typename s::impl{...}: cl rejects a typename-specifier used as
+          // a functional cast inside a requires-expression (C2760, 19.44 and 19.51).
+          using impl = typename s::impl;
+          static_cast<void>(requires { impl{owner<s, Js>{}...}; });
         } else if constexpr (s::owner) {
-          static_cast<void>(requires { typename s::impl(owner<s, Js>{}...); });
+          using impl = typename s::impl;
+          static_cast<void>(requires { impl(owner<s, Js>{}...); });
         } else {
           using impl = typename s::impl;
           alignas(impl) std::array<std::byte, sizeof(impl)> storage{};
