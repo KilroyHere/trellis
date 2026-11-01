@@ -118,7 +118,8 @@ Other choices:
 
 - **Explicit declarations everywhere:** remove every limit above, but lose the zero-intrusion default (ADR-0007).
 - **A recursive arity search:** costs about the same as the flat chain (within ±20%), but nests up to 17 instantiations per class on the resolution path, against NFR-09; the flat chain adds one. **Probing every arity with a fold** is 6–41% slower than stopping at the first hit.
-- **A lower `max_ctor_arity`:** the failed probes above the arity dominate discovery. A maximum of 8 costs 46–51% of 16, and Boost.DI's default of 10 would cut a typical 4-parameter class from 13 probes to 7. 16 stays until task T1.11 measures whether it matters against NFR-04 and NFR-05, using T1.9's benchmarks.
+- **A lower `max_ctor_arity`:** the failed probes above the arity dominate discovery. A maximum of 8 costs 46–51% of 16, and Boost.DI's default of 10 would cut a typical 4-parameter class from 13 probes to 7. Task T1.11 measured what that saves in a whole program, against NFR-04 and NFR-05 with T1.9's benchmarks: 1–3% of the compile's instructions at 100 components, while every deduced constructor of 9 to 16 parameters would need a declaration. 16 stays (History).
+- **A higher `max_ctor_arity`,** such as the cap of 32 (T1.11): 4% (GCC) and 11% (Clang) more instructions and 8% and 25% more memory at 100 components, for constructors that can be declared. Clang's fan-in 10 graph then takes 1.18× to 1.31× the hand-written compile time (NFR-04: 1.3×), depending on the machine's load.
 
 ## Consequences
 
@@ -154,3 +155,8 @@ Other choices:
   - **`repeat_t` through a class (item 6).** cl lost the pack in `ctor<repeat_t<Is, probe_arg<T>>...>` over one index (C3546), so no one-parameter constructor could be deduced.
   - **The MSVC array check (items 5 and 6).** cl's parentheses refuse members of aggregate class type, so the parenthesized check took `agg`, `agg_defaults`, `agg_base`, `agg_nested`, `with_array` and `agg_tuple_last` for aggregates with arrays. With braces and the array conversion deleted, cl gives every aggregate in the tests the verdict GCC and Clang give it.
   - Measured on cl 19.51 only. The gates cover every MSVC from NFR-13's 19.38; cl 19.44 was measured only for what T1.13 covered, which includes the array-reference initialization the brace check relies on. Plan §7.2 amended.
+- **2026-11-01, T1.11 (the bound measured):** `max_ctor_arity` at 8, 16 and 32, against NFR-04 and NFR-05, on T1.9's graphs at N = 100: `scripts/bench-compile.sh --quick`'s fan-in 1-3 graph, and the fan-in 10 graph, whose classes take up to 10 parameters ([docs/benchmarks/v0.1.md](../benchmarks/v0.1.md#max_ctor_arity)).
+  - At 16 both budgets hold in both profiles: at most 1.20× the hand-written compile time (Clang, fan-in 10; NFR-04's 1.3×) and 1.11× its memory (NFR-05's 1.5×).
+  - 32 adds 16 failed probes to every deduced class: 3.9% more instructions with GCC and 11.1% with Clang on the fan-in 1-3 graph, and 27 MB and 69 MB more memory. With Clang, the fan-in 10 graph then took 1.31× the hand-written compile time in rounds at a load of up to 4, within their 10% variation of NFR-04's 1.3×, and 1.18× to 1.22× in two quiet rounds of T1.11's review; its memory, 1.29×, doesn't depend on the load.
+  - 8 saves 1.3% and 3.2% of the instructions, and refuses every deduced constructor of 9 to 16 parameters with TRL-E010, the fan-in 10 graph's among them.
+  - So the default stays 16, as item 5 decided. No decision changes.

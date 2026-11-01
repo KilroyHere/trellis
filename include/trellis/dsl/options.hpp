@@ -149,7 +149,9 @@ struct options {
   ///        ADR-0003). Default: 16.
   ///
   /// Takes effect with `create<T>()` (T1.5), which passes it to deduced discovery (T1.3) as its
-  /// bound; task T1.11 measures whether 16 is the right default.
+  /// bound. Discovery probes every deduced class from the bound down, so a higher bound costs
+  /// compile time and memory: for a graph of 100 classes, 32 costs 4% (GCC) to 11% (Clang) more
+  /// instructions than 16 (T1.11, docs/benchmarks/v0.1.md).
   ///
   /// @par Constraints
   /// - At most 32; otherwise `trellis::make_injector` fails to compile with a static_assert. A

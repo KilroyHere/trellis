@@ -3,6 +3,14 @@
 # repository a macOS minute costs ten Linux minutes and a Windows minute two, so these don't run on
 # every push. Each job configures, builds and tests one CMake preset, as ci.yml does on Linux. A
 # failed scheduled run opens an issue (plan §9.2, risk R12).
+#
+# The chain-depth test (NFR-09, ADR-0014 item 3, T1.11) also runs on MSVC 14.44 (cl 19.44, Visual
+# Studio 2022 17.14), the newest of the series NFR-13's minimum (19.38) belongs to. NFR-09 asks
+# 200 hops of cl 19.50 and later and 150 of older versions, whose recursion limit is fixed, and
+# tests/chain_depth/check_chain_depth.py takes the length from the compiler's version. On Windows
+# it has a step of its own, which prints a notice per passing shape: other failing tests can't
+# crowd its results out of the ten error annotations a step gets, and scripts/ci-status.sh reads
+# annotations where it can't read job logs.
 name: platforms
 
 on:
@@ -52,12 +60,22 @@ jobs:
 
   windows:
     if: github.event_name != 'workflow_dispatch' || inputs.os != 'macos'
-    name: windows (MSVC)
+    name: windows (MSVC ${{ matrix.toolset }})
     runs-on: windows-latest
-    timeout-minutes: 30
+    # Comfortably above the chain-depth step's own 20 minutes, after the build and the tests on
+    # latest, and after setting up and configuring on 14.44.
+    timeout-minutes: ${{ matrix.toolset == 'latest' && 60 || 35 }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # latest: the image's newest MSVC, which builds and runs every test. 14.44: only the
+        # chain-depth test, which needs a configured build but no build (see the top).
+        toolset: [latest, '14.44']
     defaults:
       run:
         shell: pwsh
+    env:
+      MSVC_TOOLSET: ${{ matrix.toolset }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -68,18 +86,31 @@ jobs:
         run: echo "::add-matcher::.github/problem-matchers.json"
 
       # What a Visual Studio developer prompt sets (vcvars64.bat: cl, link and the Windows SDK on
-      # PATH, INCLUDE and LIB), exported to the later steps through GITHUB_ENV.
+      # PATH, INCLUDE and LIB), exported to the later steps through GITHUB_ENV; -vcvars_ver picks a
+      # toolset other than the latest. A toolset the image lacks is reported, and the job skips the
+      # rest, as in msvc-probe.yml.
       - name: Set up the MSVC developer environment
+        id: msvc
         run: |
           $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
           $vs = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
           if (-not $vs) { throw 'vswhere found no Visual Studio with the x64 C++ tools' }
           "Visual Studio: $vs"
+          $version = ''
+          if ($env:MSVC_TOOLSET -ne 'latest') {
+            if (-not (Test-Path (Join-Path $vs "VC\Tools\MSVC\$env:MSVC_TOOLSET.*"))) {
+              $toolsets = (Get-ChildItem (Join-Path $vs 'VC\Tools\MSVC') -Directory | ForEach-Object Name) -join ', '
+              "::notice title=MSVC toolset $env:MSVC_TOOLSET::not on this image ($env:ImageOS $env:ImageVersion), which has $toolsets; the job skips the rest"
+              "missing=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+              exit 0
+            }
+            $version = "-vcvars_ver=$env:MSVC_TOOLSET"
+          }
           $before = @{}
           Get-ChildItem env: | ForEach-Object { $before[$_.Name] = $_.Value }
           $vcvars = Join-Path $vs 'VC\Auxiliary\Build\vcvars64.bat'
-          $after = cmd /c "`"$vcvars`" >nul && set"
-          if ($LASTEXITCODE -ne 0) { throw "$vcvars failed with exit code $LASTEXITCODE" }
+          $after = cmd /c "`"$vcvars`" $version >nul && set"
+          if ($LASTEXITCODE -ne 0) { throw "$vcvars $version failed with exit code $LASTEXITCODE" }
           foreach ($line in $after) {
             if ($line -match '^([^=]+)=(.*)$' -and $before[$Matches[1]] -cne $Matches[2]) {
               "$($Matches[1])=$($Matches[2])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
@@ -87,19 +118,51 @@ jobs:
           }
 
       - name: Tools
+        if: steps.msvc.outputs.missing != 'true'
         run: |
           (Get-Command cl).Source
           cmake --version
           "ninja $(ninja --version)"
 
       - name: Configure
+        id: configure
+        if: steps.msvc.outputs.missing != 'true'
         run: cmake --preset msvc-debug
 
+      # The chain-depth test takes NFR-09's length, 200 hops or 150 before cl 19.50, from the
+      # compiler version that CMake found, so check that it is the toolset's: cl 19.44 for 14.44,
+      # as msvc-probe.yml's Versions step checks the toolset on PATH.
+      - name: Check the MSVC version
+        id: version
+        if: steps.configure.outcome == 'success'
+        run: |
+          $config = Get-Content build/msvc-debug/trellis_compiler.json -Raw | ConvertFrom-Json
+          $found = "cl $($config.compiler_version) at $($config.compiler), toolset $env:VCToolsVersion"
+          if ($env:MSVC_TOOLSET -ne 'latest') {
+            $want = '19.' + $env:MSVC_TOOLSET.Split('.')[1]
+            if (-not $config.compiler_version.StartsWith("$want.")) {
+              "::error title=MSVC version::toolset $env:MSVC_TOOLSET should be cl $want, but CMake found $found"
+              exit 1
+            }
+          }
+          "::notice title=MSVC version ($env:MSVC_TOOLSET)::$found"
+          exit 0
+
       - name: Build
+        if: matrix.toolset == 'latest'
         run: cmake --build --preset msvc-debug -j $env:NUMBER_OF_PROCESSORS
 
+      # Every test but the chain-depth test, which has the next step.
       - name: Test
-        run: ctest --preset msvc-debug -j $env:NUMBER_OF_PROCESSORS
+        if: matrix.toolset == 'latest'
+        run: ctest --preset msvc-debug -j $env:NUMBER_OF_PROCESSORS -LE chain_depth
+
+      # The chain-depth test only compiles, so it runs where Build or Test failed, but not with the
+      # wrong cl. -X utf8: cl's output may not fit the console code page.
+      - name: Chain depth (NFR-09)
+        if: ${{ !cancelled() && steps.configure.outcome == 'success' && steps.version.outcome == 'success' }}
+        timeout-minutes: 20
+        run: python -I -X utf8 tests/chain_depth/check_chain_depth.py --config build/msvc-debug/trellis_compiler.json --jobs $env:NUMBER_OF_PROCESSORS
 
   report:
     name: report a failed scheduled run

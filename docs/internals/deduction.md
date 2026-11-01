@@ -150,11 +150,11 @@ Measured on a chain of classes each taking the next by value, resolved through `
 | T1.3 before its review, through `builds_from` and the `can_resolve` concept | 6N + 10 (610) | 8N + 11 (811) |
 | S1's prototype, in the same shape | about 5N (509) | about 7N (715) |
 
-So T1.3's share leaves T1.5 about 222 hops on GCC and 204 on Clang at the default limits. Every level that T1.5's context adds per hop, such as a separate class for the binding lookup, costs about 40 to 50 hops at N = 200. T1.11 measures the deepest chain the engine compiles (NFR-09).
+So T1.3's share leaves T1.5 about 222 hops on GCC and 204 on Clang at the default limits. Every level that T1.5's context adds per hop, such as a separate class for the binding lookup, costs about 40 to 50 hops at N = 200. T1.11's chain test measures the deepest chain the engine compiles (NFR-09; [resolution-and-storage.md](resolution-and-storage.md#the-chain-test)).
 
 T1.5's engine evaluates a deduced class with its own node, `node_v` in `static/resolve.hpp`: the same check as `deduced_constructible_v`, written with the `__is_constructible` builtin, which saves the level that `std::is_constructible_v` costs, and builds it with its own `build` functions, one function level rather than `construct_deduced`'s two. With its plan worked out before the recursion, a chain costs 3N + 13 levels on gcc-13 and 4N + 15 on clang-18, check and creation together: 295 hops on GCC and 252 on Clang at the default limits ([resolution-and-storage.md](resolution-and-storage.md), which also measures the alternatives). `tests/unit/create_test.cpp` checks that `node_v` and `deduced_constructible_v` agree.
 
-**Tests:** none in the suite yet; T1.11 adds the chain test. The numbers come from compiling the chain with `-fsyntax-only` at N = 50 and 100 and bisecting `-ftemplate-depth`.
+**Tests:** `tests/chain_depth/` (T1.11): CTest's `chain_depth.<shape>` compile chains of 200 hops at the default limits, deduced and declared classes and aggregates among them, and `check_chain_depth.py --deepest` measures the deepest ([resolution-and-storage.md](resolution-and-storage.md#the-chain-test)). The numbers above come from compiling the chain with `-fsyntax-only` at N = 50 and 100 and bisecting `-ftemplate-depth`.
 
 ## Notes for the engine
 
@@ -260,7 +260,9 @@ S1 measured full discovery at 1.5–1.6 ms per class on GCC and 2.9–3.2 ms on 
 | T1.3 (`deduction`) | 2.2 ms | 1.8 ms | 5.0 ms | 5.6 ms |
 | Peak memory, S1 / T1.3, 100 classes | 126 / 104 MB | 124 / 101 MB | 153 / 147 MB | 164 / 156 MB |
 
-The machine was shared, with a load average of about 3 on 4 CPUs, so the absolute numbers are slower than S1's; the comparison between the two, measured in the same runs, is what counts. Probing through `builds_from`, a function, cost gcc-13 0.4–0.7 ms per class more than the same rule written as a disjunction of constraints, and Clang nothing measurable (A/B, median of 7); deduction uses `builds_from` all the same, so that declarations and deduction share one definition of the rule. T1.11 checks the bound against NFR-04 and NFR-05 with the injector.
+The machine was shared, with a load average of about 3 on 4 CPUs, so the absolute numbers are slower than S1's; the comparison between the two, measured in the same runs, is what counts. Probing through `builds_from`, a function, cost gcc-13 0.4–0.7 ms per class more than the same rule written as a disjunction of constraints, and Clang nothing measurable (A/B, median of 7); deduction uses `builds_from` all the same, so that declarations and deduction share one definition of the rule.
+
+**The bound in a whole program** (T1.11): the failed probes above a class's arity are most of its discovery, so the bound sets what a deduced class costs. On T1.9's 100-component graphs, a bound of 32 costs 3.9% more instructions with GCC and 11.1% with Clang than 16, and 27 MB and 69 MB more memory; 8 saves 1.3% and 3.2%. At 16 the graphs meet NFR-04 and NFR-05, so 16 stays the default ([benchmarks](../benchmarks/v0.1.md#max_ctor_arity), ADR-0003).
 
 ## Open points
 

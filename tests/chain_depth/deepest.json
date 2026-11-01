@@ -1,0 +1,201 @@
+{
+  "about": "The deepest dependency chain the static engine compiles at each compiler's default template depth, per shape: written by tests/chain_depth/check_chain_depth.py --deepest --record (task T1.11), which documents the shapes and how a chain is compiled, under each preset's name, with cl's version on MSVC. NFR-09 asks for 200 hops, 150 on MSVC before 19.50 (ADR-0014). 'deepest' compiles and 'deepest' + 1 doesn't, stopped as 'stopped_by' says. 'include' is the tree id of include/ at the measurement, which a rebase or a squash keeps, unlike 'commit': the tests say when include/ is no longer that tree. Re-measure after changing include/trellis/static/ or include/trellis/discovery/.",
+  "presets": {
+    "clang-18-debug": {
+      "compiler": "Clang 18.1.3",
+      "flags": "-g -std=c++20 -Iinclude -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual",
+      "commit": "a48cca3",
+      "include": "817969d68d4b",
+      "date": "2026-11-01",
+      "shapes": {
+        "value": {
+          "deepest": 251,
+          "stopped_by": "depth limit: include/trellis/discovery/deduced.hpp:86:14: fatal error: recursive template instantiation exceeded maximum depth of 1024"
+        },
+        "unique_ptr": {
+          "deepest": 251,
+          "stopped_by": "depth limit: include/trellis/discovery/deduced.hpp:86:14: fatal error: recursive template instantiation exceeded maximum depth of 1024"
+        },
+        "reference": {
+          "deepest": 251,
+          "stopped_by": "depth limit: include/trellis/discovery/deduced.hpp:86:14: fatal error: recursive template instantiation exceeded maximum depth of 1024"
+        },
+        "pointer": {
+          "deepest": 251,
+          "stopped_by": "depth limit: include/trellis/discovery/deduced.hpp:86:14: fatal error: recursive template instantiation exceeded maximum depth of 1024"
+        },
+        "shared_ptr": {
+          "deepest": 251,
+          "stopped_by": "depth limit: include/trellis/discovery/deduced.hpp:86:14: fatal error: recursive template instantiation exceeded maximum depth of 1024"
+        },
+        "weak_ptr": {
+          "deepest": 251,
+          "stopped_by": "depth limit: include/trellis/discovery/deduced.hpp:86:14: fatal error: recursive template instantiation exceeded maximum depth of 1024"
+        },
+        "declared": {
+          "deepest": 502,
+          "stopped_by": "depth limit: /usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/type_traits:3599:5: fatal error: recursive template instantiation exceeded maximum depth of 1024"
+        },
+        "aggregate": {
+          "deepest": 251,
+          "stopped_by": "depth limit: include/trellis/discovery/deduced.hpp:86:14: fatal error: recursive template instantiation exceeded maximum depth of 1024"
+        },
+        "eager": {
+          "deepest": 251,
+          "stopped_by": "depth limit: include/trellis/discovery/deduced.hpp:86:14: fatal error: recursive template instantiation exceeded maximum depth of 1024"
+        },
+        "mixed": {
+          "deepest": 335,
+          "stopped_by": "depth limit: include/trellis/discovery/deduced.hpp:86:14: fatal error: recursive template instantiation exceeded maximum depth of 1024"
+        }
+      }
+    },
+    "clang-20-debug": {
+      "compiler": "Clang 20.1.2",
+      "flags": "-g -std=c++20 -Iinclude -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual",
+      "commit": "a48cca3",
+      "include": "817969d68d4b",
+      "date": "2026-11-01",
+      "shapes": {
+        "value": {
+          "deepest": 251,
+          "stopped_by": "depth limit: include/trellis/discovery/deduced.hpp:86:14: fatal error: recursive template instantiation exceeded maximum depth of 1024"
+        },
+        "unique_ptr": {
+          "deepest": 251,
+          "stopped_by": "depth limit: include/trellis/discovery/deduced.hpp:86:14: fatal error: recursive template instantiation exceeded maximum depth of 1024"
+        },
+        "reference": {
+          "deepest": 251,
+          "stopped_by": "depth limit: include/trellis/discovery/deduced.hpp:86:14: fatal error: recursive template instantiation exceeded maximum depth of 1024"
+        },
+        "pointer": {
+          "deepest": 251,
+          "stopped_by": "depth limit: include/trellis/discovery/deduced.hpp:86:14: fatal error: recursive template instantiation exceeded maximum depth of 1024"
+        },
+        "shared_ptr": {
+          "deepest": 251,
+          "stopped_by": "depth limit: include/trellis/discovery/deduced.hpp:86:14: fatal error: recursive template instantiation exceeded maximum depth of 1024"
+        },
+        "weak_ptr": {
+          "deepest": 251,
+          "stopped_by": "depth limit: include/trellis/discovery/deduced.hpp:86:14: fatal error: recursive template instantiation exceeded maximum depth of 1024"
+        },
+        "declared": {
+          "deepest": 503,
+          "stopped_by": "depth limit: include/trellis/discovery/deduced.hpp:86:14: fatal error: recursive template instantiation exceeded maximum depth of 1024"
+        },
+        "aggregate": {
+          "deepest": 246,
+          "stopped_by": "compiler limit: include/trellis/discovery/ctor_traits.hpp:243:25: error: stack nearly exhausted; compilation time may suffer, and crashes due to stack overflow are likely [-Werror,-Wstack-exhausted]"
+        },
+        "eager": {
+          "deepest": 251,
+          "stopped_by": "depth limit: include/trellis/discovery/deduced.hpp:86:14: fatal error: recursive template instantiation exceeded maximum depth of 1024"
+        },
+        "mixed": {
+          "deepest": 335,
+          "stopped_by": "depth limit: include/trellis/discovery/deduced.hpp:86:14: fatal error: recursive template instantiation exceeded maximum depth of 1024"
+        }
+      }
+    },
+    "gcc-13-debug": {
+      "compiler": "GNU 13.3.0",
+      "flags": "-g -std=c++20 -Iinclude -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual",
+      "commit": "a48cca3",
+      "include": "817969d68d4b",
+      "date": "2026-11-01",
+      "shapes": {
+        "value": {
+          "deepest": 294,
+          "stopped_by": "depth limit: /usr/include/c++/13/type_traits:3447:11: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)"
+        },
+        "unique_ptr": {
+          "deepest": 294,
+          "stopped_by": "depth limit: /usr/include/c++/13/type_traits:3447:11: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)"
+        },
+        "reference": {
+          "deepest": 294,
+          "stopped_by": "depth limit: /usr/include/c++/13/type_traits:3447:11: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)"
+        },
+        "pointer": {
+          "deepest": 294,
+          "stopped_by": "depth limit: /usr/include/c++/13/type_traits:3447:11: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)"
+        },
+        "shared_ptr": {
+          "deepest": 294,
+          "stopped_by": "depth limit: /usr/include/c++/13/type_traits:3447:11: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)"
+        },
+        "weak_ptr": {
+          "deepest": 294,
+          "stopped_by": "depth limit: /usr/include/c++/13/type_traits:3447:11: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)"
+        },
+        "declared": {
+          "deepest": 442,
+          "stopped_by": "depth limit: include/trellis/config.hpp:100:30: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)"
+        },
+        "aggregate": {
+          "deepest": 294,
+          "stopped_by": "depth limit: /usr/include/c++/13/type_traits:3447:11: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)"
+        },
+        "eager": {
+          "deepest": 294,
+          "stopped_by": "depth limit: include/trellis/config.hpp:100:30: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)"
+        },
+        "mixed": {
+          "deepest": 354,
+          "stopped_by": "depth limit: /usr/include/c++/13/type_traits:3416:44: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)"
+        }
+      }
+    },
+    "gcc-14-debug": {
+      "compiler": "GNU 14.2.0",
+      "flags": "-g -std=c++20 -Iinclude -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual",
+      "commit": "a48cca3",
+      "include": "817969d68d4b",
+      "date": "2026-11-01",
+      "shapes": {
+        "value": {
+          "deepest": 294,
+          "stopped_by": "depth limit: /usr/include/c++/14/type_traits:3599:11: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)"
+        },
+        "unique_ptr": {
+          "deepest": 294,
+          "stopped_by": "depth limit: /usr/include/c++/14/type_traits:3599:11: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)"
+        },
+        "reference": {
+          "deepest": 294,
+          "stopped_by": "depth limit: /usr/include/c++/14/type_traits:3599:11: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)"
+        },
+        "pointer": {
+          "deepest": 294,
+          "stopped_by": "depth limit: /usr/include/c++/14/type_traits:3599:11: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)"
+        },
+        "shared_ptr": {
+          "deepest": 294,
+          "stopped_by": "depth limit: /usr/include/c++/14/type_traits:3599:11: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)"
+        },
+        "weak_ptr": {
+          "deepest": 294,
+          "stopped_by": "depth limit: /usr/include/c++/14/type_traits:3599:11: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)"
+        },
+        "declared": {
+          "deepest": 442,
+          "stopped_by": "depth limit: include/trellis/config.hpp:100:30: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)"
+        },
+        "aggregate": {
+          "deepest": 294,
+          "stopped_by": "depth limit: /usr/include/c++/14/type_traits:3599:11: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)"
+        },
+        "eager": {
+          "deepest": 294,
+          "stopped_by": "depth limit: include/trellis/config.hpp:100:30: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)"
+        },
+        "mixed": {
+          "deepest": 354,
+          "stopped_by": "depth limit: /usr/include/c++/14/type_traits:3571:44: fatal error: template instantiation depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)"
+        }
+      }
+    }
+  }
+}

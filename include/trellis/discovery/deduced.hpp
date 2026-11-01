@@ -37,8 +37,8 @@
 namespace trellis::inline v1::detail {
 
 // The default bound on a deduced constructor's arity: options::max_ctor_arity's default (plan
-// §6.13, ADR-0003), measured by spike S1 at 1.5 to 3.2 ms per class. T1.11 checks it against the
-// compile-time budgets.
+// §6.13, ADR-0003), measured by spike S1 at 1.5 to 3.2 ms per class, and by T1.11 against the
+// compile-time budgets, which 100-class graphs meet with it (docs/benchmarks/v0.1.md).
 inline constexpr std::size_t default_max_ctor_arity = 16;
 
 // The largest bound the arity search supports. A constructor with more parameters can always be

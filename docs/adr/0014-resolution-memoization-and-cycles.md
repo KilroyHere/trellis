@@ -59,7 +59,7 @@ Spike S2 measured three strategies on S1's injector stub, with identical creatio
      - The check sets that limit, and it already has the lean shape. So NFR-09 is ≥ 200 hops on GCC, Clang and MSVC ≥ 19.50, and ≥ 150 hops on MSVC 19.38 to 19.4x, the rest of NFR-13's range. 150 leaves a margin below the 161 measured.
      - **The boundary at 19.50 is assumed, not measured.** 19.44 is the newest version measured without `/templateDepth`, and 19.51 the first measured with it. 19.50 is Visual Studio 2026's first toolset, and the runner image doesn't have it: it has 14.29, 14.44 and 14.51 (T1.13's third run).
      - The alternative is raising NFR-13's MSVC minimum to 19.50, or to 19.51 until 19.50 is checked (Alternatives).
-   - **CI gets a test:** a 200-hop chain in each request form, at the default limits, on every compiler; 150 hops on MSVC before 19.50, where CI tests one. CI's `windows-latest` runs cl 19.51.
+   - **CI gets a test:** a 200-hop chain in each request form, at the default limits, on every compiler; 150 hops on MSVC before 19.50, where CI tests one. CI's `windows-latest` runs cl 19.51. T1.11 added it: `tests/chain_depth/`, which `platforms.yml` also runs with cl 19.44 (History).
    - **In deduced mode the real size limit is chain depth, not N.** The generated graphs pass at N = 1,000 because their depth-first stack is 35–66 hops, but a graph whose classes list their longest-chain dependency first would need 900–1,000. The documentation of deduced mode says so.
 
 4. **Smaller rules for Phase 1** (S2 §4.4):
@@ -86,7 +86,7 @@ Spike S2 measured three strategies on S1's injector stub, with identical creatio
   - **The opt-in check:** exactly one TRL-E007, but 824 lines (item 2).
   - **Builtins:** `__is_same` is missing (item 4).
 - **Not measured** (S2 §5): request forms other than `shared_ptr` were checked for correctness but not timed; graphs where one class has consumers of different lifetimes; aggregates, scoped lifetimes, factories and `lazy`; Apple Clang; option 2 at N = 1,000, which can't compile there at the default limits; and fan-in 10 at N of 500 or more.
-- **Work this creates:** Phase 2 implements `cycle_check` and the error catalog's E007 page (plan §12.2: "E007 cycles (per S2)"). Task T1.11 carries the 200-hop chain test and the MSVC chain test (150 hops on MSVC before 19.50, if CI tests one; `platforms.yml` runs the image's latest toolset, cl 19.51).
+- **Work this creates:** Phase 2 implements `cycle_check` and the error catalog's E007 page (plan §12.2: "E007 cycles (per S2)"). Task T1.11 added the 200-hop chain test and the MSVC chain test: `platforms.yml` runs it with the image's latest toolset, cl 19.51, at 200 hops, and with cl 19.44 at 150 (History).
 
 ## History
 
@@ -102,3 +102,16 @@ Spike S2 measured three strategies on S1's injector stub, with identical creatio
   - The cycle results and the opt-in check's output size on MSVC added.
   - After review, a third run tested the cycle check at bounds of 150 and 200 hops. On cl 19.44, 150 gives TRL-E007 and 200 ends in C1202; on cl 19.51 both give TRL-E007. The boundary at 19.50 is marked as assumed: the runner has no 14.50 toolset, so only 19.44 and 19.51 were measured.
 - **2026-11-01, T1.5 (the engine):** `create<T>()` keeps item 1's key and item 3's lean shape ([docs/internals/resolution-and-storage.md](../internals/resolution-and-storage.md)). The check is a variable template per (injector, consumer lifetime, request) whose value is the request's node, evaluated with the `__is_constructible` builtin (item 4); everything else about a request is worked out before the recursion. The creation code nests three function bodies per hop, also through a singleton, whose slot gets a function pointer rather than the creation code. Measured on chains through `create<C0>()`: 3N + 13 levels on gcc-13 and 4N + 15 on clang-18 for N hops, the same by value, through `std::unique_ptr`, and through singletons by reference or `std::shared_ptr`; 2N + 14 to 2N + 23 for declared constructors. The deepest chain at the default limits is 295 hops on gcc-13 and gcc-14 and 252 on clang-18 and clang-20, so NFR-09 holds on GCC and Clang. With `std::is_constructible_v` instead of the builtin, the check costs a level more per hop (about 222 and 202 hops). MSVC gets the builtin through `config.hpp`, untested; T1.11 tests the chain, on MSVC too.
+- **2026-11-01, T1.11 (NFR-09 measured):** item 3's test, `tests/chain_depth/check_chain_depth.py` ([docs/internals/resolution-and-storage.md](../internals/resolution-and-storage.md#the-chain-test)). It generates a dependency chain, N + 1 classes for N hops as S2 counted, in ten shapes: one per request form the engine serves (by value, `std::unique_ptr`, a reference, a pointer, `std::shared_ptr`, `std::weak_ptr`), declared constructors, aggregates, an eager injector, and a mix of them all. It compiles each with the build's compiler and flags at the default limits: GCC and Clang with `-fsyntax-only`, which stops at the same length as a full compile, and MSVC with `/c`. CTest's `chain_depth.<shape>` tests compile 200 hops on every preset, 150 on MSVC before 19.50, and `platforms.yml` runs them with the image's latest cl and with cl 19.44. `--deepest` finds the deepest chain, and `tests/chain_depth/deepest.json` records it. The deepest chains at the default limits, in hops:
+
+  | Shape | gcc-13, gcc-14 | clang-18 | clang-20 |
+  |---|---|---|---|
+  | every request form, an eager injector | 294 | 251 | 251 |
+  | aggregates | 294 | 251 | 246 |
+  | declared constructors | 442 | 502 | 503 |
+  | the mix | 354 | 335 | 335 |
+
+  - NFR-09 holds on GCC and Clang, with 94 and 51 hops to spare in every request form. The MSVC results come with the first platforms run after T1.11.
+  - Clang 20 stops the aggregate chain with `-Wstack-exhausted`, its warning that its stack is nearly exhausted, which `-Werror` makes an error; without it, the chain reaches 251 hops. Clang budgets 8 MiB of stack, Linux's default, and checking an aggregate's braces takes more of it per hop.
+  - T1.5's 295 and 252 hops were measured on chains whose last class was an empty aggregate. The deepest instantiation is the last class's discovery, and a last class with a constructor of its own costs 2 more levels on GCC and 3 on Clang: 3N + 16 and 4N + 19 levels for the test's value chain.
+  - An eager injector checks and builds its singletons in binding order. With its bindings listed from the root down, as in the test, the chain stops where a lazy injector's does. Listed from the leaf up, every singleton finds its dependencies already checked and built, and the chain doesn't nest: 1,000 hops compile on gcc-13, and 300 on clang-18. This bears out the last sentence of the Alternatives' "warming the memo in binding order": the creation code instantiated in binding order lifts the limit, and an eager injector does that by itself. Nothing in the decision changes.
