@@ -8,8 +8,9 @@
 //   bound.
 // - "Entry point": a declaration wins over deduction, cv-qualifiers don't matter, and the results
 //   agree with ctor_matches_v.
-// - "Workarounds": the two config.hpp workarounds, TRELLIS_PROBE_DECLARES_TWINS and the
-//   -Wconversion pragma pair, which this file needs to compile under -Werror on GCC.
+// - "Workarounds": the config.hpp workarounds: for GCC, TRELLIS_PROBE_DECLARES_TWINS and the
+//   -Wconversion pragma pair, which this file needs to compile under -Werror on GCC; for MSVC,
+//   TRELLIS_REPEAT_THROUGH_CLASS and TRELLIS_ARRAY_CHECK_WITH_BRACES.
 //
 // Most checks are static_asserts, so a wrong answer breaks the build; the TESTs run the
 // constructions. tests/compile_fail/discovery/deduced_*.cpp have the types that must not compile.
@@ -414,6 +415,14 @@ struct agg_nested {
   with_array a;
   x b;
 };
+// A member that is an aggregate with a field: one request, as any class member.
+struct port_number {
+  int value;
+};
+struct agg_of_aggregate {
+  int host;
+  port_number port;
+};
 struct agg_rvalue_member {
   x&& a;
 };
@@ -576,6 +585,7 @@ static_assert(status_of<agg_defaults> == deduced && arity_of<agg_defaults> == 2)
 static_assert(status_of<agg_base> == deduced && arity_of<agg_base> == 2);
 static_assert(status_of<agg_nested> == deduced && arity_of<agg_nested> == 2);
 static_assert(status_of<with_array> == deduced && arity_of<with_array> == 1);
+static_assert(status_of<agg_of_aggregate> == deduced && arity_of<agg_of_aggregate> == 2);
 static_assert(status_of<std::array<int, 2>> == deduction_status::array_member);
 static_assert(status_of<agg_rvalue_member> == deduced && arity_of<agg_rvalue_member> == 1);
 static_assert(status_of<agg_empty> == deduced && arity_of<agg_empty> == 0);
@@ -976,6 +986,26 @@ static_assert(work::plain_probe_discovers<std::reference_wrapper<dd::x>> ==
 static_assert(deduction<dd::consumer<dd::x&&>>::status == deduction_status::deduced);
 static_assert(deduction<dd::consumer<std::reference_wrapper<dd::x>>>::status ==
               deduction_status::deduced);
+
+// The two MSVC workarounds are on exactly on MSVC (not clang-cl).
+#if defined(_MSC_VER) && !defined(__clang__)
+static_assert(TRELLIS_REPEAT_THROUGH_CLASS == 1);
+static_assert(TRELLIS_ARRAY_CHECK_WITH_BRACES == 1);
+#else
+static_assert(TRELLIS_REPEAT_THROUGH_CLASS == 0);
+static_assert(TRELLIS_ARRAY_CHECK_WITH_BRACES == 0);
+#endif
+// TRELLIS_REPEAT_THROUGH_CLASS: cl expands repeat_t<Is, A>... over a single index into no pack,
+// so a deduced constructor with one parameter failed to compile (C3546). Every form under "Forms"
+// has one parameter; here is one more, through the entry point.
+static_assert(
+    std::is_same_v<discovered_ctor_t<lim::explicit_one>, ctor<probe_arg<lim::explicit_one>>>);
+// TRELLIS_ARRAY_CHECK_WITH_BRACES: cl's parentheses refuse a member of aggregate class type, which
+// the parenthesized array check would take for an array member. If a cl release fixes that, this
+// fails, and the workaround can go. The aggregates under "Limits" test the check itself.
+using nested_probe = trellis::detail::no_array_arg<lim::agg_nested>;
+static_assert(std::is_constructible_v<lim::agg_nested, nested_probe, nested_probe> ==
+              (TRELLIS_ARRAY_CHECK_WITH_BRACES == 0));
 
 }  // namespace
 
