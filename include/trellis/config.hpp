@@ -124,4 +124,39 @@
 #define TRELLIS_FUNCTION_SIGNATURE_CLASS_KEYS 0
 #endif
 
+// The two compiler workarounds of deduced constructor discovery (discovery/deduced.hpp, ADR-0003
+// item 6, docs/internals/deduction.md). Both are tested in tests/unit/deduced_test.cpp.
+//
+// TRELLIS_PROBE_DECLARES_TWINS is 1 on GCC before 14. GCC 13 picks the discovery probe's
+// `operator T&() const` for a parameter of type X&&, const X&&, std::unique_ptr<X>&& or
+// std::reference_wrapper<X>, and then rejects it ("invalid user-defined conversion ... near
+// match"), so discovery misses those constructors (spike S1, note b). GCC 14 is fixed; no bug
+// report was found, as gcc.gnu.org can't be reached from here. When the probe also declares the
+// deleted twins of the resolving placeholder's operators, constrained so that no constructor
+// parameter selects them, GCC 13 chooses as GCC 14, Clang and MSVC do (measured in T1.3 on
+// gcc-13.3). S1 recommended a probe-only `operator T&&() const` instead, which also made GCC 13's
+// discovery accept std::optional<T> and std::tuple<T> parameters and aggregate members; the twins
+// don't (amended by ADR-0003, 2026-10-31, T1.3).
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 14
+#define TRELLIS_PROBE_DECLARES_TWINS 1
+#else
+#define TRELLIS_PROBE_DECLARES_TWINS 0
+#endif
+
+// TRELLIS_PLACEHOLDER_CONVERSIONS_BEGIN and _END surround the code that builds an object from
+// resolving placeholders. GCC's -Wconversion warns at every by-value parameter ("choosing
+// 'operator T()' over 'operator T&() const' ... because conversion sequence for the argument is
+// better"): it flags exactly the tie-break on the implicit object parameter that deduction relies
+// on ([over.ics.rank]/3.2.6, spike S1 §3.3), in Trellis's code rather than the user's, so the pair
+// switches that warning off there and only there. Clang doesn't warn, so the pair is empty there,
+// as everywhere but GCC.
+#if defined(__GNUC__) && !defined(__clang__)
+#define TRELLIS_PLACEHOLDER_CONVERSIONS_BEGIN \
+  _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wconversion\"")
+#define TRELLIS_PLACEHOLDER_CONVERSIONS_END _Pragma("GCC diagnostic pop")
+#else
+#define TRELLIS_PLACEHOLDER_CONVERSIONS_BEGIN
+#define TRELLIS_PLACEHOLDER_CONVERSIONS_END
+#endif
+
 #endif  // TRELLIS_CONFIG_HPP

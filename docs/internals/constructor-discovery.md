@@ -1,6 +1,6 @@
 # Constructor discovery
 
-Constructor discovery tells the static engine which constructor of an implementation type to call, and with what ([plan §5.3](../plan.md#53-how-injectorcreateapp-compiles-static-engine), step 3.3). [ADR-0003](../adr/0003-constructor-discovery.md) puts three strategies behind one trait, in this order: explicit, reflection (C++26, Phase 6) and deduced (T1.3). This note covers the explicit strategy, in [`include/trellis/discovery/ctor_traits.hpp`](../../include/trellis/discovery/ctor_traits.hpp), and the state it hands to the next strategy. The deduction tricks of spike S1 get their own note with T1.3, `deduction.md`.
+Constructor discovery tells the static engine which constructor of an implementation type to call, and with what ([plan §5.3](../plan.md#53-how-injectorcreateapp-compiles-static-engine), step 3.3). [ADR-0003](../adr/0003-constructor-discovery.md) puts three strategies behind one trait, in this order: explicit, reflection (C++26, Phase 6) and deduced (T1.3). This note covers the explicit strategy, in [`include/trellis/discovery/ctor_traits.hpp`](../../include/trellis/discovery/ctor_traits.hpp), and the state it hands to the next strategy. The deduction tricks of spike S1, and `discovered_ctor_t`, the one entry point for every mode, are in [deduction.md](deduction.md).
 
 ## The explicit strategy
 
@@ -120,7 +120,7 @@ Deducing the return type makes the compiler instantiate the body, and with it th
 
 **What it does.** Where no declaration applies, `declared_ctor_t` and `explicit_ctor_t` yield `detail::no_ctor_declared`, and the primary `ctor_traits<T>` derives from it when `T` has no member alias. `ctor_matches_v` is true for it: there is nothing to check.
 
-**Why.** It is the state that the next strategy takes over: from T1.3 on, the engine deduces the constructor of a type whose explicit result is `no_ctor_declared`, without any change to `ctor`, `ctor_traits` or the member alias.
+**Why.** It is the state that the next strategy takes over: the engine deduces the constructor of a type whose explicit result is `no_ctor_declared`, without any change to `ctor`, `ctor_traits` or the member alias. `discovered_ctor_t` ([deduction.md](deduction.md#the-entry-point)) puts the two together: the declaration when one applies, otherwise the deduced constructor.
 
 **Tests:** `tests/unit/ctor_traits_test.cpp`: `ct::undeclared`, `int`, `void` and an abstract class; `TEST(CtorTraits, NothingDeclared)`.
 

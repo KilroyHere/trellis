@@ -1,9 +1,9 @@
 # ADR-0003: Three constructor-discovery strategies behind one trait
 
-- **Status:** Accepted (owner, 2026-10-30)
-- **Plan:** [§4](../plan.md#4-architecture-decisions) ADR-03; §6.3, §7.2, §7.10; FR-06
+- **Status:** Accepted (owner, 2026-10-30). T1.3's amendments to items 5, 6 and 7 are provisional, awaiting owner review (T1.3, 2026-10-31; see History).
+- **Plan:** [§4](../plan.md#4-architecture-decisions) ADR-03; §6.3, §6.13, §7.2, §7.4, §7.10; FR-06
 - **Spikes:** [S1 deduced discovery](../spikes/S1-deduced-discovery.md), whose recommendation the owner accepted. Spike S5 (reflection prototype) is deferred, so the reflection strategy below is accepted as planned but not yet prototyped.
-- **Amends:** plan §6.3 (`T&&` parameters) and §7.2 (the operator set, the workarounds and the residual limits).
+- **Amends:** plan §6.3 (`T&&` parameters), §6.13 (the bound on `max_ctor_arity`), §7.2 (the operator set, the workarounds, the aggregate checks and the residual limits) and §7.4 (what deduced mode reports as E004).
 
 ## Context
 
@@ -51,30 +51,32 @@ Plan §7.2 sketched the placeholder with two `const` operators, `operator T()` a
 
    4. **Parameters of type `std::optional<T>`, `std::tuple<T>` and `std::any` need the explicit route** (S1 §3.2 note c). Their unconstrained converting constructor templates accept the placeholder itself, which is ambiguous on every compiler. For the same reason, Trellis's own wrappers (`lazy`, `provider`, `factory`) must not have converting constructor templates that accept arbitrary types (ADR-0007); S1's `lazy<T&>` stand-in shows that such a wrapper deduces exactly.
 
-   5. **Arity search** (S1 §3.4, §4.4): the arity is the largest *N* ≤ `max_ctor_arity` for which the class is constructible from *N* probes, searched from the top down with a flat `if constexpr` chain whose discarded branches are never instantiated. `max_ctor_arity` defaults to **16** and is an option (§6.13). The limits are detected as S1 §3.5 shows:
+   5. **Arity search** (S1 §3.4, §4.4): the arity is the largest *N* ≤ `max_ctor_arity` for which the class is constructible from *N* probes, searched from the top down with a flat `if constexpr` chain whose discarded branches are never instantiated. `max_ctor_arity` defaults to **16** and is an option (§6.13); deduction supports a bound of at most **32**, and longer constructors are declared explicitly, which has no limit (T1.3, 2026-10-31, provisional). The limits are detected as S1 §3.5 shows:
 
       | Case | Detection | Error |
       |---|---|---|
-      | Abstract type | `std::is_abstract_v`, before probing | E001 |
+      | Abstract type | `std::is_abstract_v`, before probing | E002 from discovery, which sees an abstract type only as the implementation of a binding; the engine reports E001 for an abstract key without a binding before it asks discovery (T1.6). S1's stub reported E001 here because it had no bindings to tell the two apart (T1.3, 2026-10-31, provisional) |
+      | Incomplete type | `requires { sizeof(T); }`, before anything that needs the definition | E002, asking for the definition where the type is discovered (T1.3, 2026-10-31, provisional) |
       | Greedy constructor template, `template<class U> C(U&&)` | the chosen arity also accepts an inert argument that converts to nothing | E004 |
       | Variadic constructor (template or C `...`) | arity = `max_ctor_arity`, and the inert probe is accepted | E004 |
       | Same-arity overloads | the probe is ambiguous at that arity | E002, with a hint |
-      | Arity above the limit | probes *max* + 1 to 2·*max*, only on the failure path | E010 |
+      | Arity above the limit | probes the 16 arities above the bound, only on the failure path; S1 probed *max* + 1 to 2·*max* (T1.3, 2026-10-31, provisional) | E010 |
       | Private or deleted constructors | invisible to `is_constructible` | E002, or the next public arity |
       | Copy and move constructors | `not_self` on every operator | none: excluded |
       | Aggregates | `std::is_aggregate_v`: probe and build with braces; otherwise parentheses, so `initializer_list` constructors never capture the placeholders | none |
+      | Aggregate with an array member, or with a member no placeholder can initialize (T1.3, 2026-10-31, provisional) | parentheses with a probe that can't yield arrays; a trailing `{}` after the deduced fields | E004 |
 
       The compile-fail cases E001, E002 (private), E002 (no fallback), E004, E005 (reference to a unique binding), E005 (singleton by value) and E010 each give the intended ID as the first and only error on all five configurations, in 7 to 11 lines (S1 §3.5).
 
    6. **Two workarounds in `config.hpp`**, each with a test (S1 §3.2 note b, §3.3, §4.5):
-      - **gcc-13** (fixed in gcc-14) selects `operator T&()` for an rvalue-reference parameter and then rejects it. On GCC < 14 the probe, and only the probe, also declares `operator T&&() const`, so discovery still finds the constructor. This was verified for `C(X&&)`. `const T&&`, `unique_ptr<T>&&` and `reference_wrapper<T>` take the same path, but their resolution on gcc-13 wasn't tested separately. Side effect, on gcc-13 only: discovery accepts `optional<T>` parameters, which resolution still rejects.
+      - **gcc-13** (fixed in gcc-14) selects `operator T&()` for an rvalue-reference parameter and then rejects it. On GCC < 14 the probe, and only the probe, also declares the two deleted twins of `any_arg`'s operators, constrained so that no parameter selects them; gcc-13 then chooses as gcc-14 does, so discovery finds the constructor (T1.3, 2026-10-31, provisional; see History). Measured on gcc-13 for `X&&`, `const X&&`, `std::unique_ptr<X>&&` and `std::reference_wrapper<X>`, and `any_arg` resolves all four there without help. S1's own workaround, a probe-only `operator T&&() const`, also made gcc-13's discovery accept `optional<T>` and `tuple<T>` parameters, which resolution still rejects; the twins don't.
       - **GCC's `-Wconversion`** warns at every by-value conversion, because it flags exactly the object-parameter tie-break this design relies on. A `#pragma GCC diagnostic` push and ignore around the construction functions, behind `config.hpp` macros, gives zero warnings under `-Werror` on all five configurations (NFR-10).
 
    7. **Residual limits,** documented and pointing to the explicit route (S1 §4.6):
       - same-arity overloads next to a shorter constructor: the shorter one is chosen silently;
       - defaulted parameters, which are injected (S1's `shorter_viable` flag sees them, but a shorter overload gives the same signal);
       - constructor templates whose constraints the probe satisfies;
-      - aggregate array members, whose count depends on the compiler: GCC and Clang elide the braces and count each element, while cl counts the whole array as one field (T1.13, S1's MSVC addendum). Once the element type is bound, GCC and Clang build such an aggregate and cl doesn't;
+      - aggregate array members, whose count depends on the compiler: GCC and Clang elide the braces and count each element, while cl counts the whole array as one field (T1.13, S1's MSVC addendum). Once the element type is bound, GCC and Clang build such an aggregate and cl doesn't. T1.3 detects them on every compiler and reports E004, which no longer leaves this limit silent (T1.3, 2026-10-31, provisional);
       - private, deleted and absent constructors, which look the same.
 
 Cycle handling in deduced mode is a separate decision, [ADR-0014](0014-resolution-memoization-and-cycles.md).
@@ -138,3 +140,11 @@ Other choices:
   - One residual limit turned out compiler-dependent: cl counts an aggregate's array member as one field, where GCC and Clang count each element. Its wording changed here and in plan §7.2.
   - The MSVC risk section and the "Untested" list now point to the addendum.
 - **2026-10-31, T1.2 (explicit declarations):** the check of an explicit declaration follows the construction rule, not `is_constructible` alone. Aggregates are checked by brace-initialization, as they are built, so a declaration that narrows into an aggregate is rejected and one that relies on brace elision is accepted. Every other type is checked with `is_constructible` and built with parentheses, which also keeps `initializer_list` constructors from capturing a declaration. Plan §7.2 amended. Awaits the owner's confirmation, as a refinement of the accepted Decision.
+- **2026-10-31, T1.3 (implementation):** the decision is implemented in `include/trellis/discovery/deduced.hpp`, with S1's form table and every limit in [docs/internals/deduction.md](../internals/deduction.md). Its amendments, marked provisional above, are for the owner to confirm:
+  - **The gcc-13 workaround changed (item 6).** The probe's twins, declared on GCC < 14 only, replace S1's probe-only `operator T&&() const`. Measured on gcc-13.3: the four rvalue-reference forms are discovered and resolved, and every form and limit gets the same verdict as on gcc-14 and Clang, `optional<T>` and `tuple<T>` parameters and aggregate members included, which `operator T&&()` accepted. The twins' constraint names an internal tag type, so that the templates have valid specializations.
+  - **Two aggregate checks (items 5 and 7).** An aggregate with an array member is refused with E004 on every compiler, as S1's addendum suggested, so the count no longer depends on the compiler; the fix, declaring one parameter per element, works everywhere because declarations are checked with braces. An aggregate member that no placeholder can initialize, such as `std::optional`, would have ended the deduced field list and left the later members value-initialized without a word; it is refused with E004 too.
+  - **An abstract type is E002 from discovery, not E001 (item 5).** Discovery sees an abstract type only as the implementation of a binding, which can't be built; a missing binding for an abstract key is the engine's E001, reported before discovery is asked (T1.6). S1's stub reported E001 because it had no bindings to tell the two apart.
+  - **An incomplete type is one E002 (item 5),** checked before anything that needs the definition, which otherwise gave 20 errors on Clang and 77 on GCC.
+  - **E010 probes the 16 arities above the bound (item 5),** not *max* + 1 to 2·*max*, so the failure path costs the same for every bound, and a bound of 0 still finds a constructor just above it.
+  - **The bound is at most 32 (item 5, plan §6.13).** The arity search is written out up to 32; a longer constructor is declared explicitly. The check is a plain `static_assert` without an ID, as plan §7.8 has none for a misconfigured option.
+  - E004 and E010 are emitted as item 5 says. Same-arity overloads stay E002 with a hint, as item 5's table says: deduction can't tell them from a private or deleted constructor. Plan §7.2 and §7.4's E004 row amended to match; §7.4 had listed same-arity overloads under E004.

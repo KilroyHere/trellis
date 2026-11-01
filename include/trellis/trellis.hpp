@@ -7,6 +7,7 @@
 #include <trellis/config.hpp>                 // IWYU pragma: export
 #include <trellis/diagnostics/errors.hpp>     // IWYU pragma: export
 #include <trellis/discovery/ctor_traits.hpp>  // IWYU pragma: export
+#include <trellis/discovery/deduced.hpp>      // IWYU pragma: export
 #include <trellis/dsl/bind.hpp>               // IWYU pragma: export
 #include <trellis/dsl/lifetimes.hpp>          // IWYU pragma: export
 #include <trellis/dsl/module.hpp>             // IWYU pragma: export

@@ -693,6 +693,8 @@ auto injector = di::make_injector<di::options{
 }>(app_module(cfg));
 ```
 
+`max_ctor_arity` bounds deduced discovery's arity search: 16 by default and at most 32, as a longer constructor can be declared explicitly, with no limit (amended by ADR-0003, 2026-10-31, T1.3).
+
 **Per-injector, not global.** Options are a C++20 class-type template argument with designated initializers. Making them per-injector avoids configuration through global macros, which is fragile under the one-definition rule (ODR). Macros remain only for things that must be global, such as disabling the reflection backend.
 
 ---
@@ -755,15 +757,15 @@ struct any_arg {                                   // the resolving placeholder 
 
 - **Why this set** (amended by ADR-0003, 2026-10-30). A by-value parameter selects the non-const `operator T()`: the placeholder is an rvalue, and a non-const object parameter ranks better than a const one. `T&` and `const T&` can only use the lvalue-yielding `operator T&()`, with `T` deduced as `const U` for a `const U&`. The deleted twins keep an unresolvable request from falling back to the other operator, which would bind a temporary to a `const X&` of a unique `X`, or copy a singleton requested by value. S1's prototype keys `can_resolve` on the request alone; Trellis also keys it on the consumer's lifetime, as [§7.3](#73-resolution-and-memoization)'s memoization key requires.
 - **Forms** (amended by ADR-0003, 2026-10-30). S1 tested 35 parameter forms on gcc-13, gcc-14, clang-18, clang-20 and clang-18 with libc++. 29 are deduced exactly everywhere except gcc-13, which deduces 28 and needs the workaround below. `T&&`, `const T&&` and `unique_ptr<T>&&` are reported as their by-value forms, which [§6.3](#63-the-request-form-compatibility-table) makes the rule. `std::optional<T>`, `std::tuple<T>` and `std::any` are ambiguous on every compiler, because their unconstrained converting constructors accept the placeholder; they need the explicit route, and Trellis's own wrapper types must not have such constructors. The table goes into `docs/internals/deduction.md`. MSVC is untested; ADR-0003 names the fallback operator sets.
-- **Workarounds in `config.hpp`** (amended by ADR-0003, 2026-10-30). On GCC < 14 the probe also declares `operator T&&() const`, because gcc-13 mis-selects `operator T&()` for rvalue-reference parameters. A `#pragma GCC diagnostic` push and ignore around construction silences GCC's `-Wconversion` warning about the object-parameter tie-break.
+- **Workarounds in `config.hpp`** (amended by ADR-0003, 2026-10-30 and 2026-10-31, T1.3). On GCC < 14 the probe also declares the deleted twins of `any_arg`'s operators, constrained so that no parameter selects them, because gcc-13 otherwise mis-selects `operator T&()` for rvalue-reference parameters; S1's `operator T&&() const` did the same but also accepted `std::optional<T>` and `std::tuple<T>` there. A `#pragma GCC diagnostic` push and ignore around construction silences GCC's `-Wconversion` warning about the object-parameter tie-break.
 - **Copy and move constructors** are excluded by the constraint that the conversion's target is not `Consumer`.
-- **Aggregates** are probed with braces only when the type has no user-declared constructor. Configuration structs are normally bound as values anyway.
+- **Aggregates** are probed with braces only when the type has no user-declared constructor. Configuration structs are normally bound as values anyway. An aggregate with an array member, or with a member that no placeholder can initialize, such as a `std::optional`, is refused with E004 on every compiler, rather than counted differently by each or silently cut short (amended by ADR-0003, 2026-10-31, T1.3).
 - **Known limits, each with a compile-fail test and an error that points to the explicit route:**
   - "Greedy" constructor templates such as `template<class U> X(U&&)`.
   - Variadic constructors.
   - Overloads with the same arity.
   - Defaulted parameters, which get injected. This is documented, and the explicit route avoids it.
-- **Residual limits** (amended by ADR-0003, 2026-10-30), which discovery can't detect, so they are documented and point to the explicit route: same-arity overloads next to a shorter constructor, which is then chosen silently; constructor templates whose constraints the probe satisfies; aggregate array members, whose count depends on the compiler (GCC and Clang elide the braces and count each element, cl counts the array as one field: T1.13); and private, deleted and absent constructors, which look the same.
+- **Residual limits** (amended by ADR-0003, 2026-10-30), which discovery can't detect, so they are documented and point to the explicit route: same-arity overloads next to a shorter constructor, which is then chosen silently; constructor templates whose constraints the probe satisfies; and private, deleted and absent constructors, which look the same. Aggregate array members, whose count depends on the compiler (GCC and Clang elide the braces and count each element, cl counts the array as one field: T1.13), are E004 instead (above; amended by ADR-0003, 2026-10-31, T1.3).
 
 ### 7.3 Resolution and memoization
 
@@ -786,7 +788,7 @@ struct any_arg {                                   // the resolving placeholder 
 |---|---|---|---|
 | Missing binding / not constructible (E001, E002) | compile time | compile time | `build()` if dependencies are known; otherwise first resolve, or `validate(roots...)` |
 | Duplicate binding (E003) | compile time | compile time | `build()` |
-| Ambiguous constructor (E004) | compile time (overloads with the same arity) | compile time | — (discovered at compile time) |
+| Ambiguous constructor (E004) | compile time: constructor templates and variadic constructors that accept anything, and aggregates with an array member or a member no placeholder can initialize; same-arity overloads look like a missing constructor there, so they are E002 (amended by ADR-0003, 2026-10-31, T1.3) | compile time | — (discovered at compile time) |
 | Request form vs lifetime (E005, E012) | compile time | compile time | `build()` or resolve |
 | Captive dependency (E006) | compile time | compile time | `build()` |
 | Cycle (E007) | see [§7.3](#73-resolution-and-memoization) (spike S2) | compile time, with the full cycle | `build()` |

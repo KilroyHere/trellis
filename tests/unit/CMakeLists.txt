@@ -29,6 +29,7 @@ set(trellis_per_mode_tests
 set(trellis_cxx20_tests
   bind_test.cpp
   ctor_traits_test.cpp
+  deduced_test.cpp
   injector_test.cpp
   module_test.cpp
   request_forms_test.cpp

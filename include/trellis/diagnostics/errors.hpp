@@ -18,6 +18,8 @@
 #ifndef TRELLIS_DIAGNOSTICS_ERRORS_HPP
 #define TRELLIS_DIAGNOSTICS_ERRORS_HPP
 
+#include <cstddef>
+
 namespace trellis::error {
 
 /// @brief The error type of TRL-E002, type not constructible, for an explicit constructor
@@ -199,6 +201,82 @@ struct E012 {
   /// @par Example
   /// @code
   /// static_assert(!trellis::error::E012<int, trellis::error::request<int&>>::reported);
+  /// @endcode
+  static constexpr bool reported = false;
+};
+
+/// @brief The error type of TRL-E004, ambiguous constructor, for a type whose constructor deduced
+///        discovery can't pin down.
+///
+/// Users never name it: it appears in the compiler's output when a constructor template or a
+/// variadic constructor accepts any argument, or when an aggregate's fields can't be counted the
+/// same way on every compiler, so that the error shows which type it is (ADR-0006).
+///
+/// @tparam T The type whose constructor is ambiguous.
+///
+/// @par Constraints
+/// None.
+///
+/// @par Errors
+/// None: it is the type that the TRL-E004 assertion names, not an entity that raises it.
+///
+/// @par Example
+/// @code
+/// // What Clang prints for a class whose only constructor is template <class U> greedy(U&&):
+/// // error: static assertion failed due to requirement
+/// //     'trellis::error::E004<greedy>::reported': TRL-E004: ambiguous constructor: ...
+/// @endcode
+template <class T>
+struct E004 {
+  /// @brief Always false, so that the static assertion naming it fails and prints the type.
+  ///
+  /// @par Constraints
+  /// None.
+  ///
+  /// @par Errors
+  /// None.
+  ///
+  /// @par Example
+  /// @code
+  /// static_assert(!trellis::error::E004<greedy>::reported);
+  /// @endcode
+  static constexpr bool reported = false;
+};
+
+/// @brief The error type of TRL-E010, constructor arity above `max_ctor_arity`, for a type that
+///        deduced discovery finds a constructor for only above the bound.
+///
+/// Users never name it: it appears in the compiler's output when a type's constructors all take
+/// more than `MaxArity` parameters, so that the error shows the type and the bound (ADR-0006).
+///
+/// @tparam T The type whose constructor takes too many parameters.
+/// @tparam MaxArity The bound in effect, the injector's `max_ctor_arity` (16 by default).
+///
+/// @par Constraints
+/// None.
+///
+/// @par Errors
+/// None: it is the type that the TRL-E010 assertion names, not an entity that raises it.
+///
+/// @par Example
+/// @code
+/// // What Clang prints for a class whose only constructor takes 17 parameters:
+/// // error: static assertion failed due to requirement
+/// //     'trellis::error::E010<wide, 16>::reported': TRL-E010: constructor arity above ...
+/// @endcode
+template <class T, std::size_t MaxArity>
+struct E010 {
+  /// @brief Always false, so that the static assertion naming it fails and prints the type.
+  ///
+  /// @par Constraints
+  /// None.
+  ///
+  /// @par Errors
+  /// None.
+  ///
+  /// @par Example
+  /// @code
+  /// static_assert(!trellis::error::E010<wide, 16>::reported);
   /// @endcode
   static constexpr bool reported = false;
 };
