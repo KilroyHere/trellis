@@ -37,8 +37,9 @@
 
 namespace trellis::error {
 
-/// @brief The error type of TRL-E002, type not constructible, for an explicit constructor
-///        declaration that matches no constructor of the type, and for a copy that can't be made.
+/// @brief The error type of TRL-E002, type not constructible: an explicit constructor declaration
+///        that matches no constructor of the type, a class for which deduction finds no
+///        constructor (or that is incomplete), and a copy that can't be made.
 ///
 /// Users never name it: it appears in the compiler's output when a declared
 /// `trellis::ctor<Args...>` can't build `T` the way Trellis builds it (see `trellis::ctor`), so

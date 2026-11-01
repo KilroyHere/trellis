@@ -1,6 +1,6 @@
 # Constructor discovery
 
-Constructor discovery tells the static engine which constructor of an implementation type to call, and with what ([plan §5.3](../plan.md#53-how-injectorcreateapp-compiles-static-engine), step 3.3). [ADR-0003](../adr/0003-constructor-discovery.md) puts three strategies behind one trait, in this order: explicit, reflection (C++26, Phase 6) and deduced (T1.3). This note covers the explicit strategy, in [`include/trellis/discovery/ctor_traits.hpp`](../../include/trellis/discovery/ctor_traits.hpp), and the state it hands to the next strategy. The deduction tricks of spike S1, and `discovered_ctor_t`, the one entry point for every mode, are in [deduction.md](deduction.md).
+Constructor discovery tells the static engine which constructor of an implementation type to call, and with what ([plan §5.3](../plan.md#53-how-injectorcreateapp-compiles-static-engine), step 3.3). [ADR-0003](../adr/0003-constructor-discovery.md) puts three strategies behind one trait, in this order: explicit, reflection (C++26, Phase 6) and deduced (T1.3). This note covers the explicit strategy, in [`include/trellis/discovery/ctor_traits.hpp`](../../include/trellis/discovery/ctor_traits.hpp), and the state it hands to the next strategy. The deduction tricks of spike S1, and `discovered_ctor_t`, the entry point the tests use (the engine asks `discoverable_v`), are in [deduction.md](deduction.md).
 
 ## The explicit strategy
 

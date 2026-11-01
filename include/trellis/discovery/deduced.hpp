@@ -573,9 +573,9 @@ constexpr auto discover() {
 // to deduce), TRL-E004 (an ambiguous constructor) or TRL-E010 (above the bound); after it the type
 // is no_ctor_declared, so nothing else fails. MaxArity is an injector's max_ctor_arity, and
 // BindingCtor is for a binding's .with_ctor<Args...>(), as for explicit_ctor_t. create<T>() doesn't
-// name this type: with the same arguments, the class's binding's declaration or no_ctor_declared
-// (static/resolve.hpp, served_binding; T1.15), its normal pass asks discoverable_v, and its explain
-// pass raises discovery_report (diagnostics/explain.hpp). cv-qualifiers are stripped.
+// use this alias. Its normal pass asks discoverable_v, and its explain pass raises discovery_report
+// (diagnostics/explain.hpp), each with the same arguments: the class's binding's declaration or
+// no_ctor_declared (static/resolve.hpp, served_binding; T1.15). cv-qualifiers are stripped.
 template <class T, class BindingCtor = no_ctor_declared,
           std::size_t MaxArity = default_max_ctor_arity>
 using discovered_ctor_t = decltype(detail::discover<std::remove_cv_t<T>, BindingCtor, MaxArity>());
