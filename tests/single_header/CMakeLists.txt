@@ -114,6 +114,10 @@ endif()
 # generated header, which the twins' build makes.
 if(NOT MSVC)
   separate_arguments(trellis_cxx_flags UNIX_COMMAND "${CMAKE_CXX_FLAGS}")
+  # The timetrace preset's -ftime-trace profiles code generation, so -fsyntax-only leaves it
+  # unused, which Clang reports and the warnings-as-errors flag makes fatal. The test is about the
+  # header's own warnings, so the profiler flag goes.
+  list(FILTER trellis_cxx_flags EXCLUDE REGEX "^-ftime-trace")
   add_test(NAME single_header.main_file
     COMMAND "${CMAKE_CXX_COMPILER}" ${trellis_cxx_flags} -std=c++20 -fsyntax-only -x c++-header
             ${TRELLIS_WARNING_FLAGS} ${TRELLIS_WARNINGS_AS_ERRORS} "${single_header}")
