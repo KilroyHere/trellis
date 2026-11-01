@@ -489,6 +489,8 @@ None of the domain classes includes Trellis. Deleting the `di::bind<Service>` li
 
 **Rvalue-reference parameters** (amended by ADR-0003, 2026-10-30). A parameter of type `X&&` or `const X&&` is the request `X`, allowed and rejected exactly as `X` is: `T&&` asks for a fresh `T` that the consumer owns, and `std::unique_ptr<T>&&` for a `std::unique_ptr<T>`. Deduced discovery can't tell `T&&` from `T` on any compiler (spike S1). The rule holds in every discovery mode, so a class wires the same way whichever mode discovers it.
 
+**Deleting through a base class** (amended by ADR-0004, 2026-11-01, provisional). Where the table allows `std::unique_ptr<T>`, a binding whose implementation is a class derived from `T` needs `T`'s destructor to be virtual: otherwise `std::default_delete<T>` would delete the implementation through `T`, undefined behaviour, and the request is E014. `std::shared_ptr<T>`, whose control block deletes the class it was made for, and the other allowed forms are unaffected.
+
 **The captive-dependency rule (E006).**
 
 - A binding with lifetime L may hold a dependency with lifetime L′ through a sharing form (`T&`, `T*`, `shared_ptr`, `weak_ptr`) only if L′ lives at least as long as L.
@@ -803,7 +805,7 @@ The runtime engine needs dependency lists for classes discovered by deduction. S
 
 ### 7.5 Storage, lifetimes and teardown
 
-- **Injector layout:** `std::tuple<slot<B>...>`, with slots only for bindings the injector owns; a teardown stack; and the options.
+- **Injector layout:** a slot for each binding the injector owns, held as indexed base classes, one per binding position and empty for bindings the injector doesn't own, rather than in a `std::tuple<slot<B>...>`, whose recursive implementation nests a class per element (amended by ADR-0005, 2026-11-01, T1.5); a teardown stack; and the options.
 - **`slot<B>`** holds `std::shared_ptr<Impl>`, or, for inline storage, the object in aligned raw bytes, plus its one-byte initialization state, which also serves as the inline object's engaged flag (amended by ADR-0005, 2026-10-30; the draft said `std::optional<Impl>`). An inline slot costs `sizeof(Impl)` plus 1 byte, rounded up to `alignof(Impl)`: 2, 16 and 65 bytes for objects of 1, 8 and 64 bytes, as measured in S4 (the 64-byte case was `char[64]`, alignment 1; with 8-byte alignment it would be 72 bytes).
 - **Teardown stack:** a `std::array` of `{destroy function, object}` pairs. Its capacity is the number of owned bindings, known at compile time, so it needs no heap. Each slot pushes itself when constructed, and the injector's destructor pops in reverse, so teardown runs in reverse order of construction for each injector.
   - **Ordering rules** (amended by ADR-0005, 2026-10-30). A slot pushes its entry after its constructor succeeds and before it publishes `ready`. A direct dependency is ready before its dependent's constructor runs, so its entry always lands below its dependents', even when different threads build them. Under `threading::safe` the counter is an `atomic<size_t>` with relaxed `fetch_add`. Failed attempts push nothing, so the capacity can't overflow.
@@ -853,6 +855,8 @@ The runtime engine needs dependency lists for classes discovered by deduction. S
 | E010 | Constructor arity above `max_ctor_arity` | `raise max_ctor_arity or use di::ctor_traits` |
 | E011 | Scoped binding requested outside its scope | `call injector.begin_scope<Tag>()` |
 | E012 | Unbound concrete type requested by reference, pointer or `shared_ptr` | `bind it with an owning lifetime` |
+| E013 | Unbound concrete type requested in strict mode (amended by ADR-0006, 2026-11-01, provisional) | `bind it, such as di::bind<T>` |
+| E014 | Owning request would delete the implementation through a base class whose destructor isn't virtual (amended by ADR-0006, 2026-11-01, provisional) | `give I a virtual destructor, or request std::shared_ptr<I>` |
 | R001–R005 | Runtime: missing registration, cycle, captive dependency, re-entrant construction, type-key mismatch across shared libraries | — |
 
 **C++20 rendering**
@@ -1084,6 +1088,8 @@ Each spike is a throwaway branch with a one- or two-page write-up and a decision
 | **6 Reflection → v0.6 (experimental)** | 28–32 (in parallel with 5 if two engineers) | Reflection discovery; annotations; `scan<NS>`; formatted diagnostics; CI on GCC 16 and clang-p2996 | Scenario and random graphs pass in reflection mode; no effect on C++20 builds |
 | **7 Ecosystem → v0.9 beta** | 33–36 | Single header; finished docs site; five examples; migration guides; benchmarks page | Installs from vcpkg and Conan work in fresh projects on 3 OSes; every doc snippet compiles |
 | **8 Beta → v1.0** | 37–44 | API review; a programme of 2–3 design partners using the beta in real code; revalidation on the newest compilers; sanitizer and fuzzing sweep; governance in place | No open P0 or P1 bugs; budgets green; at least 2 external users; at least 2 maintainers; 1.0 tagged |
+
+**Early in Phase 1** (amended by ADR-0012 and ADR-0004, 2026-11-01): eager mode, `threading::none` with a ThreadSanitizer test of `threading::safe`, and strict mode took effect with storage and `create<T>()` (T1.5), as each is a small branch of that code. Phase 2 keeps their remaining work: the property oracle and the per-operation thread-safety guarantees of §7.6.
 
 ### 12.3 Requirement coverage by phase
 

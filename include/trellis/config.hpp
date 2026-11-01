@@ -218,4 +218,91 @@
 #define TRELLIS_ARRAY_CHECK_WITH_BRACES 0
 #endif
 
+// ---- the static engine's resolution and storage (T1.5) ------------------------------------------
+
+// TRELLIS_IS_CONSTRUCTIBLE(T, Args...) is std::is_constructible_v<T, Args...>, but where the
+// compiler has the __is_constructible builtin it instantiates no variable template. The resolution
+// check (static/resolve.hpp) asks it once per hop of a dependency chain, and each template it
+// instantiates there is one more level of instantiation depth per hop, against NFR-09's 200 hops
+// (ADR-0014 item 4; the measurements are in docs/internals/resolution-and-storage.md). GCC 13 and
+// 14 and Clang 18 and 20 report the builtin through __has_builtin (checked in T1.5). MSVC has no
+// __has_builtin, but has the builtin (T1.13 ran spike S2's stub, which uses it, on cl 19.44 and
+// 19.51), so it gets it too; untested locally, as MSVC runs only in CI, where
+// tests/unit/create_test.cpp checks that it agrees with discovery's std::is_constructible_v.
+// Variadic, like TRELLIS_IS_SAME, so that template arguments with commas pass through whole. The
+// fallback needs <type_traits>, which every header that uses the macro includes.
+#if defined(__has_builtin)
+#if __has_builtin(__is_constructible)
+#define TRELLIS_IS_CONSTRUCTIBLE(...) __is_constructible(__VA_ARGS__)
+#endif
+#elif defined(_MSC_VER)
+#define TRELLIS_IS_CONSTRUCTIBLE(...) __is_constructible(__VA_ARGS__)
+#endif
+#ifndef TRELLIS_IS_CONSTRUCTIBLE
+#define TRELLIS_IS_CONSTRUCTIBLE(...) ::std::is_constructible_v<__VA_ARGS__>
+#endif
+
+// TRELLIS_HAS_ATOMIC_WAIT is 1 where std::atomic<T>::wait and notify_all exist (C++20, P1135R6).
+// Threads that find a singleton under construction block on the slot's state byte with them
+// (ADR-0012 item 2). libc++ withholds __cpp_lib_atomic_wait for Apple deployment targets below
+// macOS 11 and iOS 14; there the waiters use a mutex and a condition variable per injector instead
+// (ADR-0012 item 3). A build may define the macro as 0 to force that fallback, as
+// tests/unit/CMakeLists.txt does for one test program. Every translation unit of a program must
+// then define it alike: it changes the injector's members and the slots' code, so mixing the two
+// violates the one-definition rule.
+#ifndef TRELLIS_HAS_ATOMIC_WAIT
+#if defined(__cpp_lib_atomic_wait) && __cpp_lib_atomic_wait >= 201907L
+#define TRELLIS_HAS_ATOMIC_WAIT 1
+#else
+#define TRELLIS_HAS_ATOMIC_WAIT 0
+#endif
+#endif
+
+// TRELLIS_CPU_RELAX() tells the CPU that the thread is spinning: `pause` on x86, `yield` on
+// AArch64, nothing elsewhere. A thread that finds a singleton under construction re-reads its
+// state up to 128 times with it before it blocks (ADR-0012 item 2, spike S4: the spin count was
+// tuned on x86). MSVC spells the instructions as the intrinsics _mm_pause and __yield, declared in
+// <intrin.h>; untested locally, as MSVC runs only in CI.
+#if defined(_MSC_VER) && !defined(__clang__) && (defined(_M_IX86) || defined(_M_X64))
+#include <intrin.h>
+#define TRELLIS_CPU_RELAX() _mm_pause()
+#elif defined(_MSC_VER) && !defined(__clang__) && defined(_M_ARM64)
+#include <intrin.h>
+#define TRELLIS_CPU_RELAX() __yield()
+#elif (defined(__GNUC__) || defined(__clang__)) && (defined(__x86_64__) || defined(__i386__))
+#define TRELLIS_CPU_RELAX() __builtin_ia32_pause()
+#elif (defined(__GNUC__) || defined(__clang__)) && defined(__aarch64__)
+#define TRELLIS_CPU_RELAX() __asm__ __volatile__("yield")
+#else
+#define TRELLIS_CPU_RELAX() static_cast<void>(0)
+#endif
+
+// TRELLIS_NOINLINE keeps a function out of line: the slow path of a singleton's slot, which runs
+// once per singleton, so that the fast path, a load and a compare, stays small where it is inlined
+// (ADR-0012 item 2). MSVC spells it __declspec(noinline) (untested locally).
+#if defined(_MSC_VER) && !defined(__clang__)
+#define TRELLIS_NOINLINE __declspec(noinline)
+#elif defined(__GNUC__) || defined(__clang__)
+#define TRELLIS_NOINLINE __attribute__((noinline))
+#else
+#define TRELLIS_NOINLINE
+#endif
+
+// TRELLIS_NO_UNIQUE_ADDRESS on an empty member and TRELLIS_EMPTY_BASES on a class with several
+// empty bases let them take no space. An injector holds one stored binding per binding, most of
+// them empty (dsl/module.hpp), and one slot holder per binding, empty for each binding it doesn't
+// own (static/storage.hpp). GCC and Clang honour [[no_unique_address]] and lay out distinct empty
+// bases at offset 0, as the Itanium C++ ABI says, so there the second macro is empty. MSVC, and
+// clang-cl, which follows its layout, ignore the standard attribute and give each empty base after
+// the first a byte of its own: they need the attribute spelled [[msvc::no_unique_address]] (cl
+// 19.29 and later) and the class declared __declspec(empty_bases) (platform fixes, 2026-11-01).
+// Untested locally, as MSVC runs only in CI, where tests/unit/create_test.cpp checks the sizes.
+#if defined(_MSC_VER)
+#define TRELLIS_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
+#define TRELLIS_EMPTY_BASES __declspec(empty_bases)
+#else
+#define TRELLIS_NO_UNIQUE_ADDRESS [[no_unique_address]]
+#define TRELLIS_EMPTY_BASES
+#endif
+
 #endif  // TRELLIS_CONFIG_HPP

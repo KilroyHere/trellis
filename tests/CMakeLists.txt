@@ -79,6 +79,14 @@ add_test(NAME tools.error_catalog
 add_test(NAME tools.error_catalog_selftest
   COMMAND "${Python3_EXECUTABLE}" -I "${CMAKE_CURRENT_SOURCE_DIR}/tools/error_catalog_selftest.py")
 set_tests_properties(tools.error_catalog tools.error_catalog_selftest PROPERTIES LABELS tools)
+# README.md shows the parts of examples/hello_world.cpp it marks, line for line, both ways; the
+# test example.hello_world builds and runs the example (examples/CMakeLists.txt). Compiles nothing.
+# Its self-test runs the check on files where it must fail.
+add_test(NAME tools.readme_example
+  COMMAND "${Python3_EXECUTABLE}" -I "${PROJECT_SOURCE_DIR}/tools/readme_example.py")
+add_test(NAME tools.readme_example_selftest
+  COMMAND "${Python3_EXECUTABLE}" -I "${CMAKE_CURRENT_SOURCE_DIR}/tools/readme_example_selftest.py")
+set_tests_properties(tools.readme_example tools.readme_example_selftest PROPERTIES LABELS tools)
 
 add_subdirectory(unit)
 add_subdirectory(property)

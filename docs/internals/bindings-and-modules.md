@@ -45,7 +45,7 @@ Each deduction is one overload resolution: the index is unique among the bases, 
 
 An rvalue argument gives its bindings up by moving them, an lvalue or a const argument by copying them. A binding that holds a move-only value can't be copied, so `make_module` and `make_injector` check that first (`detail::bindings_can_be_taken`) and report it as one error that says to pass the argument with `std::move`, instead of the copy constructor's errors deep in the store.
 
-A module stores its bindings as the bases `stored_binding<J, B_J>` of one struct (`binding_store`), with `[[no_unique_address]]` members, so a module of empty bindings takes one byte on GCC and Clang. The injector holds the flattened bindings as one module. A struct derived from a module counts as a module, because `module_bindings` deduces `module<B...>` from a pointer to the struct.
+A module stores its bindings as the bases `stored_binding<J, B_J>` of one struct (`binding_store`), with members declared `TRELLIS_NO_UNIQUE_ADDRESS` (`[[no_unique_address]]`, or `[[msvc::no_unique_address]]` on MSVC, which ignores the standard spelling) and the store declared `TRELLIS_EMPTY_BASES` (`__declspec(empty_bases)` on MSVC), so a module of empty bindings takes one byte (T1.5 added the MSVC spellings; untested there). The injector holds the flattened bindings as one module. A struct derived from a module counts as a module, because `module_bindings` deduces `module<B...>` from a pointer to the struct.
 
 **Why.**
 

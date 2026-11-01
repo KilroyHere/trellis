@@ -25,7 +25,7 @@ The project runs across many sessions. The task list, the progress log and the g
 - Full local matrix, every preset one at a time (gcc-13, gcc-14, clang-18, clang-20 and clang-18 + libc++ debug; gcc-13 and clang-18 release; ASan/UBSan; TSan; timetrace): `scripts/check-full.sh`, or `scripts/check-full.sh <preset>...` for some
 - One preset: `cmake --preset clang-18-debug && cmake --build --preset clang-18-debug && ctest --preset clang-18-debug`
 - One test: `ctest --preset clang-18-debug -R <regex>`
-- By label: `ctest --preset clang-18-debug -L compile_fail` (or `-L unit`, `-L golden`, `-L tools`). `-L property` has tests from T0.3 and `-L module` from T1.8; until then they fail, because a label that selects no tests is an error.
+- By label: `ctest --preset clang-18-debug -L compile_fail` (or `-L unit`, `-L golden`, `-L tools`, `-L examples`). `-L property` has tests from T0.3 and `-L module` from T1.8; until then they fail, because a label that selects no tests is an error.
 - Compile-time budgets: `scripts/bench-compile.sh --quick`. Runtime: `scripts/bench-runtime.sh`
 - CI status and the first errors of failed jobs: `scripts/ci-status.sh`. MSVC and macOS run only in CI.
 - Lint changed lines: `scripts/tidy.sh`. Formatting is automatic: a hook runs clang-format-18 on edited files.

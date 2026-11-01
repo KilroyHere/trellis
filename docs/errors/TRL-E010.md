@@ -2,8 +2,8 @@
 
 - **Detected:** at compile time.
 - **Since:** T1.3, by deduced constructor discovery.
-- **Raised by:** constructor discovery, wherever the static engine asks it for a type that declares no constructor: today through `trellis::detail::discovered_ctor_t`, its entry point into discovery, whose last template argument is the bound, and from T1.5 on through `injector.create<T>()`, with the injector's `max_ctor_arity`.
-- **Tests:** in `tests/compile_fail/discovery/`: [`deduced_above_bound.cpp`](../../tests/compile_fail/discovery/deduced_above_bound.cpp) (17 parameters, the default bound of 16) and [`deduced_above_lowered_bound.cpp`](../../tests/compile_fail/discovery/deduced_above_lowered_bound.cpp) (5 parameters, a bound of 4). Goldens come with T1.6.
+- **Raised by:** constructor discovery, wherever the static engine asks it for a type that declares no constructor: through `injector.create<T>()` (and `trellis::make_injector` with `options{.eager = true}`) since T1.5, with the injector's `max_ctor_arity` as the bound, and through `trellis::detail::discovered_ctor_t`, its entry point into discovery, whose last template argument is the bound.
+- **Tests:** in `tests/compile_fail/discovery/`: [`deduced_above_bound.cpp`](../../tests/compile_fail/discovery/deduced_above_bound.cpp) (17 parameters, the default bound of 16) and [`deduced_above_lowered_bound.cpp`](../../tests/compile_fail/discovery/deduced_above_lowered_bound.cpp) (5 parameters, a bound of 4); through `create<T>()`, [`tests/compile_fail/create/e010_lowered_bound_via_create.cpp`](../../tests/compile_fail/create/e010_lowered_bound_via_create.cpp) (3 parameters, `options{.max_ctor_arity = 2}`). Goldens come with T1.6.
 
 ## What you see
 

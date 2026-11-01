@@ -2,8 +2,8 @@
 
 - **Detected:** at compile time
 - **Since:** T1.4 (unreleased; v0.1)
-- **Raised by:** the request check of the static engine, `trellis::detail::report_request_form`, which `create<T>()` calls from T1.5 on
-- **Tests:** [`tests/compile_fail/static/e012_unbound_by_reference.cpp`](../../tests/compile_fail/static/e012_unbound_by_reference.cpp), [`e012_unbound_shared_ptr.cpp`](../../tests/compile_fail/static/e012_unbound_shared_ptr.cpp) and [`e012_reference_to_shared_ptr.cpp`](../../tests/compile_fail/static/e012_reference_to_shared_ptr.cpp); the unbound column of the table in [`tests/unit/request_forms_test.cpp`](../../tests/unit/request_forms_test.cpp) and [`tests/unit/injector_test.cpp`](../../tests/unit/injector_test.cpp). Golden tests come with T1.6.
+- **Raised by:** `injector::create<T>()`, for its request and for every constructor parameter below it, and `trellis::make_injector` with `options{.eager = true}`, for each singleton (T1.5); both through the request check of the static engine, `trellis::detail::report_request_form` (T1.4)
+- **Tests:** through `create<T>()`: [`tests/compile_fail/create/e012_hello_world_without_service.cpp`](../../tests/compile_fail/create/e012_hello_world_without_service.cpp) (plan §6.1's hello world without its `bind<Service>` line), [`e012_parameter_used_twice.cpp`](../../tests/compile_fail/create/e012_parameter_used_twice.cpp), [`e012_three_hops_down.cpp`](../../tests/compile_fail/create/e012_three_hops_down.cpp), [`eager_e012.cpp`](../../tests/compile_fail/create/eager_e012.cpp) and [`e012_incomplete_by_pointer.cpp`](../../tests/compile_fail/create/e012_incomplete_by_pointer.cpp) (a type that is only declared, taken by pointer). Through the check's entry point: [`tests/compile_fail/static/e012_unbound_by_reference.cpp`](../../tests/compile_fail/static/e012_unbound_by_reference.cpp), [`e012_unbound_shared_ptr.cpp`](../../tests/compile_fail/static/e012_unbound_shared_ptr.cpp) and [`e012_reference_to_shared_ptr.cpp`](../../tests/compile_fail/static/e012_reference_to_shared_ptr.cpp); the unbound column of the table in [`tests/unit/request_forms_test.cpp`](../../tests/unit/request_forms_test.cpp) and [`tests/unit/injector_test.cpp`](../../tests/unit/injector_test.cpp). Golden tests come with T1.6.
 
 ## What you see
 
@@ -36,23 +36,28 @@ A parameter of type `const std::shared_ptr<T>&` is a reference to a `std::shared
 
 Take the `std::shared_ptr<T>` by value: the injector then makes it from `T`'s binding, as the request-form table allows. Don't bind `std::shared_ptr<T>` itself in a lifetime such as `trellis::singleton`: that object would be an empty pointer. (ADR-0004 leaves open whether such parameters should be allowed; T1.4 keeps rejecting them.)
 
-An unbound abstract type is a different error, E001 (no binding for an abstract type), which T1.6 reports.
+An unbound abstract type is a different error, [TRL-E001](TRL-E001.md) (no binding for an abstract type).
+
+`create<T>()` reports the request where it finds it, one or more constructors below the request it was given, and each failing request once, however many consumers make it.
 
 ## Minimal example
 
-There is no `create<T>()` before T1.5, so the example drives the check through the entry point that `create<T>()` calls:
-
 ```cpp
-#include <trellis/static/validate.hpp>
 #include <trellis/trellis.hpp>
 
 struct sensor {};
+struct reader {
+  explicit reader(const sensor& input) : input_(&input) {}
+  const sensor* input_;
+};
 
 int main() {
   auto injector = trellis::make_injector();  // nothing binds sensor
-  trellis::detail::report_request_form<decltype(injector), const sensor&>();
+  reader built = injector.create<reader>();  // error: TRL-E012 for const sensor&
 }
 ```
+
+Plan §6.1's hello world gives this error when its `bind<Service>` line is deleted: `App` takes `Service&`, and nothing would own the Service.
 
 ## Fix
 

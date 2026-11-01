@@ -12,7 +12,7 @@ The engine's entry points, all in `trellis::detail`:
 | `deduced_constructible_v<T, Arity, Ctx>` | whether T builds with every parameter resolved by `Ctx` | none |
 | `construct_deduced<T, Arity>(ctx)` | the built T, a prvalue | none |
 
-`BindingCtor` is a binding's `.with_ctor<Args...>()` (T1.4), and `MaxArity` the injector's `max_ctor_arity`, 16 by default (`default_max_ctor_arity`) and at most 32; T1.5 connects both. Every entry point strips `T`'s cv-qualifiers, and `not_self` compares unqualified types, so a `const` or `volatile` `T` is the same class with the same constructors.
+`MaxArity` is the injector's `max_ctor_arity`, 16 by default (`default_max_ctor_arity`) and at most 32, which `create<T>()` passes (T1.5). `BindingCtor` is for a binding's `.with_ctor<Args...>()`, which plan §5.3 lists first among the declarations; the binding DSL doesn't offer it yet, and no task in `docs/tasks.json` builds it, so `create<T>()` passes `no_ctor_declared`. Every entry point strips `T`'s cv-qualifiers, and `not_self` compares unqualified types, so a `const` or `volatile` `T` is the same class with the same constructors.
 
 ## The placeholders
 
@@ -152,11 +152,13 @@ Measured on a chain of classes each taking the next by value, resolved through `
 
 So T1.3's share leaves T1.5 about 222 hops on GCC and 204 on Clang at the default limits. Every level that T1.5's context adds per hop, such as a separate class for the binding lookup, costs about 40 to 50 hops at N = 200. T1.11 measures the deepest chain the engine compiles (NFR-09).
 
+T1.5's engine evaluates a deduced class with its own node, `node_v` in `static/resolve.hpp`: the same check as `deduced_constructible_v`, written with the `__is_constructible` builtin, which saves the level that `std::is_constructible_v` costs, and builds it with its own `build` functions, one function level rather than `construct_deduced`'s two. With its plan worked out before the recursion, a chain costs 3N + 13 levels on gcc-13 and 4N + 15 on clang-18, check and creation together: 295 hops on GCC and 252 on Clang at the default limits ([resolution-and-storage.md](resolution-and-storage.md), which also measures the alternatives). `tests/unit/create_test.cpp` checks that `node_v` and `deduced_constructible_v` agree.
+
 **Tests:** none in the suite yet; T1.11 adds the chain test. The numbers come from compiling the chain with `-fsyntax-only` at N = 50 and 100 and bisecting `-ftemplate-depth`.
 
 ## Notes for the engine
 
-- T1.5 must ask `discoverable_v` before it reads `discovered_ctor_t<...>::args`: after a failed discovery the type is `no_ctor_declared`, which has no `args`, so reading it adds a second error.
+- T1.5 must ask `discoverable_v` before it reads `discovered_ctor_t<...>::args`: after a failed discovery the type is `no_ctor_declared`, which has no `args`, so reading it adds a second error. (T1.5 asks `discoverable_v` in its plan and names `discovered_ctor_t` only to report a failure, so it never reads `args` after one.)
 - A failure is reported once per (T, binding declaration, bound): one greedy type used by two injectors with different `max_ctor_arity` gives two TRL-E004s, one per bound. That is acceptable, since each injector's options are its own.
 
 ## The compiler workarounds
@@ -262,6 +264,6 @@ The machine was shared, with a load average of about 3 on 4 CPUs, so the absolut
 
 ## Open points
 
-- The engine (T1.5) builds a deduced type with `construct_deduced` and checks it with `deduced_constructible_v`, from a context that carries the consumer's lifetime and adds as few levels per hop as it can (see "Depth per hop"). It connects `options.max_ctor_arity` (T1.4) to `MaxArity`, and should check once that it is at most 32: `deduce` asserts it once per type, without an error ID, as plan §7.8 has none for a misconfigured option.
+- Done in T1.5: the engine checks and builds a deduced type with its own node and build functions, the same rule with one level less each (see "Depth per hop"), from a context that carries the consumer's lifetime. It passes `options.max_ctor_arity` (T1.4) as `MaxArity`, clamped to 32, after `make_injector` has checked it once, so `deduce`'s own assertion never fires through the injector.
 - T1.6 decides whether the assertions stay in `discover` or move into `create<T>()` with the explain pass, and how the pass reports a deduced type's failing parameter (TRL-E005 with its index, ADR-0006), which deduction can't name.
 - MSVC and Apple Clang run only in CI. `tests/unit/deduced_test.cpp` passes on cl 19.51 and Apple clang 21, and so do the compile-fail tests on Apple clang. On MSVC the compile-fail tests give the intended ID first, but their checks of the error type fail, because cl doesn't print a `static_assert`'s condition (ADR-0006's MSVC risk), and two expect GCC's and Clang's wording for a deleted function; T1.6 owns the MSVC rendering.

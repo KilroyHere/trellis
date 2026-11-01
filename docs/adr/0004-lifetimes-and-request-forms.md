@@ -3,6 +3,7 @@
 - **Status:** Accepted (plan baseline)
 - **Plan:** [§4](../plan.md#4-architecture-decisions) ADR-04; §6.2, §6.3; FR-02, FR-03, FR-04
 - **Spikes:** S1, S2 and S4 confirmed parts of it without changing it. S1 also led to a new rule about how a parameter's spelling maps to a request form, `T&&` as the request `T`. [ADR-0003](0003-constructor-discovery.md) decides that rule and adds a note to §6.3; this ADR's lifetimes and table are unchanged.
+- **Amends:** plan §6.3 (from T1.5's review, provisional: `std::unique_ptr<T>` of a derived implementation needs `T`'s destructor to be virtual) and §12.2 (strict mode takes effect in Phase 1).
 
 ## Context
 
@@ -44,3 +45,8 @@ A related rule from ADR-0003: a parameter of type `X&&` or `const X&&` is the re
   - `.allow_copy()` exists and turns exactly the "copies hide sharing" cells into allowed ones. Constness carries through for `to_ref`, `to_ptr` and `to_shared` bindings.
   - Cells that §6.3 marks ✗ without a reason take their row's reason (`unique_ptr`: would duplicate ownership), or that of the matching `shared_ptr` cell (`weak_ptr` of `singleton_inline` and `to_value`: not heap-owned); `shared_ptr` and `weak_ptr` of a `to_ref` or `to_ptr` binding say "the caller owns the object", and `weak_ptr` of a unique object "nothing would keep it alive". The `lazy`/`provider` row allows every column, as §6.3 says; whether those wrappers check their inner form is for Phase 2.
   - The open question above stays open for the API review.
+- **2026-11-01, T1.5:** `create<T>()` serves every allowed cell and reports every rejected one, at any depth of the graph. No decision changes; readings for review:
+  - **Unbound non-class types,** such as `int`, are implicitly unique for the table, as T1.4 encodes them, but have no constructor to discover: a by-value request is TRL-E002 ("deduction needs a class type; bind the type to a value"), never a silently value-initialized 0, and a reference is TRL-E012 (`[NEEDS CLARIFICATION]` in the progress log).
+  - **Strict mode** turns the implicit unique binding off, so an owning request (by value or `std::unique_ptr`) whose type has no binding is TRL-E013 there; the other requests of unbound types are TRL-E001 or TRL-E012, as without it (see ADR-0006's History). Strict mode, like eager mode and the threading options (ADR-0012), takes effect in Phase 1 (plan §12.2 amended).
+  - **A by-value request** of a unique binding whose implementation is a derived class, `bind<Base>.to<Derived>()`, gets a new `Derived` moved into a `Base`, sliced, as a by-value request of a `.to_value()` of a derived object gets a sliced copy (T1.4); a key that can't be constructed from its implementation is TRL-E002.
+- **2026-11-01, T1.5 review:** where the table allows `std::unique_ptr<T>`, a binding whose implementation derives from `T` needs `T`'s destructor to be virtual, since `std::default_delete<T>` would otherwise delete the implementation through `T`, which is undefined behaviour; such a request is TRL-E014 (plan §6.3 amended, provisional, `[NEEDS CLARIFICATION]` in the progress log). `std::shared_ptr<T>`, singletons and by-value requests stay allowed: they destroy the implementation itself (`tests/unit/create_test.cpp`).

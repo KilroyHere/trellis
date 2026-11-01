@@ -3,7 +3,7 @@
 - **Status:** Accepted (owner, 2026-10-30)
 - **Plan:** [§4](../plan.md#4-architecture-decisions) ADR-12; §6.8, §7.6, §7.7; §16 D6; R18; risk K10
 - **Spikes:** [S4 storage and threading](../spikes/S4-storage-threading.md), whose recommendation the owner accepted.
-- **Amends:** plan §6.8 and §7.6 (the slot design, the retry after a throw, and R004 in all builds), and §7.7 (R004 as the static engine's one runtime failure path).
+- **Amends:** plan §6.8 and §7.6 (the slot design, the retry after a throw, and R004 in all builds), §7.7 (R004 as the static engine's one runtime failure path), and, from T1.5, §12.2 (eager mode and the threading options take effect in Phase 1).
 
 ## Context
 
@@ -107,3 +107,4 @@ It measured sizes, speed with Google Benchmark, the include cost, semantics in s
 - **2026-10-30, owner:** accepted S4's recommendation: atomic state-machine slots using `atomic::wait`, with a mutex fallback, and `std::call_once` rejected (docs/PROGRESS.md, "Owner decisions").
 - **2026-10-31, T0.8:** recorded in this file. Plan §6.8 and §7.6 amended.
 - **2026-10-31, T0.8 review:** plan §7.7 amended too, because R004 in every build contradicted its statement that the static engine has no failure path at run time.
+- **2026-11-01, T1.5:** implemented as decided, in `include/trellis/static/storage.hpp`: item 2's C+spin slot with the waiters bit and 128 spins, item 3's fallback (`TRELLIS_HAS_ATOMIC_WAIT`, which a test program sets to 0, so the fallback runs locally too), item 6's retry, item 7's plain flag for `threading::none` and plain reads for an eager injector, and `TRELLIS_CPU_RELAX` and `TRELLIS_NOINLINE` in `config.hpp`. Item 5's R004 detection is left for Phase 2, with `lazy`, as the Consequences say: without `lazy` nothing re-enters a slot, as a dependency cycle doesn't compile (ADR-0014). `tests/unit/threading_test.cpp` runs S4's three concurrency cases (exactly once across 8 threads on a 16-node graph, waiting for a slow construction, 3 failures under contention); the tsan preset runs it under ThreadSanitizer. `eager` and `threading::none` take effect in Phase 1 rather than with Phase 2's options (plan §12.2).

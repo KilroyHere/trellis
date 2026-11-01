@@ -25,18 +25,43 @@ set(trellis_per_mode_tests
 
 # Tests whose subject is the same in every language mode, compiled in C++20 only: the
 # explicit constructor declarations (T1.2), and the binding vocabulary, modules and the
-# injector (T1.4), which use no TRELLIS_HAS_* feature.
+# injector (T1.4), which use no TRELLIS_HAS_* feature, and create<T>() with the injector's storage
+# (T1.5).
 set(trellis_cxx20_tests
   bind_test.cpp
+  create_test.cpp
   ctor_traits_test.cpp
   deduced_test.cpp
   injector_test.cpp
   module_test.cpp
   request_forms_test.cpp
-  smoke_test.cpp)
+  resolve_forms_test.cpp
+  smoke_test.cpp
+  threading_test.cpp)
+
+find_package(Threads REQUIRED)
 
 trellis_unit_test_executable(trellis_unit_tests 20 ${trellis_cxx20_tests} ${trellis_per_mode_tests})
+target_link_libraries(trellis_unit_tests PRIVATE Threads::Threads)
 gtest_discover_tests(trellis_unit_tests DISCOVERY_MODE PRE_TEST PROPERTIES LABELS unit)
+
+# The singleton slots with the fallback for standard libraries without atomic::wait, a mutex and a
+# condition variable per injector (ADR-0012 item 3), forced here, where atomic::wait exists. The
+# macro changes the injector's members, so this program defines it in its only translation unit.
+trellis_unit_test_executable(trellis_wait_fallback_tests 20 threading_test.cpp)
+target_compile_definitions(trellis_wait_fallback_tests PRIVATE TRELLIS_HAS_ATOMIC_WAIT=0)
+target_link_libraries(trellis_wait_fallback_tests PRIVATE Threads::Threads)
+gtest_discover_tests(trellis_wait_fallback_tests
+  DISCOVERY_MODE PRE_TEST TEST_PREFIX wait_fallback. PROPERTIES LABELS unit)
+
+# The research scenario wired with Trellis, against the hand-wired version (T1.5). Its own
+# program, with the research's domain header on the include path (and its warnings checked as the
+# project's), and test names prefixed scenario., which `ctest -R scenario` selects.
+trellis_unit_test_executable(trellis_scenario_tests 20 scenario_test.cpp)
+target_include_directories(trellis_scenario_tests PRIVATE
+  "${PROJECT_SOURCE_DIR}/research/experiments/common")
+gtest_discover_tests(trellis_scenario_tests
+  DISCOVERY_MODE PRE_TEST TEST_PREFIX scenario. PROPERTIES LABELS unit)
 
 # The meta toolkit without exceptions and RTTI (NFR-11). GoogleTest needs both, so this is a plain
 # program that returns 0 when its checks pass. GCC and Clang only: MSVC spells the flags otherwise.
@@ -46,6 +71,13 @@ if(NOT MSVC)
   target_compile_options(trellis_no_exceptions_test PRIVATE -fno-exceptions -fno-rtti)
   add_test(NAME unit.no_exceptions COMMAND trellis_no_exceptions_test)
   set_tests_properties(unit.no_exceptions PROPERTIES LABELS unit)
+
+  # create<T>() and the injector's storage in the same mode (T1.5).
+  add_executable(trellis_no_exceptions_create_test no_exceptions_create_test.cpp)
+  target_link_libraries(trellis_no_exceptions_create_test PRIVATE trellis::trellis)
+  target_compile_options(trellis_no_exceptions_create_test PRIVATE -fno-exceptions -fno-rtti)
+  add_test(NAME unit.no_exceptions_create COMMAND trellis_no_exceptions_create_test)
+  set_tests_properties(unit.no_exceptions_create PROPERTIES LABELS unit)
 endif()
 
 # The same tests again in C++23 and C++26 mode, where the TRELLIS_HAS_* macros can be 1, so that

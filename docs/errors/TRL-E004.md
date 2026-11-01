@@ -2,8 +2,8 @@
 
 - **Detected:** at compile time.
 - **Since:** T1.3, by deduced constructor discovery. The reflection strategy (Phase 6) will raise it too, for two constructors that tie (plan §7.2).
-- **Raised by:** constructor discovery, wherever the static engine asks it for a type that declares no constructor: today through `trellis::detail::discovered_ctor_t`, its entry point into discovery, and from T1.5 on through `injector.create<T>()`.
-- **Tests:** in `tests/compile_fail/discovery/`: [`deduced_greedy_template.cpp`](../../tests/compile_fail/discovery/deduced_greedy_template.cpp), [`deduced_variadic_template.cpp`](../../tests/compile_fail/discovery/deduced_variadic_template.cpp), [`deduced_c_variadic.cpp`](../../tests/compile_fail/discovery/deduced_c_variadic.cpp), [`deduced_aggregate_array.cpp`](../../tests/compile_fail/discovery/deduced_aggregate_array.cpp) and [`deduced_aggregate_optional_member.cpp`](../../tests/compile_fail/discovery/deduced_aggregate_optional_member.cpp). Goldens come with T1.6.
+- **Raised by:** constructor discovery, wherever the static engine asks it for a type that declares no constructor: through `injector.create<T>()` (and `trellis::make_injector` with `options{.eager = true}`) since T1.5, and through `trellis::detail::discovered_ctor_t`, its entry point into discovery.
+- **Tests:** in `tests/compile_fail/discovery/`: [`deduced_greedy_template.cpp`](../../tests/compile_fail/discovery/deduced_greedy_template.cpp), [`deduced_variadic_template.cpp`](../../tests/compile_fail/discovery/deduced_variadic_template.cpp), [`deduced_c_variadic.cpp`](../../tests/compile_fail/discovery/deduced_c_variadic.cpp), [`deduced_aggregate_array.cpp`](../../tests/compile_fail/discovery/deduced_aggregate_array.cpp) and [`deduced_aggregate_optional_member.cpp`](../../tests/compile_fail/discovery/deduced_aggregate_optional_member.cpp); through `create<T>()`, [`tests/compile_fail/create/e004_greedy_via_create.cpp`](../../tests/compile_fail/create/e004_greedy_via_create.cpp). Goldens come with T1.6.
 
 ## What you see
 

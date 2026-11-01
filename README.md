@@ -2,7 +2,7 @@
 
 A header-only C++20 dependency injection library. It builds and connects the objects in a C++ program for you, checks the wiring when the program compiles, and aims to cost no more at run time than wiring by hand.
 
-> **Status: pre-alpha, not usable yet.** Phase 0 (foundations) is complete. Phase 1 (the core injector, v0.1) is in progress. There is no public injector API yet.
+> **Status: pre-alpha.** Phase 0 (foundations) is complete. Phase 1 (the core injector, v0.1) is in progress: bindings, modules, lifetimes and `create<T>()` work, as in the example below, and the API may still change before v0.1. Diagnostics with the path from the root, test overrides and packaging are next.
 
 ## Goals
 
@@ -13,9 +13,9 @@ A header-only C++20 dependency injection library. It builds and connects the obj
 
 The design is in [`docs/plan.md`](docs/plan.md), and the decisions behind it are in [`docs/adr/`](docs/adr/README.md).
 
-## What it will look like
+## What it looks like
 
-> **Planned API, not implemented yet.** This is the design in [plan §6.1](docs/plan.md#61-hello-world). Names may still change before v0.1. Once `create<T>()` exists (task T1.5), this example becomes a compiled test.
+This is the hello world of [plan §6.1](docs/plan.md#61-hello-world), from [`examples/hello_world.cpp`](examples/hello_world.cpp), which the tests build and run. Names may still change before v0.1.
 
 Your classes stay plain C++: none of them includes Trellis, and constructors are discovered without macros.
 
@@ -30,17 +30,22 @@ class SystemClock   final : public IClock      { /* ... */ };
 class SqlRepository final : public IRepository {
  public:
   SqlRepository(const Config& cfg, ILogger& log);
+  void save(int value) override;
+  // ...
 };
 
 class Service {
  public:
   Service(std::shared_ptr<IRepository> repo, ILogger& log, std::unique_ptr<IClock> clock);
+  void handle(int value);
+  // ...
 };
 
 class App {
  public:
   explicit App(Service& service);
   void run();
+  // ...
 };
 ```
 
@@ -53,16 +58,24 @@ namespace di = trellis;
 int main() {
   const Config cfg = load_config();
   auto injector = di::make_injector(
-      di::bind<ILogger>.to<ConsoleLogger>().in(di::singleton),      // one per injector
+      di::bind<ILogger>.to<ConsoleLogger>().in(di::singleton),  // one per injector
       di::bind<IRepository>.to<SqlRepository>().in(di::singleton),
-      di::bind<IClock>.to<SystemClock>(),                           // unique: a new one per request
-      di::bind<Service>.in(di::singleton),                          // App takes Service&, so it needs an owner
-      di::bind<Config>.to_ref(cfg));                                // external: used, never owned
+      di::bind<IClock>.to<SystemClock>(),   // unique: a new one per request
+      di::bind<Service>.in(di::singleton),  // App takes Service&, so it needs an owner
+      di::bind<Config>.to_ref(cfg));        // external: used, never owned
   injector.create<App>().run();
 }
 ```
 
-Trellis checks the wiring at compile time. For example, a missing binding is one error that names the type and the path to it. This is the planned format on GCC 14+ and Clang 20+; older compilers show the same ID and type in a shorter form:
+`create<App>()` builds the App, its Service and everything they need, once per singleton, and the injector destroys its singletons in reverse order of construction when it goes. Any constructor parameter form works that the binding's lifetime allows: by value, by reference or pointer, or as `std::unique_ptr`, `std::shared_ptr` or `std::weak_ptr` ([plan §6.3](docs/plan.md#63-the-request-form-compatibility-table)).
+
+Trellis checks the wiring at compile time, and each mistake is one error with an ID. Delete the `di::bind<Service>` line, and nothing owns the Service that App takes by reference; Clang 18 says:
+
+```text
+error: static assertion failed due to requirement 'error::E012<Service, trellis::error::request<Service &>>::reported': TRL-E012: unbound concrete type requested by reference, pointer or shared_ptr: nothing would own it; bind it with an owning lifetime such as trellis::singleton
+```
+
+The ID leads to a page in [`docs/errors/`](docs/errors/README.md). The path from the root, such as `App -> Service`, is planned next (task T1.6), and on GCC 14+ and Clang 20+ a multi-line message like this one (Phase 4):
 
 ```text
 error: static assertion failed: trellis [TRL-E001]: no binding for abstract type 'IRepository'
@@ -70,8 +83,6 @@ error: static assertion failed: trellis [TRL-E001]: no binding for abstract type
   path: App -> Service -> IRepository
   fix: add di::bind<IRepository>.to<YourImplementation>() (docs: errors/TRL-E001)
 ```
-
-Each error ID gets a page in [`docs/errors/`](docs/errors/README.md) when the library first reports it.
 
 ## Repository map
 

@@ -124,6 +124,26 @@ struct request_traits<std::weak_ptr<R>> {
   static constexpr bool mutable_access = !std::is_const_v<R>;
 };
 
+// request_result_t<R>: what serving request R yields, which create<R>() returns and the engine's
+// resolve<R>() produces (static/resolve.hpp). A reference request yields that reference. Anything
+// else yields a prvalue without top-level cv qualifiers: a parameter `const T` takes a T, and X&&
+// and const X&& take a new X, the request X (ADR-0003). A prvalue initializes the parameter
+// directly, so a by-value parameter of a type that can't be copied or moved still works.
+template <class R>
+struct request_result {
+  using type = std::remove_cv_t<R>;
+};
+template <class R>
+struct request_result<R&> {
+  using type = R&;
+};
+template <class R>
+struct request_result<R&&> {
+  using type = std::remove_cv_t<R>;
+};
+template <class R>
+using request_result_t = typename request_result<R>::type;
+
 // ---- the table --------------------------------------------------------------------------------
 
 // A cell of the table: allowed, or the reason it isn't. The reasons are plan §6.3's words; the
@@ -140,7 +160,7 @@ enum class form_verdict : unsigned char {
   // Not cells: the outcomes of the rules applied on top of a cell (adjusted_verdict, below).
   const_object,    // ✗ TRL-E005: mutable access to a const external object
   unbound_shared,  // ✗ TRL-E012: an unbound concrete type, requested in a sharing form
-  no_binding,      // nothing to check: an unbound abstract type (E001, T1.6)
+  no_binding,      // nothing to check: an unbound abstract type (TRL-E001, create<T>())
   keys_repeat,     // nothing to check: make_injector has reported a key bound twice
 };
 

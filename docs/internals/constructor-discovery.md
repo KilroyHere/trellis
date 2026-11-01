@@ -6,7 +6,7 @@ Constructor discovery tells the static engine which constructor of an implementa
 
 The user lists the constructor's parameter types as a `trellis::ctor<Args...>`, in one of three places. The first that applies wins:
 
-1. the binding: `bind<I>.to<C>().with_ctor<Args...>()`, whose DSL comes with T1.4;
+1. the binding: `bind<I>.to<C>().with_ctor<Args...>()`, which discovery accepts but the binding DSL doesn't offer yet: T1.4's DSL has no `.with_ctor`, and no task in `docs/tasks.json` builds it;
 2. a specialization, full or partial: `template <> struct trellis::ctor_traits<C> : trellis::ctor<Args...> {};`
 3. a public member alias in `C`: `using trellis_ctor = trellis::ctor<Args...>;`
 
@@ -128,4 +128,4 @@ Deducing the return type makes the compiler instantiate the body, and with it th
 
 - The static engine doesn't exist yet (T1.5), so the compile-fail tests reach the check through `detail::explicit_ctor_t`. Those tests are protected, so if T1.6 moves the assertion into `create<T>()` with the explain pass, `detail::explicit_ctor_t` must keep reporting as it does; T1.6 adds tests through `create<T>()`.
 - T1.5 builds a declared type by the rule above: braces for an aggregate, parentheses otherwise.
-- An abstract class with a member alias gives TRL-E002 here, where plan §5.3 reports an abstract type as TRL-E001; T1.5 should look for the binding, and report TRL-E001, before it discovers a constructor.
+- An abstract class with a member alias gives TRL-E002 here, where plan §5.3 reports an abstract type as TRL-E001. T1.5 settled it: `create<T>()` looks for the binding, and reports TRL-E001, before it discovers a constructor; discovery's own entry points keep TRL-E002.

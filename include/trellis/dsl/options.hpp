@@ -7,7 +7,8 @@
 // global macros, which would be fragile under the one-definition rule (plan §6.13).
 //
 // T1.4 defines the fields. Each takes effect with the task that implements it, as its comment
-// says; until then a field is accepted and has no effect.
+// says: strict, eager, threading and max_ctor_arity with create<T>() (T1.5); cycle_check is
+// accepted and has no effect until Phase 2.
 #ifndef TRELLIS_DSL_OPTIONS_HPP
 #define TRELLIS_DSL_OPTIONS_HPP
 
@@ -84,14 +85,17 @@ struct options {
   /// @brief Turns off the implicit unique binding of unbound concrete types (ADR-0004): every
   ///        type the injector creates needs a binding. Default: false.
   ///
-  /// Takes effect in Phase 2 ("options and strict mode", plan §12.2); until then it is accepted
-  /// and ignored.
+  /// Takes effect with `create<T>()` (T1.5): a request, or a constructor parameter, whose type
+  /// has no binding is then a compile error, even for a concrete class requested by value or as
+  /// `std::unique_ptr`, which the implicit binding would otherwise serve.
   ///
   /// @par Constraints
   /// None.
   ///
   /// @par Errors
-  /// None.
+  /// - `TRL-E013`: with `strict` set, `create<T>()` meets an unbound type requested by value or
+  ///   as `std::unique_ptr` (provisional ID). Other requests of unbound types are `TRL-E001` or
+  ///   `TRL-E012`, as without `strict`.
   ///
   /// @par Example
   /// @code
@@ -102,13 +106,18 @@ struct options {
   /// @brief Constructs every singleton inside `make_injector`, in dependency order, instead of on
   ///        first use (plan §7.5, FR-13). Default: false.
   ///
-  /// Takes effect in Phase 2 (eager mode, plan §12.2); until then it is accepted and ignored.
+  /// Takes effect with `create<T>()` (T1.5). `make_injector` then gives the strong guarantee: if
+  /// a constructor throws, the singletons already built are destroyed in reverse order and the
+  /// exception propagates. Afterwards, requests read the singletons without testing whether they
+  /// are built (plan §7.6). The docs recommend it for applications: it fails fast at startup
+  /// (ADR-0012).
   ///
   /// @par Constraints
-  /// None.
+  /// - Every singleton can be built, even one that nothing requests; otherwise compilation fails
+  ///   in `make_injector` with the errors `create<T>()` lists.
   ///
   /// @par Errors
-  /// None.
+  /// None of its own: `make_injector` reports those of `create<T>()` for each singleton.
   ///
   /// @par Example
   /// @code
@@ -118,8 +127,9 @@ struct options {
 
   /// @brief How lazily built singletons behave across threads. Default: `threading::safe`.
   ///
-  /// `threading::safe` is the behaviour of the storage that T1.5 brings (ADR-0012);
-  /// `threading::none` takes effect with the threading options of Phase 2 (plan §12.2).
+  /// Both take effect with `create<T>()` (T1.5): `threading::safe` builds each singleton once
+  /// even under concurrent requests, with an atomic state per singleton (ADR-0012), and
+  /// `threading::none` uses a plain flag.
   ///
   /// @par Constraints
   /// None.
@@ -138,14 +148,16 @@ struct options {
   /// @brief The largest constructor arity that deduced discovery probes for (plan §7.2,
   ///        ADR-0003). Default: 16.
   ///
-  /// Takes effect with deduced discovery (T1.3), which reports a larger arity as an error; task
-  /// T1.11 measures whether 16 is the right default.
+  /// Takes effect with `create<T>()` (T1.5), which passes it to deduced discovery (T1.3) as its
+  /// bound; task T1.11 measures whether 16 is the right default.
   ///
   /// @par Constraints
-  /// None.
+  /// - At most 32; otherwise `trellis::make_injector` fails to compile with a static_assert. A
+  ///   constructor with more parameters can be declared explicitly, which has no limit.
   ///
   /// @par Errors
-  /// None.
+  /// - `TRL-E010`: `create<T>()` meets a deduced class whose constructors all take more
+  ///   parameters than the bound.
   ///
   /// @par Example
   /// @code

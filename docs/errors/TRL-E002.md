@@ -1,8 +1,8 @@
 # TRL-E002: type not constructible: no viable constructor for the available bindings
 
 - **Detected:** at compile time.
-- **Since:** T1.2, for an explicit constructor declaration that matches no constructor of its type; T1.3, for a type that declares no constructor and whose constructor deduction can't find. The general case, a type with no constructor that the available bindings can satisfy, comes with T1.6.
-- **Raised by:** `trellis::ctor<Args...>` and `trellis::ctor_traits<T>`, wherever the static engine uses the declaration, and constructor discovery for a type that declares none: today through `trellis::detail::explicit_ctor_t` and `trellis::detail::discovered_ctor_t`, the engine's entry points into discovery, and from T1.5 on through `injector.create<T>()`.
+- **Since:** T1.2, for an explicit constructor declaration that matches no constructor of its type; T1.3, for a type that declares no constructor and whose constructor deduction can't find; T1.5, for a by-value request whose copy can't be made. The general case, a type with no constructor that the available bindings can satisfy, comes with T1.6.
+- **Raised by:** `trellis::ctor<Args...>` and `trellis::ctor_traits<T>`, wherever the static engine uses the declaration, and constructor discovery for a type that declares none: through `injector.create<T>()` (and `trellis::make_injector` with `options{.eager = true}`) since T1.5, and through `trellis::detail::explicit_ctor_t` and `trellis::detail::discovered_ctor_t`, the engine's entry points into discovery. `injector.create<T>()` also raises it for a copy it can't make (below).
 - **Tests:** in `tests/compile_fail/discovery/`. Declarations: [`specialization_wrong_types.cpp`](../../tests/compile_fail/discovery/specialization_wrong_types.cpp), [`specialization_wrong_arity.cpp`](../../tests/compile_fail/discovery/specialization_wrong_arity.cpp), [`member_alias_wrong_types.cpp`](../../tests/compile_fail/discovery/member_alias_wrong_types.cpp), [`member_alias_wrong_arity.cpp`](../../tests/compile_fail/discovery/member_alias_wrong_arity.cpp), [`binding_ctor_wrong_types.cpp`](../../tests/compile_fail/discovery/binding_ctor_wrong_types.cpp) and [`aggregate_narrowing.cpp`](../../tests/compile_fail/discovery/aggregate_narrowing.cpp); and, for a declaration that two consumers use, still one error, [`specialization_used_twice.cpp`](../../tests/compile_fail/discovery/specialization_used_twice.cpp), [`member_alias_used_twice.cpp`](../../tests/compile_fail/discovery/member_alias_used_twice.cpp) and [`binding_ctor_used_twice.cpp`](../../tests/compile_fail/discovery/binding_ctor_used_twice.cpp). Deduction: [`deduced_same_arity.cpp`](../../tests/compile_fail/discovery/deduced_same_arity.cpp), [`deduced_private_ctor.cpp`](../../tests/compile_fail/discovery/deduced_private_ctor.cpp), [`deduced_deleted_ctor.cpp`](../../tests/compile_fail/discovery/deduced_deleted_ctor.cpp), [`deduced_only_copy_ctor.cpp`](../../tests/compile_fail/discovery/deduced_only_copy_ctor.cpp), [`deduced_optional_param.cpp`](../../tests/compile_fail/discovery/deduced_optional_param.cpp), [`deduced_abstract.cpp`](../../tests/compile_fail/discovery/deduced_abstract.cpp) and [`deduced_not_a_class.cpp`](../../tests/compile_fail/discovery/deduced_not_a_class.cpp), [`deduced_incomplete.cpp`](../../tests/compile_fail/discovery/deduced_incomplete.cpp). Goldens come with T1.6.
 
 ## What you see
@@ -28,7 +28,15 @@ When the type declares no constructor and deduction finds none, the second argum
 <src>/include/trellis/discovery/deduced.hpp:L:C: error: static assertion failed due to requirement 'trellis::error::E002<app::router, trellis::detail::no_ctor_declared>::reported': TRL-E002: type not constructible: deduction found no public, non-deleted, unambiguous constructor (same-arity overloads are ambiguous); declare one with trellis::ctor_traits
 ```
 
-The other messages are `TRL-E002: type not constructible: it is abstract; bind it to an implementation`, `TRL-E002: type not constructible: deduction needs a class type; bind the type to a value` and `TRL-E002: type not constructible: it is incomplete here; define the type before the point where Trellis discovers its constructor`.
+The other messages are `TRL-E002: type not constructible: it is abstract; bind it to an implementation`, `TRL-E002: type not constructible: deduction needs a class type; bind the type to a value` and `TRL-E002: type not constructible: it is incomplete here; define the type before the point where Trellis discovers its constructor`. (`injector.create<T>()` reports an abstract type that it would have to build as [TRL-E001](TRL-E001.md) instead, before it asks discovery, so the "it is abstract" message only comes from discovery's entry points.)
+
+`injector.create<T>()` raises TRL-E002 for one more cause: a by-value request that needs a copy the key can't be constructed from (T1.5). The second argument is then the request (clang-18):
+
+```text
+<src>/include/trellis/static/resolve.hpp:L:C: error: static assertion failed due to requirement 'trellis::error::E002<(anonymous namespace)::pool, trellis::error::request<(anonymous namespace)::pool>>::reported': TRL-E002: type not constructible: a by-value request takes a copy of the bound object, or a new object of the bound class as the key, and the key can't be constructed from it; request a reference or a smart pointer instead
+```
+
+That is a request by value of a singleton or external object with `.allow_copy()`, or of a `.to_value()` binding, whose class can't be copied; or of a key bound to a derived class, `bind<Base>.to<Derived>()`, which `Base` can't be constructed from ([`tests/compile_fail/create/e002_copy_not_copyable.cpp`](../../tests/compile_fail/create/e002_copy_not_copyable.cpp)), such as an abstract interface requested by value, `create<const IShape>()` ([`e002_root_abstract_bound_by_value.cpp`](../../tests/compile_fail/create/e002_root_abstract_bound_by_value.cpp)). The fix is a reference or a smart pointer, or a key that can be copied. Through `create<T>()`, a class whose constructor can't be found is [`e002_no_constructor_via_create.cpp`](../../tests/compile_fail/create/e002_no_constructor_via_create.cpp): one error for a class that two consumers need; and a class that is only declared, requested as `std::unique_ptr<X>` at the root, as a constructor parameter and as an aggregate's member, is discovery's one "it is incomplete here" ([`e002_incomplete_unique_ptr_parameter.cpp`](../../tests/compile_fail/create/e002_incomplete_unique_ptr_parameter.cpp)).
 
 ## Cause
 
@@ -65,7 +73,7 @@ struct trellis::ctor_traits<app::service> : trellis::ctor<int> {};
 int main() { [[maybe_unused]] trellis::detail::explicit_ctor_t<app::service>* unused = nullptr; }
 ```
 
-Until the injector exists (T1.5), the example reaches the check through `trellis::detail::explicit_ctor_t`, as the static engine will; `injector.create<app::service>()` will reach it the same way.
+The example reaches the check through `trellis::detail::explicit_ctor_t`, the static engine's entry point into discovery; `trellis::make_injector().create<app::service>()` reaches it the same way (T1.5).
 
 ## Fix
 

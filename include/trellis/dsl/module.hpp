@@ -28,6 +28,7 @@
 #ifndef TRELLIS_DSL_MODULE_HPP
 #define TRELLIS_DSL_MODULE_HPP
 
+#include <trellis/config.hpp>
 #include <trellis/dsl/bind.hpp>
 #include <trellis/meta/type_list.hpp>
 
@@ -53,11 +54,12 @@ namespace detail {
 // ---- storage ----------------------------------------------------------------------------------
 
 // The binding at position J of a module or an injector. Most bindings are empty, and
-// [[no_unique_address]] lets those take no space (MSVC ignores the attribute; untested there).
+// TRELLIS_NO_UNIQUE_ADDRESS, [[no_unique_address]] or MSVC's spelling of it (config.hpp), lets
+// those take no space; binding_store's TRELLIS_EMPTY_BASES does the rest on MSVC (T1.5).
 template <std::size_t J, class Binding>
 struct stored_binding {
   using binding_type = Binding;
-  [[no_unique_address]] Binding binding;
+  TRELLIS_NO_UNIQUE_ADDRESS Binding binding;
 };
 
 // The base stored_binding<J, B> of a store, found by deduction from J alone: J is unique among
@@ -85,7 +87,8 @@ struct from_layout_t {
 template <class Indices, class... Bindings>
 struct binding_store;
 template <std::size_t... J, class... Bindings>
-struct binding_store<std::index_sequence<J...>, Bindings...> : stored_binding<J, Bindings>... {
+struct TRELLIS_EMPTY_BASES binding_store<std::index_sequence<J...>, Bindings...>
+    : stored_binding<J, Bindings>... {
   binding_store() = default;
   template <class... Args>
   constexpr explicit binding_store(from_bindings_t /*tag*/, Args&&... bindings)

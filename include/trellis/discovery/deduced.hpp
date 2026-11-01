@@ -517,9 +517,10 @@ constexpr auto discover() {
 // parameter types, or else the deduced ctor<probe_arg<T>, ...> with one placeholder per parameter.
 // Checked: each mistake is one static_assert, TRL-E002 (a declaration that lies, or no constructor
 // to deduce), TRL-E004 (an ambiguous constructor) or TRL-E010 (above the bound); after it the type
-// is no_ctor_declared, so nothing else fails. BindingCtor is the binding's .with_ctor<Args...>(),
-// as for explicit_ctor_t, and MaxArity the injector's max_ctor_arity (T1.5 connects both).
-// cv-qualifiers are stripped.
+// is no_ctor_declared, so nothing else fails. MaxArity is the injector's max_ctor_arity, which
+// create<T>() passes (T1.5). BindingCtor is for a binding's .with_ctor<Args...>(), as for
+// explicit_ctor_t; the binding DSL has no .with_ctor yet and no task in the task list builds it,
+// so create<T>() passes no_ctor_declared. cv-qualifiers are stripped.
 template <class T, class BindingCtor = no_ctor_declared,
           std::size_t MaxArity = default_max_ctor_arity>
 using discovered_ctor_t = decltype(detail::discover<std::remove_cv_t<T>, BindingCtor, MaxArity>());

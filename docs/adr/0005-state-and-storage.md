@@ -3,7 +3,7 @@
 - **Status:** Accepted (owner, 2026-10-30)
 - **Plan:** [§4](../plan.md#4-architecture-decisions) ADR-05; §6.2, §7.5, §7.7; FR-02, FR-13
 - **Spikes:** [S4 storage and threading](../spikes/S4-storage-threading.md), whose recommendation the owner accepted. S4 confirmed this ADR and added two teardown rules.
-- **Amends:** plan §7.5 (the inline slot layout and the teardown ordering rules).
+- **Amends:** plan §7.5 (the inline slot layout, the teardown ordering rules, and, from T1.5, slots as indexed bases rather than a `std::tuple`).
 
 ## Context
 
@@ -45,3 +45,7 @@ Boost.DI's singletons are function-local statics shared by every injector in the
 - **2026-10-30, owner:** accepted S4's recommendation (docs/PROGRESS.md, "Owner decisions").
 - **2026-10-31, T0.8:** recorded in this file. Plan §7.5 amended with the ordering rules.
 - **2026-10-31, T0.8 review:** plan §7.5's slot text amended to match item 3 (the draft said `std::optional<Impl>`). Item 4's first rule now speaks of direct dependencies, because a lazy or provider dependency can be built after its dependent.
+- **2026-11-01, T1.5:** implemented in `include/trellis/static/storage.hpp` ([docs/internals/resolution-and-storage.md](../internals/resolution-and-storage.md)), with S4's sizes: an inline slot is 2, 16 and 65 bytes for 1, 8 and 64-byte objects, a shared slot 24 bytes, a stack of 100 entries 1,608 bytes. Two implementation choices, neither changing a decision:
+  - The `std::shared_ptr` of item 2 is made by `std::allocate_shared` with an allocator whose `construct` builds the object in place, so a singleton still costs one allocation while Trellis builds it by its own construction rule (ADR-0003), whatever its copy and move constructors, and `std::enable_shared_from_this` works.
+  - Plan §7.5's `std::tuple<slot<B>...>` is a store of indexed bases instead, one per binding position, empty for a binding the injector doesn't own (plan §7.5 amended): a slot is then a `static_cast` from the position the binding map gives, and no recursive tuple nests a class per binding, which T1.4 avoided for the bindings too. On MSVC the empty bases, and T1.4's empty stored bindings, take no space only with `__declspec(empty_bases)` and `[[msvc::no_unique_address]]`, which `config.hpp` gives as `TRELLIS_EMPTY_BASES` and `TRELLIS_NO_UNIQUE_ADDRESS` (untested locally).
+  - Item 5's guarantees are tested as S4 tested them: the `E(F, G)` case, and the eager build that throws at node 4.

@@ -8,7 +8,7 @@
 // user lists the constructor's parameter types as a trellis::ctor<Args...>, in one of three
 // places, and the first that applies wins:
 //
-//   1. the binding:         bind<I>.to<C>().with_ctor<Args...>()  (the binding DSL is T1.4's)
+//   1. the binding:         bind<I>.to<C>().with_ctor<Args...>()  (not in the binding DSL yet)
 //   2. a specialization:    template <> struct trellis::ctor_traits<C> : trellis::ctor<Args...> {};
 //   3. a member alias in C: using trellis_ctor = trellis::ctor<Args...>;
 //

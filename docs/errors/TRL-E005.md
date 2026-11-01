@@ -2,8 +2,8 @@
 
 - **Detected:** at compile time
 - **Since:** T1.4 (unreleased; v0.1)
-- **Raised by:** the request check of the static engine, `trellis::detail::report_request_form`, which `create<T>()` calls from T1.5 on
-- **Tests:** the seven `e005_*.cpp` tests in [`tests/compile_fail/static/`](../../tests/compile_fail/static/), one per reason below; every cell of the table in [`tests/unit/request_forms_test.cpp`](../../tests/unit/request_forms_test.cpp), and again end to end in [`tests/unit/injector_test.cpp`](../../tests/unit/injector_test.cpp). Golden tests come with T1.6.
+- **Raised by:** `injector::create<T>()`, for its request and for every constructor parameter below it, and `trellis::make_injector` with `options{.eager = true}`, for each singleton (T1.5); both through the request check of the static engine, `trellis::detail::report_request_form` (T1.4)
+- **Tests:** through `create<T>()`: the four `e005_*.cpp` tests in [`tests/compile_fail/create/`](../../tests/compile_fail/create/), at the root, one hop down in a deduced class and in a declared one, each used twice. Through the check's entry point: the seven `e005_*.cpp` tests in [`tests/compile_fail/static/`](../../tests/compile_fail/static/), one per reason below; every cell of the table in [`tests/unit/request_forms_test.cpp`](../../tests/unit/request_forms_test.cpp), and again end to end in [`tests/unit/injector_test.cpp`](../../tests/unit/injector_test.cpp). Golden tests come with T1.6.
 
 ## What you see
 
@@ -40,19 +40,18 @@ Each lifetime allows some request forms and rejects others, as the table in [pla
 
 ## Minimal example
 
-There is no `create<T>()` before T1.5, so the example drives the check through the entry point that `create<T>()` calls:
-
 ```cpp
-#include <trellis/static/validate.hpp>
 #include <trellis/trellis.hpp>
 
 struct sensor {};
 
 int main() {
   auto injector = trellis::make_injector(trellis::bind<sensor>);  // unique
-  trellis::detail::report_request_form<decltype(injector), sensor&>();
+  sensor& object = injector.create<sensor&>();  // error: TRL-E005, nothing would keep it alive
 }
 ```
+
+A constructor parameter is a request too, reported where `create<T>()` finds it, and each failing request once, however many consumers make it.
 
 ## Fix
 
@@ -68,4 +67,5 @@ Change the binding's lifetime, or the request:
 ## Related
 
 - [TRL-E012](TRL-E012.md): the same check for a type without a binding, which is implicitly unique.
+- [TRL-E014](TRL-E014.md): an allowed `std::unique_ptr<I>` that would delete the implementation through `I`'s non-virtual destructor.
 - [TRL-E003](TRL-E003.md): two bindings of one key.

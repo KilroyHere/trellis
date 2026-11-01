@@ -23,15 +23,19 @@
 namespace trellis::error {
 
 /// @brief The error type of TRL-E002, type not constructible, for an explicit constructor
-///        declaration that matches no constructor of the type.
+///        declaration that matches no constructor of the type, and for a copy that can't be made.
 ///
 /// Users never name it: it appears in the compiler's output when `std::is_constructible_v<T,
 /// Args...>` is false for a declared `trellis::ctor<Args...>`, so that the error shows which type
-/// and which declaration disagree (ADR-0006).
+/// and which declaration disagree (ADR-0006). `create<T>()` also raises it when a by-value request
+/// needs a copy of a bound object, or of a new object of a derived class, that `T` can't be
+/// constructed from.
 ///
-/// @tparam T The type that can't be constructed as declared.
+/// @tparam T The type that can't be constructed as declared, or as the request needs.
 /// @tparam Declared The declaration: a `trellis::ctor<Args...>` whose parameters no constructor
-///                  of `T` takes.
+///                  of `T` takes; `trellis::detail::no_ctor_declared` where deduction found no
+///                  constructor; or `trellis::error::request<R>`, the by-value request that needs
+///                  the copy.
 ///
 /// @par Constraints
 /// None.
@@ -277,6 +281,130 @@ struct E010 {
   /// @par Example
   /// @code
   /// static_assert(!trellis::error::E010<wide, 16>::reported);
+  /// @endcode
+  static constexpr bool reported = false;
+};
+
+// ---- T1.5: TRL-E001, TRL-E013, TRL-E014 -------------------------------------------------------
+
+/// @brief The error type of `TRL-E001`: no binding for an abstract type.
+///
+/// `create<T>()` raises it when a request names an abstract type that has no binding, or one
+/// bound to itself with `bind<I>` alone, so that nothing says which class implements it (plan
+/// §7.8). T1.6 adds the path from the root.
+///
+/// @tparam Key The requested key.
+/// @tparam Request `request<R>`, where `R` is the request as the consumer spelled it.
+///
+/// @par Constraints
+/// None.
+///
+/// @par Errors
+/// - `TRL-E001`: this type is the condition of the static_assert that reports it.
+///
+/// @par Example
+/// @code
+/// // A constructor parameter std::shared_ptr<IRepository>, with no binding for IRepository:
+/// //   'trellis::error::E001<IRepository,
+/// //                         trellis::error::request<std::shared_ptr<IRepository>>>::reported':
+/// //   TRL-E001: no binding for an abstract type: ...
+/// @endcode
+template <class Key, class Request>
+struct E001 {
+  /// @brief Always false, so that the static_assert naming it fails and prints this type.
+  ///
+  /// @par Constraints
+  /// None.
+  ///
+  /// @par Errors
+  /// None.
+  ///
+  /// @par Example
+  /// @code
+  /// static_assert(!trellis::error::E001<int, trellis::error::request<int&>>::reported);
+  /// @endcode
+  static constexpr bool reported = false;
+};
+
+/// @brief The error type of `TRL-E013`: an unbound concrete type requested in strict mode.
+///
+/// `options{.strict = true}` turns off the implicit unique binding of unbound concrete types
+/// (ADR-0004), so `create<T>()` raises it when a request names a type without a binding that the
+/// injector would otherwise build (plan §7.8, provisional: the ID awaits the owner's
+/// confirmation). An abstract type without a binding is `TRL-E001` in every mode, and a concrete
+/// one requested by reference, pointer or `std::shared_ptr` is `TRL-E012`.
+///
+/// @tparam Key The requested key, which has no binding.
+/// @tparam Request `request<R>`, where `R` is the request as the consumer spelled it.
+///
+/// @par Constraints
+/// None.
+///
+/// @par Errors
+/// - `TRL-E013`: this type is the condition of the static_assert that reports it.
+///
+/// @par Example
+/// @code
+/// // Under options{.strict = true}, an unbound Clock requested by value fails with:
+/// //   'trellis::error::E013<Clock, trellis::error::request<Clock>>::reported':
+/// //   TRL-E013: unbound concrete type requested in strict mode: ...
+/// @endcode
+template <class Key, class Request>
+struct E013 {
+  /// @brief Always false, so that the static_assert naming it fails and prints this type.
+  ///
+  /// @par Constraints
+  /// None.
+  ///
+  /// @par Errors
+  /// None.
+  ///
+  /// @par Example
+  /// @code
+  /// static_assert(!trellis::error::E013<int, trellis::error::request<int>>::reported);
+  /// @endcode
+  static constexpr bool reported = false;
+};
+
+/// @brief The error type of `TRL-E014`: an owning request would delete the implementation through
+///        a base class whose destructor isn't virtual.
+///
+/// `create<T>()` raises it when a request `std::unique_ptr<Key>` would hold a new object of a
+/// class derived from `Key`, the binding's implementation, while `Key`'s destructor isn't virtual:
+/// `std::default_delete<Key>` would then delete the object through `Key`, which is undefined
+/// behaviour (plan §7.8, provisional: the ID awaits the owner's confirmation).
+///
+/// @tparam Key The requested key, the base class.
+/// @tparam Request `request<R>`, where `R` is the request as the consumer spelled it.
+/// @tparam Impl The binding's implementation, the class that would be deleted through `Key`.
+///
+/// @par Constraints
+/// None.
+///
+/// @par Errors
+/// - `TRL-E014`: this type is the condition of the static_assert that reports it.
+///
+/// @par Example
+/// @code
+/// // bind<Shape>.to<Square>(), where Shape's destructor isn't virtual, requested as
+/// // std::unique_ptr<Shape>:
+/// //   'trellis::error::E014<Shape, trellis::error::request<std::unique_ptr<Shape>>,
+/// //                         Square>::reported':
+/// //   TRL-E014: owning request would delete the implementation through a base class ...
+/// @endcode
+template <class Key, class Request, class Impl>
+struct E014 {
+  /// @brief Always false, so that the static_assert naming it fails and prints this type.
+  ///
+  /// @par Constraints
+  /// None.
+  ///
+  /// @par Errors
+  /// None.
+  ///
+  /// @par Example
+  /// @code
+  /// static_assert(!trellis::error::E014<int, trellis::error::request<int>, long>::reported);
   /// @endcode
   static constexpr bool reported = false;
 };
