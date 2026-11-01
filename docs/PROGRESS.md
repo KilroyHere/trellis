@@ -68,6 +68,26 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev clang-tools-18 clang-tools-20` (`clang-tools-*` gives `clang-scan-deps`, which the C++20 module build needs, T1.8) so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
 
+## 2026-11-01: T1.8 C++20 module and single header (landed; waits for T1.7 to pass)
+
+- **What changed** (squashed as 320d5ed):
+  - **Modules.** `modules/trellis.cppm` exports the public API from module `trellis`, through using-declarations in `trellis::inline v1`, where GCC 14 can see them. `trellis::error` is exported and `detail` is not. The testing helpers are a second module, `trellis.testing`, which re-exports `trellis`.
+  - **Build.** CMake 3.28 and Ninja build the modules in the Clang presets, with ccache off for the module targets (it gave stale objects). GCC before 15 is refused: GCC 14 builds the module, but its importers misspell `type_name` and ignore deduction guides.
+  - **Export check.** `tools/module_exports.py` reads Clang's syntax tree and fails on a missing, extra or misplaced export (ctest `module.exports`).
+  - **Single header.** `tools/amalgamate.py` writes `single_include/trellis.hpp` (gitignored) in the preprocessor's own include order. A twin of every unit test (232) builds against it.
+  - Docs: `docs/internals/delivery.md` and ADR-0008's History.
+- **Review:** the infrastructure was reviewed early (stage 1, passed with 8 non-blocking fixes, all made). Stage 2, after T1.5–T1.7 landed, exported 9 more names and passed:
+  - every export mutation is caught;
+  - a fresh consumer project uses `create<T>()`, `override` and `create_all` through the import;
+  - the single-header twins read only the generated header;
+  - `ctest -L module` passes 44/44 on clang-18 and clang-20.
+- **Evidence:** `scripts/tasks.py verify T1.8` on main: `[PASS] ctest --preset clang-18-debug -L module`, `[PASS] python3 -I tools/amalgamate.py --check`, `T1.8: all verify commands passed`. The builder's check-full passed 10 of 10 presets.
+- **[NEEDS CLARIFICATION]**
+  - The module isn't installed for `find_package` (a follow-up).
+  - GCC 15 and MSVC are accepted but untested (configure warns).
+  - Module users must include `<trellis/config.hpp>` for macros, and set configuration macros PUBLIC on `trellis_module`.
+- **Follow-ups:** the unit tests that use `detail::` (create, explain, override) can't run through the module. Editing a served unit-test source re-runs CMake.
+
 ## 2026-11-01: T1.7 test overrides and testing helpers (landed; waits for T1.6 to pass)
 
 - **What changed** (squashed as bffb420), in `include/trellis/dsl/override.hpp` and `include/trellis/testing/wiring.hpp`:
