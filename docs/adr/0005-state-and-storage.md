@@ -3,7 +3,7 @@
 - **Status:** Accepted (owner, 2026-10-30)
 - **Plan:** [§4](../plan.md#4-architecture-decisions) ADR-05; §6.2, §7.5, §7.7; FR-02, FR-13
 - **Spikes:** [S4 storage and threading](../spikes/S4-storage-threading.md), whose recommendation the owner accepted. S4 confirmed this ADR and added two teardown rules.
-- **Amends:** plan §7.5 (the inline slot layout, the teardown ordering rules, and, from T1.5, slots as indexed bases rather than a `std::tuple`).
+- **Amends:** plan §7.5 (the inline slot layout, the teardown ordering rules, from T1.5 slots as indexed bases rather than a `std::tuple`, and from T1.14 how a shared slot holds its pointer).
 
 ## Context
 
@@ -49,3 +49,6 @@ Boost.DI's singletons are function-local statics shared by every injector in the
   - The `std::shared_ptr` of item 2 is made by `std::allocate_shared` with an allocator whose `construct` builds the object in place, so a singleton still costs one allocation while Trellis builds it by its own construction rule (ADR-0003), whatever its copy and move constructors, and `std::enable_shared_from_this` works.
   - Plan §7.5's `std::tuple<slot<B>...>` is a store of indexed bases instead, one per binding position, empty for a binding the injector doesn't own (plan §7.5 amended): a slot is then a `static_cast` from the position the binding map gives, and no recursive tuple nests a class per binding, which T1.4 avoided for the bindings too. On MSVC the empty bases, and T1.4's empty stored bindings, take no space only with `__declspec(empty_bases)` and `[[msvc::no_unique_address]]`, which `config.hpp` gives as `TRELLIS_EMPTY_BASES` and `TRELLIS_NO_UNIQUE_ADDRESS` (untested locally).
   - Item 5's guarantees are tested as S4 tested them: the `E(F, G)` case, and the eager build that throws at node 4.
+- **2026-11-01, T1.14:** the shared storage of item 2 changed shape, not behaviour, so that a singleton costs less code to compile and to link (NFR-04, NFR-06; [docs/internals/resolution-and-storage.md](../internals/resolution-and-storage.md)):
+  - A class that shares from this still gets its `std::shared_ptr` from `std::allocate_shared` with the allocator. Any other class is built in a holder that `std::make_shared` creates, the object's bytes and its destroy function, and the `std::shared_ptr` aliases the object in it. Every class of one size and alignment shares the holder's control block type, where the allocator gave each class its own, with `allocator_traits` of its own: at 100 singletons that was a quarter of Trellis's compile time over hand-written wiring. A singleton still costs one allocation, a `std::shared_ptr` request still shares real ownership, `weak_ptr`s still expire with the last owner, and `enable_shared_from_this` still works.
+  - The slot keeps the pointer as a `std::shared_ptr<void>` in raw bytes, which the teardown stack destroys, as it destroys an inline object, so the slots are trivially destructible (plan §7.5 amended). The sizes are unchanged: a shared slot is 24 bytes, the teardown stack 1,608 bytes for 100 entries.

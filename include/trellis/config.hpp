@@ -288,6 +288,17 @@
 #define TRELLIS_NOINLINE
 #endif
 
+// TRELLIS_COLD marks a function that rarely runs: the slow path of a singleton's slot, once per
+// singleton (T1.14). GCC and Clang optimize it for size, place it apart from the hot code
+// (.text.unlikely) and treat the branches that lead to a call of it as unlikely, so the code that
+// requests a singleton stays a load, a compare and a branch that is not taken. MSVC has no such
+// attribute, so the macro is empty there; TRELLIS_NOINLINE keeps the function out of line anyway.
+#if defined(__GNUC__) || defined(__clang__)
+#define TRELLIS_COLD __attribute__((cold))
+#else
+#define TRELLIS_COLD
+#endif
+
 // TRELLIS_NO_UNIQUE_ADDRESS on an empty member and TRELLIS_EMPTY_BASES on a class with several
 // empty bases let them take no space. An injector holds one stored binding per binding, most of
 // them empty (dsl/module.hpp), and one slot holder per binding, empty for each binding it doesn't

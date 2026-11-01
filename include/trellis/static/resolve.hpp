@@ -334,9 +334,11 @@ struct context {
                        .template at<served::position, typename served::binding_type>();
       if constexpr (Access == slot_access::checked) {
         if (!cell.ready()) [[unlikely]] {
-          cell.construct(injector_access::teardown(owner), injector_access::sync(owner),
-                         &build<typename p::node, slot_access::checked>::place,
-                         static_cast<void*>(std::addressof(owner)));
+          using cell_type = std::remove_reference_t<decltype(cell)>;
+          cell.construct(
+              injector_access::teardown(owner), injector_access::sync(owner),
+              &build<typename p::node, slot_access::checked>::template make_in<cell_type>,
+              static_cast<void*>(std::addressof(owner)));
         }
       }
       if constexpr (form == request_form::reference) {
@@ -346,7 +348,7 @@ struct context {
       } else if constexpr (form == request_form::value) {
         return result(std::as_const(cell.object()));  // a copy, which .allow_copy() permits
       } else {
-        return result(cell.storage().pointer());  // std::shared_ptr or std::weak_ptr
+        return cell.storage().template share<result>();  // std::shared_ptr or std::weak_ptr
       }
     } else if constexpr (served::kind == binding_kind::constructed) {
       // A new object, which the consumer owns: unique, or unbound. Its parameters are requested
@@ -358,8 +360,8 @@ struct context {
         return result(built::fresh(next));
       } else if constexpr (form == request_form::shared_ptr) {
         // One allocation for the object and its control block, as std::make_shared would make.
-        return std::allocate_shared<typename p::impl>(construct_with<typename p::impl>(
-            &built::place, static_cast<void*>(std::addressof(owner))));
+        own_context next{owner};
+        return built::template share<typename result::element_type>(next);
       } else if constexpr (TRELLIS_IS_SAME(typename p::impl, result)) {
         own_context next{owner};
         return built::value(next);
@@ -410,13 +412,28 @@ struct context {
 template <class Ctx, slot_access Access>
 using with_access_t = context<typename Ctx::injector_type, typename Ctx::lifetime_type, Access>;
 
-// build<Node, Access>::value(ctx), fresh(ctx) and place(injector, where): the class of a
-// construction node as a prvalue (for a by-value request), on the heap (for std::unique_ptr), or
-// in given storage (a slot, or allocate_shared's control block, through a build_fn). Each builds
-// the object exactly as discovery checked it, with braces for an aggregate and parentheses
-// otherwise (ADR-0003 item 5), and resolves each parameter in the class's own context: the node's,
-// Ctx, with the access Access. A prvalue is returned directly, so the class needn't be copyable or
-// movable.
+// build<Node, Access>: the class of a construction node, built
+//   value(ctx)                    as a prvalue, for a by-value request;
+//   fresh(ctx)                    on the heap, for std::unique_ptr;
+//   share<Element>(ctx)           owned by a new std::shared_ptr<Element>, for a std::shared_ptr
+//                                 request of a unique object (static/storage.hpp,
+//                                 make_shared_object);
+//   make_in<Cell>(state, injector)  in the storage of the singleton's slot Cell, through the slot's
+//                                 make_with: the slot's make_fn (static/storage.hpp).
+// Each builds the object exactly as discovery checked it, with braces for an aggregate and
+// parentheses otherwise (ADR-0003 item 5), and resolves each parameter in the class's own context:
+// the node's, Ctx, with the access Access. A prvalue is returned directly, so the class needn't be
+// copyable or movable.
+//
+// share and make_in hand the storage code a lambda that builds the object where it is told. The
+// lambda's body is instantiated with the function that contains it, so the placeholders'
+// conversion operators, the next hop, are instantiated one level below that function, which
+// resolve<R>() names directly: a hop still nests three function bodies (ADR-0014 item 3), however
+// deep the storage code that calls the lambda (std::make_shared, std::allocate_shared) is. The
+// storage code can inline the lambda, so a singleton costs one function, make_in, where a separate
+// build function called through a pointer cost two (T1.14). GCC inlines it; Clang does where the
+// constructor's parameters are few and cheap, as in the research scenario, and otherwise keeps it
+// as a function of its own.
 //
 // The order in which the parameters are created is the compiler's order of evaluation of
 // function arguments, which C++ leaves unspecified for parentheses (GCC goes right to left, Clang
@@ -433,9 +450,20 @@ struct build<deduced_node<Impl, Ctx, std::index_sequence<Is...>, false>, Access>
   static Impl* fresh([[maybe_unused]] own& ctx) {
     return new Impl(repeat_t<Is, any_arg<Impl, own>>{ctx}...);
   }
-  static void place(void* injector, std::byte* where) {
+  template <class Element>
+  static std::shared_ptr<Element> share([[maybe_unused]] own& ctx) {
+    auto emplace = [&](std::byte* where) {
+      ::new (where) Impl(repeat_t<Is, any_arg<Impl, own>>{ctx}...);
+    };
+    return detail::make_shared_object<Impl, Element>(emplace);
+  }
+  template <class Cell>
+  static teardown_entry make_in(typename Cell::state_type& state, void* injector) {
     [[maybe_unused]] own ctx{*static_cast<typename Ctx::injector_type*>(injector)};
-    ::new (where) Impl(repeat_t<Is, any_arg<Impl, own>>{ctx}...);
+    auto emplace = [&](std::byte* where) {
+      ::new (where) Impl(repeat_t<Is, any_arg<Impl, own>>{ctx}...);
+    };
+    return Cell::make_with(state, emplace);
   }
 };
 
@@ -448,9 +476,20 @@ struct build<deduced_node<Impl, Ctx, std::index_sequence<Is...>, true>, Access> 
   static Impl* fresh([[maybe_unused]] own& ctx) {
     return new Impl{repeat_t<Is, any_arg<Impl, own>>{ctx}...};
   }
-  static void place(void* injector, std::byte* where) {
+  template <class Element>
+  static std::shared_ptr<Element> share([[maybe_unused]] own& ctx) {
+    auto emplace = [&](std::byte* where) {
+      ::new (where) Impl{repeat_t<Is, any_arg<Impl, own>>{ctx}...};
+    };
+    return detail::make_shared_object<Impl, Element>(emplace);
+  }
+  template <class Cell>
+  static teardown_entry make_in(typename Cell::state_type& state, void* injector) {
     [[maybe_unused]] own ctx{*static_cast<typename Ctx::injector_type*>(injector)};
-    ::new (where) Impl{repeat_t<Is, any_arg<Impl, own>>{ctx}...};
+    auto emplace = [&](std::byte* where) {
+      ::new (where) Impl{repeat_t<Is, any_arg<Impl, own>>{ctx}...};
+    };
+    return Cell::make_with(state, emplace);
   }
 };
 
@@ -461,9 +500,16 @@ struct build<declared_node<Impl, Ctx, false, Args...>, Access> {
   static Impl* fresh([[maybe_unused]] own& ctx) {
     return new Impl(ctx.template resolve<Args>()...);
   }
-  static void place(void* injector, std::byte* where) {
+  template <class Element>
+  static std::shared_ptr<Element> share([[maybe_unused]] own& ctx) {
+    auto emplace = [&](std::byte* where) { ::new (where) Impl(ctx.template resolve<Args>()...); };
+    return detail::make_shared_object<Impl, Element>(emplace);
+  }
+  template <class Cell>
+  static teardown_entry make_in(typename Cell::state_type& state, void* injector) {
     [[maybe_unused]] own ctx{*static_cast<typename Ctx::injector_type*>(injector)};
-    ::new (where) Impl(ctx.template resolve<Args>()...);
+    auto emplace = [&](std::byte* where) { ::new (where) Impl(ctx.template resolve<Args>()...); };
+    return Cell::make_with(state, emplace);
   }
 };
 
@@ -474,9 +520,16 @@ struct build<declared_node<Impl, Ctx, true, Args...>, Access> {
   static Impl* fresh([[maybe_unused]] own& ctx) {
     return new Impl{ctx.template resolve<Args>()...};
   }
-  static void place(void* injector, std::byte* where) {
+  template <class Element>
+  static std::shared_ptr<Element> share([[maybe_unused]] own& ctx) {
+    auto emplace = [&](std::byte* where) { ::new (where) Impl{ctx.template resolve<Args>()...}; };
+    return detail::make_shared_object<Impl, Element>(emplace);
+  }
+  template <class Cell>
+  static teardown_entry make_in(typename Cell::state_type& state, void* injector) {
     [[maybe_unused]] own ctx{*static_cast<typename Ctx::injector_type*>(injector)};
-    ::new (where) Impl{ctx.template resolve<Args>()...};
+    auto emplace = [&](std::byte* where) { ::new (where) Impl{ctx.template resolve<Args>()...}; };
+    return Cell::make_with(state, emplace);
   }
 };
 

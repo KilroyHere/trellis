@@ -2,7 +2,8 @@
 // CMakeLists.txt builds this file with -fno-exceptions -fno-rtti, which GoogleTest can't take, so
 // it is a plain program that returns 0 when every check passes. It builds singletons in both
 // storages under both threading modes, lazily and eagerly, and unique objects in every owning
-// form: the slots' code without its try and catch (static/storage.hpp, TRELLIS_HAS_EXCEPTIONS).
+// form: the slots' code, whose retry after a throw is a destructor rather than a try and catch,
+// and the holders and control blocks of std::shared_ptr singletons (static/storage.hpp).
 #include <trellis/trellis.hpp>
 
 #include <memory>

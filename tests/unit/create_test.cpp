@@ -322,6 +322,107 @@ TEST_F(Create, NonVirtualBaseFormsDestroyTheDerivedClass) {
   EXPECT_EQ(marked('-').size(), 4U);  // each object as a plain_derived, once
 }
 
+// A singleton shared through a base at an offset (static/storage.hpp, shared_storage::share): the
+// slot keeps a std::shared_ptr<void> to the class, and each request converts the class's address to
+// its own element type, so a base that isn't first, or is virtual, gets its own subobject, owned
+// with the slot's control block.
+struct first_base {
+  first_base() = default;
+  first_base(const first_base&) = delete;
+  first_base& operator=(const first_base&) = delete;
+  first_base(first_base&&) = delete;
+  first_base& operator=(first_base&&) = delete;
+  virtual ~first_base() = default;
+  int first = 1;
+};
+struct second_base {
+  second_base() = default;
+  second_base(const second_base&) = delete;
+  second_base& operator=(const second_base&) = delete;
+  second_base(second_base&&) = delete;
+  second_base& operator=(second_base&&) = delete;
+  virtual ~second_base() = default;
+  [[nodiscard]] virtual int id() const { return 0; }
+  int second = 2;
+};
+struct two_bases final : first_base, second_base, recorded<two_bases> {
+  static constexpr const char* name = "two_bases";
+  two_bases() = default;
+  [[nodiscard]] int id() const override { return 42; }
+};
+
+TEST_F(Create, ASingletonIsSharedThroughABaseThatIsntFirst) {
+  std::shared_ptr<const second_base> held;
+  std::weak_ptr<second_base> observed;
+  {
+    auto injector = make_injector(bind<second_base>.to<two_bases>().in(trellis::singleton));
+    second_base& object = injector.create<second_base&>();
+    ASSERT_NE(static_cast<void*>(&object), dynamic_cast<void*>(&object));  // at an offset
+    const std::shared_ptr<second_base> shared = injector.create<std::shared_ptr<second_base>>();
+    held = injector.create<std::shared_ptr<const second_base>>();
+    observed = injector.create<std::weak_ptr<second_base>>();
+    EXPECT_EQ(shared.get(), &object);
+    EXPECT_EQ(held.get(), &object);
+    EXPECT_EQ(observed.lock().get(), &object);
+    EXPECT_EQ(shared->id(), 42);
+    EXPECT_FALSE(shared.owner_before(observed) || observed.owner_before(shared));
+    EXPECT_EQ(shared.use_count(), 3);  // the slot's, shared and held
+  }
+  EXPECT_TRUE(marked('-').empty());  // teardown dropped the injector's reference only
+  EXPECT_EQ(held->second, 2);
+  EXPECT_EQ(observed.lock().get(), held.get());
+  held.reset();
+  EXPECT_TRUE(observed.expired());
+  EXPECT_EQ(marked('-'), std::vector<std::string>{"two_bases"});  // as itself, once
+}
+
+struct shared_root {
+  shared_root() = default;
+  shared_root(const shared_root&) = delete;
+  shared_root& operator=(const shared_root&) = delete;
+  shared_root(shared_root&&) = delete;
+  shared_root& operator=(shared_root&&) = delete;
+  virtual ~shared_root() = default;
+  int root = 3;
+};
+struct left_branch : virtual shared_root {
+  int left = 4;
+};
+struct right_branch : virtual shared_root {
+  int right = 5;
+};
+struct diamond final : left_branch, right_branch, recorded<diamond> {
+  static constexpr const char* name = "diamond";
+  diamond() = default;
+};
+
+TEST_F(Create, ASingletonIsSharedThroughAVirtualBase) {
+  std::shared_ptr<shared_root> held;
+  std::weak_ptr<const shared_root> observed;
+  {
+    auto injector = make_injector(bind<shared_root>.to<diamond>().in(trellis::singleton));
+    shared_root& object = injector.create<shared_root&>();
+    held = injector.create<std::shared_ptr<shared_root>>();
+    observed = injector.create<std::weak_ptr<const shared_root>>();
+    EXPECT_EQ(held.get(), &object);
+    EXPECT_EQ(observed.lock().get(), &object);
+    EXPECT_NE(dynamic_cast<diamond*>(held.get()), nullptr);
+    EXPECT_EQ(held->root, 3);
+    EXPECT_FALSE(held.owner_before(observed) || observed.owner_before(held));
+  }
+  EXPECT_TRUE(marked('-').empty());
+  EXPECT_FALSE(observed.expired());
+  held.reset();
+  EXPECT_TRUE(observed.expired());
+  EXPECT_EQ(marked('-'), std::vector<std::string>{"diamond"});
+  // A unique binding requested as std::shared_ptr takes the same conversion.
+  auto fresh = make_injector(bind<shared_root>.to<diamond>());
+  const std::shared_ptr<shared_root> made = fresh.create<std::shared_ptr<shared_root>>();
+  EXPECT_NE(dynamic_cast<diamond*>(made.get()), nullptr);
+  EXPECT_EQ(made->root, 3);
+  EXPECT_EQ(made.use_count(), 1);
+}
+
 // ---- how classes are built --------------------------------------------------------------------
 
 struct clock_part {
@@ -522,9 +623,9 @@ TEST_F(Create, ASharedPtrOutlivesTheInjector) {
 }
 
 // Over-aligned classes (static/storage.hpp): a std::shared_ptr slot and a unique std::shared_ptr
-// request get the object from std::allocate_shared's control block, an inline slot from the
-// injector's own bytes, and std::unique_ptr from new, each at the class's alignment. The class is
-// as large as its alignment, so that it needs no padding of its own.
+// request get the object from the holder in std::make_shared's control block, an inline slot
+// from the injector's own bytes, and std::unique_ptr from new, each at the class's alignment. The
+// class is as large as its alignment, so that it needs no padding of its own.
 struct alignas(128) aligned_part {
   aligned_part() = default;
   std::array<unsigned char, 128> bytes{};
@@ -618,6 +719,44 @@ using empty_module =
     decltype(trellis::make_module(bind<part<20>>, bind<part<21>>.in(trellis::singleton),
                                   bind<part<22>>.in(trellis::singleton_inline)));
 static_assert(sizeof(empty_module) == 1);
+
+// A singleton's std::shared_ptr shares one control block type with the classes of its size, unless
+// its class shares from this, which takes std::allocate_shared<T> (static/storage.hpp,
+// make_shared_object, T1.14): shares_from_this holds exactly where std::shared_ptr sets up
+// enable_shared_from_this, for an unambiguous and accessible base ([util.smartptr.shared.const]/1).
+struct shares_publicly : std::enable_shared_from_this<shares_publicly> {};
+struct shares_through_a_base : shares_publicly {};
+struct shares_privately : private std::enable_shared_from_this<shares_privately> {};
+struct shares_ambiguously : shares_publicly, std::enable_shared_from_this<shares_ambiguously> {};
+using trellis::detail::shares_from_this;
+static_assert(shares_from_this<shares_publicly>);
+static_assert(shares_from_this<shares_through_a_base>);
+static_assert(shares_from_this<self_sharing>);
+static_assert(!shares_from_this<shares_privately>);
+static_assert(!shares_from_this<shares_ambiguously>);
+static_assert(!shares_from_this<eight_bytes>);
+// The slots hold nothing that needs destroying but through the teardown stack.
+static_assert(
+    std::is_trivially_destructible_v<slot_t<shared_storage<self_sharing>, threading::safe>>);
+static_assert(
+    std::is_trivially_destructible_v<slot_t<inline_storage<std::string>, threading::none>>);
+
+// The holder of a singleton's object (make_shared_object): its bytes, then the function pointer,
+// with nothing padded, which MSVC would report as C4324 for an over-aligned class, at the size the
+// pointer-first layout had: Size and the pointer rounded up to 8 bytes, or Size plus Align beyond
+// that. A class's size is a multiple of its alignment, so the holder's arguments are too.
+template <std::size_t Size, std::size_t Align>
+using holder_t = trellis::detail::shared_holder<Size, Align>;
+template <std::size_t Size, std::size_t Align>
+constexpr bool unpadded = sizeof(holder_t<Size, Align>) == sizeof(holder_t<Size, Align>::bytes) +
+                                                               sizeof(trellis::detail::destroy_fn);
+static_assert(unpadded<1, 1> && unpadded<12, 4> && unpadded<16, 8> && unpadded<64, 64> &&
+              unpadded<128, 128> && unpadded<256, 128>);
+static_assert(sizeof(void*) != 8 ||
+              (sizeof(holder_t<1, 1>) == 16 && sizeof(holder_t<12, 4>) == 24 &&
+               sizeof(holder_t<16, 8>) == 24 && sizeof(holder_t<64, 64>) == 128 &&
+               sizeof(holder_t<128, 64>) == 192 && sizeof(holder_t<128, 128>) == 256));
+static_assert(alignof(holder_t<128, 128>) == 128 && alignof(holder_t<12, 4>) == alignof(void*));
 
 // ---- exceptions (plan §7.7, ADR-0005 item 5, ADR-0012 item 6) ---------------------------------
 
