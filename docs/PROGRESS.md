@@ -35,6 +35,10 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - (a) keep NFR-13's minimum, 19.38, and use a 150-hop bound on MSVC before 19.50: the provisional text, measured to give exactly one TRL-E007 on cl 19.44;
   - (b) raise NFR-13's MSVC minimum to 19.51. 19.45 to 19.50 can't be measured on GitHub's image, so 19.50 is only an assumed boundary.
   Not blocking until the cycle check lands in Phase 2.
+- **Compile-fail expectations on MSVC (platform fixes).** 28 compile-fail tests encode GCC/Clang output that cl never prints: the error type in the static_assert condition, `, ` inside template argument lists, and deleted-function wording. They are protected, so changing them is your decision. Options:
+  - (a) approve compiler-scoped alternatives in those tests, such as MSVC's `error C2338: static_assert failed: 'TRL-E0xx: ...'` form, as T1.4's tests already do;
+  - (b) keep them red on Windows until Phase 4 implements ADR-0006's MSVC mitigation, which names the error type in the first instantiation note.
+  Recommendation: (a) for the ID and the one-error line budget now, and (b) for the error type. The platforms run stays red on Windows until you decide. T1.10's release gate needs it green or an explicit exception.
 - **T1.3's amendments to ADR-0003, provisional.**
   - An abstract type is TRL-E002 at discovery; E001 stays with the engine for an unbound abstract key.
   - An aggregate member that no placeholder can initialize is TRL-E004, where S1 silently value-initialized the rest.
@@ -53,6 +57,27 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Add `tests/golden_manifest.txt` to the protected paths.
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev` so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
+
+## 2026-11-01: platform fixes for MSVC and Apple Clang (not a task)
+
+- **Why:** the first platforms run on Phase 1 code ([41259741887](https://github.com/KilroyHere/trellis/actions/runs/41259741887)) failed on both jobs. T1.1 to T1.4 had been tested only on the Linux presets.
+- **What changed** (a3fcf90, e17bb73, 602ec1e, 307adfa, 4d74e4c). Each workaround is a config.hpp macro, commented and tested, with the measured versions and "no upstream report found" noted. The Clang gate is inferred.
+  - `TRELLIS_REPEAT_THROUGH_CLASS`: cl 19.51 lost the pack in `ctor<repeat_t<Is, A>...>` when it had one element (C3546, then C3615 in a cascade), so every one-parameter constructor failed.
+  - `TRELLIS_ARRAY_CHECK_WITH_BRACES`: cl's parenthesized aggregate initialization rejects any member of aggregate class type (`std::array`, empty structs), so T1.3's array check refused aggregates without arrays. On MSVC it now checks with braces, through a placeholder whose conversion to an array reference is deleted.
+  - `TRELLIS_TYPE_NAME_RESPELLS_MEMBER_POINTERS`: Apple clang 21 and cl spell `int widget::*` differently (cl gives `inttn::widget::*`). The names are rebuilt from the class's own spelling.
+  - The deleted `to_ref(T&&)` returned void, which gave MSVC an extra C3313.
+  - `tools/compile_fail.py` gives each compile its own scratch directory: parallel cl compiles collided on `vc140.pdb` (C1041). Its self-test checks that concurrent compiles get distinct directories.
+  - ADR-0003 item 6, its array-check row and its History record the two MSVC workarounds as provisional.
+- **Review:** passed after one doc fix. On gcc-13/14 and clang-18/20, the preprocessed `deduced.hpp` is byte-identical to before. The verdicts on 38 extra aggregates are identical, and so is `type_name` output for 36 types on 5 configurations.
+- **Result:** macOS (AppleClang 21.0.0) passes 227 of 227 tests. Windows (cl 19.51) builds and passes 122 of 152. The 30 failures are compile-fail tests:
+  - 26 expect the error type in the static_assert condition, which cl never prints (ADR-0006's MSVC risk), and 12 of them also expect `, ` inside template argument lists;
+  - 2 expect GCC/Clang wording for deleted functions;
+  - 2 (`bind_bad_key_decltype_value`, `bind_bad_key_named_module`) get real extra errors on cl (C3553, C2516) after the key's static_assert.
+  
+  See "Waiting for owner". The last run was [41263825592](https://github.com/KilroyHere/trellis/actions/runs/41263825592), and local `check-full` passed 10 of 10 presets.
+- **Follow-ups:**
+  - **T1.6:** make the bad-key errors one error on MSVC, and consider ADR-0006's MSVC mitigation, which names the error type in the first instantiation note.
+  - **T1.5:** MSVC needs `[[msvc::no_unique_address]]` and `__declspec(empty_bases)` to keep empty bindings at 1 byte.
 
 ## 2026-11-01: T1.3 deduced constructor discovery (passed)
 
