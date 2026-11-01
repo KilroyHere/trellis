@@ -385,18 +385,15 @@ struct context {
       // in its own context, with this context's access to the singletons.
       using built = build<typename p::node, Access>;
       using own_context = context<Injector, typename served::lifetime, Access>;
+      own_context next{owner};
       if constexpr (form == request_form::unique_ptr) {
-        own_context next{owner};
         return result(built::fresh(next));
       } else if constexpr (form == request_form::shared_ptr) {
         // One allocation for the object and its control block, as std::make_shared would make.
-        own_context next{owner};
         return built::template share<typename result::element_type>(next);
       } else if constexpr (TRELLIS_IS_SAME(typename p::impl, result)) {
-        own_context next{owner};
         return built::value(next);
       } else {
-        own_context next{owner};
         return result(built::value(next));
       }
     } else {

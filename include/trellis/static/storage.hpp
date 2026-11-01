@@ -165,6 +165,13 @@ class teardown_stack<0, ThreadSafe> {
 // it is given, the suitably sized and aligned storage of a slot or of a std::shared_ptr's control
 // block, as the resolution code builds it (static/resolve.hpp, build<Node>::make_in).
 
+// Destroys the T built at `object`: the teardown entry of inline_storage's object, and what a
+// shared_holder destroys its object with (make_shared_object).
+template <class T>
+void destroy_object(void* object) noexcept {
+  std::launder(static_cast<T*>(object))->~T();
+}
+
 // inline_storage<T>: the bytes of a T, inside the injector (singleton_inline). Whether they hold
 // a T is the slot's state, which serves as the engaged flag, so there is no flag here. The
 // teardown stack destroys the object; the storage's own destructor does nothing.
@@ -184,13 +191,11 @@ class inline_storage {
   template <class Build>
   teardown_entry construct(Build& build) {
     build(bytes_.data());
-    return {&destroy, bytes_.data()};
+    return {&destroy_object<T>, bytes_.data()};
   }
   T& object() noexcept { return *std::launder(reinterpret_cast<T*>(bytes_.data())); }
 
  private:
-  static void destroy(void* object) noexcept { std::launder(static_cast<T*>(object))->~T(); }
-
   alignas(T) std::array<std::byte, sizeof(T)> bytes_;
 };
 
@@ -274,12 +279,6 @@ struct shared_holder {
   alignas(Align) std::array<std::byte, bytes_size> bytes;
   destroy_fn destroy = nullptr;
 };
-
-// Destroys the T built at `object`.
-template <class T>
-void destroy_object(void* object) noexcept {
-  std::launder(static_cast<T*>(object))->~T();
-}
 
 // make_shared_object<T, Element>(build): a new T, built by build, owned by a
 // std::shared_ptr<Element> (Element is T, a base of T, or void) that holds it and its control

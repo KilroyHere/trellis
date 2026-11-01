@@ -40,11 +40,11 @@ namespace trellis::error {
 /// @brief The error type of TRL-E002, type not constructible, for an explicit constructor
 ///        declaration that matches no constructor of the type, and for a copy that can't be made.
 ///
-/// Users never name it: it appears in the compiler's output when `std::is_constructible_v<T,
-/// Args...>` is false for a declared `trellis::ctor<Args...>`, so that the error shows which type
-/// and which declaration disagree (ADR-0006). `create<T>()` also raises it when a by-value request
-/// needs a copy of a bound object, or of a new object of a derived class, that `T` can't be
-/// constructed from.
+/// Users never name it: it appears in the compiler's output when a declared
+/// `trellis::ctor<Args...>` can't build `T` the way Trellis builds it (see `trellis::ctor`), so
+/// that the error shows which type and which declaration disagree (ADR-0006), and when deduction
+/// finds no constructor to call. `create<T>()` also raises it when a by-value request needs a copy
+/// of a bound object, or of a new object of a derived class, that `T` can't be constructed from.
 ///
 /// @tparam T The type that can't be constructed as declared, or as the request needs.
 /// @tparam Declared The declaration: a `trellis::ctor<Args...>` whose parameters no constructor

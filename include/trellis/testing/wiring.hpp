@@ -69,24 +69,11 @@ struct accepted<injector<Opts, Parts...>> {
 
 // singletons_build<Injector>: with options{.eager = true}, whether every singleton of the injector
 // can be built, which make_injector needs, as it builds them; true, without looking, for an
-// injector that isn't eager. The checks are the memoized can_resolve<Key&> of create<Key&>().
-template <class Injector, class Binding, bool Owned = owns_object<Binding>>
-inline constexpr bool singleton_builds = true;
-template <class Injector, class Binding>
-inline constexpr bool singleton_builds<Injector, Binding, true> =
-    context<Injector, unique_t>::template can_resolve<typename binding_traits<Binding>::key&>;
-
-template <class Injector, class Bindings>
-inline constexpr bool every_singleton_builds = false;
-template <class Injector, class... Bindings>
-inline constexpr bool every_singleton_builds<Injector, type_list<Bindings...>> =
-    first_true({!singleton_builds<Injector, Bindings>...}) == sizeof...(Bindings);
-
-template <class Injector, bool Eager = injector_traits<Injector>::opts.eager>
-inline constexpr bool singletons_build = true;
+// injector that isn't eager. It is make_injector's own check, eager_fails (static/injector.hpp),
+// which reads the memoized can_resolve<Key&> of create<Key&>() for each singleton.
 template <class Injector>
-inline constexpr bool singletons_build<Injector, true> =
-    every_singleton_builds<Injector, typename injector_traits<Injector>::bindings>;
+inline constexpr bool singletons_build =
+    !eager_fails<injector_traits<Injector>::opts.eager, Injector>;
 
 // makeable<Injector>: whether make_injector makes an injector of this type, from arguments of its
 // argument types, passed as rvalues: the checks of accepted, then a sound set of bindings (no key

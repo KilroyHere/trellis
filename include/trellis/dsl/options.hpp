@@ -139,9 +139,8 @@ struct options {
   ///
   /// @par Example
   /// @code
-  /// auto injector = trellis::make_injector<trellis::options{.threading =
-  /// trellis::threading::none}>(
-  ///     app_module());
+  /// constexpr trellis::options single_threaded{.threading = trellis::threading::none};
+  /// auto injector = trellis::make_injector<single_threaded>(app_module());
   /// @endcode
   ::trellis::threading threading = ::trellis::threading::safe;
 

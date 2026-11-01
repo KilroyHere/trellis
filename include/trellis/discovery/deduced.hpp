@@ -20,7 +20,7 @@
 //    the discovered arity, so an unresolvable parameter can't select a shorter constructor.
 //
 // Deduction can't name the parameter types (ADR-0003, plan §5.3: "an arity in deduced mode"), so
-// discovered_ctor_t, the one entry point for every mode, gives ctor<probe_arg<T>, ...>: one
+// discovered_ctor_t, discovery's checked result in every mode, gives ctor<probe_arg<T>, ...>: one
 // placeholder per parameter, each standing for the request it deduces when the engine replaces it
 // with any_arg. A declared ctor<Args...> lists the parameter types instead.
 #ifndef TRELLIS_DISCOVERY_DEDUCED_HPP
@@ -201,12 +201,12 @@ concept probes_at =
 // parentheses, also for an aggregate, except on MSVC (TRELLIS_AGGREGATE_CHECKS_WITH_BRACES,
 // config.hpp). Parentheses never elide braces, so an aggregate accepts the inert arguments only if
 // each of its deduced members accepts one directly, as a member whose type accepts anything does.
-// With braces, an inert argument that converts to
-// no member of aggregate class type was tried on that member's first member, and so on down, so
-// an aggregate holding an aggregate that holds such a member was itself TRL-E004: deduction takes
-// the member as one request, whose own deduction reports the member that accepts anything. The
-// elision also nested one level of Clang's stack per aggregate below, which stopped Apple Clang's
-// chain of aggregates before 200 hops (docs/internals/deduction.md).
+// With braces, an inert argument that converts to no member of aggregate class type was tried on
+// that member's first member, and so on down, so an aggregate holding an aggregate that holds such
+// a member was itself TRL-E004: deduction takes the member as one request, whose own deduction
+// reports the member that accepts anything. The elision also nested one level of Clang's stack per
+// aggregate below, which stopped Apple Clang's chain of aggregates before 200 hops
+// (docs/internals/deduction.md).
 template <class T, class Indices>
 inline constexpr bool accepts_inert = false;
 template <class T, std::size_t... Is>
@@ -566,15 +566,16 @@ constexpr auto discover() {
   }
 }
 
-// discovered_ctor_t<T, BindingCtor, MaxArity>: the one entry point into constructor discovery, in
-// every mode (plan §5.3 step 3.3): the declaration that applies, ctor<Args...> with the declared
+// discovered_ctor_t<T, BindingCtor, MaxArity>: constructor discovery's checked result, in every
+// mode (plan §5.3 step 3.3): the declaration that applies, ctor<Args...> with the declared
 // parameter types, or else the deduced ctor<probe_arg<T>, ...> with one placeholder per parameter.
 // Checked: each mistake is one static_assert, TRL-E002 (a declaration that lies, or no constructor
 // to deduce), TRL-E004 (an ambiguous constructor) or TRL-E010 (above the bound); after it the type
-// is no_ctor_declared, so nothing else fails. MaxArity is the injector's max_ctor_arity, which
-// create<T>() passes (T1.5). BindingCtor is for a binding's .with_ctor<Args...>(), as for
-// explicit_ctor_t: create<T>() passes the declaration of the class's binding, or
-// no_ctor_declared (static/resolve.hpp, served_binding; T1.15). cv-qualifiers are stripped.
+// is no_ctor_declared, so nothing else fails. MaxArity is an injector's max_ctor_arity, and
+// BindingCtor is for a binding's .with_ctor<Args...>(), as for explicit_ctor_t. create<T>() doesn't
+// name this type: with the same arguments, the class's binding's declaration or no_ctor_declared
+// (static/resolve.hpp, served_binding; T1.15), its normal pass asks discoverable_v, and its explain
+// pass raises discovery_report (diagnostics/explain.hpp). cv-qualifiers are stripped.
 template <class T, class BindingCtor = no_ctor_declared,
           std::size_t MaxArity = default_max_ctor_arity>
 using discovered_ctor_t = decltype(detail::discover<std::remove_cv_t<T>, BindingCtor, MaxArity>());
@@ -600,19 +601,19 @@ inline constexpr bool discoverable_v =
 
 // deduced_constructible_v<T, Arity, Ctx>: whether T, at its deduced arity, is constructible with
 // every parameter resolved by Ctx: the deleted twins make it false when a request can't be served.
-// The engine's resolvable check for a deduced type (T1.5), so it sits on the resolution path once
-// per hop, and each template between it and the check costs a level of instantiation depth per hop
-// of a dependency chain (NFR-09, docs/internals/deduction.md). So it is itself the specialization
-// that expands the arity and makes the check, through parameters that callers never pass: Class is
-// T without cv-qualifiers, Indices the arity as a sequence, and Aggregate selects the check. For a
-// class built with parentheses, the check is builds_from's construction rule (ctor_traits.hpp),
-// written out rather than called: a call would be one more level per hop. An aggregate differs by
-// design: builds_from uses braces, and this check parentheses, except on MSVC
-// (TRELLIS_AGGREGATE_CHECKS_WITH_BRACES, config.hpp), as braces would elide into a member whose
-// request fails, where the deleted twin is selected, and Clang would then build that member from
-// its own members' requests. tests/unit/deduced_test.cpp checks that the two agree wherever no such
-// member fails. Once every member's request resolves, the braces of construct_deduced initialize
-// each member directly.
+// The engine's check of a deduced class is the same, written out in its nodes with the
+// __is_constructible builtin (static/resolve.hpp, node_v and can_resolve), which saves a level of
+// instantiation depth per hop of a dependency chain (NFR-09); tests/unit/create_test.cpp checks
+// that they agree with this one. It is itself the specialization that expands the arity and makes
+// the check, through parameters that callers never pass: Class is T without cv-qualifiers, Indices
+// the arity as a sequence, and Aggregate selects the check. For a class built with parentheses,
+// the check is builds_from's construction rule (ctor_traits.hpp), written out rather than called.
+// An aggregate differs by design: builds_from uses braces, and this check parentheses, except on
+// MSVC (TRELLIS_AGGREGATE_CHECKS_WITH_BRACES, config.hpp), as braces would elide into a member
+// whose request fails, where the deleted twin is selected, and Clang would then build that member
+// from its own members' requests. tests/unit/deduced_test.cpp checks that the two agree wherever
+// no such member fails. Once every member's request resolves, the braces of construct_deduced
+// initialize each member directly.
 template <class T, std::size_t Arity, class Ctx, class Class = std::remove_cv_t<T>,
           class Indices = std::make_index_sequence<Arity>,
           bool Aggregate = std::is_aggregate_v<Class>>
@@ -634,8 +635,9 @@ TRELLIS_PLACEHOLDER_CONVERSIONS_BEGIN
 
 // construct_deduced<T, Arity>(ctx): a T, without its cv-qualifiers, built from Arity resolving
 // placeholders as discovery probed it: with braces for an aggregate, otherwise with parentheses. A
-// prvalue, so T needn't be movable, and the engine can initialize storage from it directly. T must
-// satisfy deduced_constructible_v.
+// prvalue, so T needn't be movable. The engine's creation code builds the same way in functions of
+// its own (static/resolve.hpp, build), one function level per hop rather than two. T must satisfy
+// deduced_constructible_v.
 template <class T, class Ctx, std::size_t... Is>
 T construct_deduced_from(Ctx& ctx, std::index_sequence<Is...> /*arity*/) {
   if constexpr (std::is_aggregate_v<T>) {

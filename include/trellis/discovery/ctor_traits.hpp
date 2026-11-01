@@ -21,9 +21,11 @@
 // type everywhere. The plan doesn't rank the binding against the other two, so that order is this
 // task's reading (docs/internals/constructor-discovery.md).
 //
-// A declaration can't lie (plan §7.2): detail::explicit_ctor_t checks
-// std::is_constructible_v<C, Args...> and reports a declaration that matches no constructor as one
-// compile error, the type-not-constructible error of plan §7.8, rendered as ADR-0006 says.
+// A declaration can't lie (plan §7.2): detail::ctor_matches_v checks it against how a C will be
+// built (builds_from), and a declaration that matches no constructor is one compile error, the
+// type-not-constructible error of plan §7.8, rendered as ADR-0006 says: detail::explicit_ctor_t
+// raises it, and so does create<T>()'s explain pass for a class it reaches
+// (diagnostics/explain.hpp).
 #ifndef TRELLIS_DISCOVERY_CTOR_TRAITS_HPP
 #define TRELLIS_DISCOVERY_CTOR_TRAITS_HPP
 
@@ -285,9 +287,10 @@ constexpr auto checked_ctor() noexcept {
 
 // explicit_ctor_t<T, BindingCtor>: the explicit strategy's result for T, checked: the declaration
 // that applies, or no_ctor_declared, which leaves T to the next strategy. T's cv-qualifiers are
-// ignored, as in declared_ctor_t. This is the static engine's way into explicit discovery. It is
-// memoized per (T without cv-qualifiers, declaration), so each declaration is checked, and
-// reported, once.
+// ignored, as in declared_ctor_t. discovered_ctor_t (discovery/deduced.hpp) goes through it; the
+// static engine reads declared_ctor and ctor_matches_v instead, and reports through its explain
+// pass. It is memoized per (T without cv-qualifiers, declaration), so each declaration is checked,
+// and reported, once.
 //
 // Two choices keep its errors short. It names declared_ctor directly rather than through
 // declared_ctor_t, because each alias between them adds a note to every error raised inside

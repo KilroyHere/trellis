@@ -132,9 +132,9 @@ A member that is itself an aggregate with an array is one field, requested as it
 
 ## Building a deduced type
 
-**What it does.** `construct_deduced<T, Arity>(ctx)` returns `T{any_arg<T, Ctx>{ctx}...}` for an aggregate and `T(any_arg<T, Ctx>{ctx}...)` otherwise, as discovery probed it, with `T` stripped of cv-qualifiers. It returns a prvalue, so T needn't be movable and the engine can initialize storage from it directly. `deduced_constructible_v<T, Arity, Ctx>` is the same check with `any_arg`: the engine's resolvable test for a deduced type (T1.5).
+**What it does.** `construct_deduced<T, Arity>(ctx)` returns `T{any_arg<T, Ctx>{ctx}...}` for an aggregate and `T(any_arg<T, Ctx>{ctx}...)` otherwise, as discovery probed it, with `T` stripped of cv-qualifiers. It returns a prvalue, so T needn't be movable. `deduced_constructible_v<T, Arity, Ctx>` is the same check with `any_arg`, which the engine's nodes write out (below).
 
-`deduced_constructible_v` is on the resolution path once per hop, so it is itself the specialization that expands the arity and makes the check, through parameters callers never pass (`T` without cv-qualifiers, the arity as an index sequence, and a `bool` that selects braces or parentheses). The check is `builds_from`'s rule written out, not a call, which would cost a level per hop; a test checks that the two agree.
+`deduced_constructible_v` is itself the specialization that expands the arity and makes the check, through parameters callers never pass (`T` without cv-qualifiers, the arity as an index sequence, and a `bool` that selects braces or parentheses), as it was written for the resolution path, where every level counts once per hop; T1.5's nodes took its place there (below). The check is `builds_from`'s rule written out, not a call; a test checks that the two agree.
 
 **Tests:** `tests/unit/deduced_test.cpp`: `EachFormResolvesToTheRequestS1Recorded`, `ResolutionDeliversTheServedObjects`, `DefaultedParameterIsInjected`, `AggregateFieldsAreInjected`, `ConstConsumerRequestsItsParameterNotItself`, and the `rule_agrees` static_asserts.
 
@@ -160,7 +160,7 @@ T1.5's engine evaluates a deduced class with its own node, `node_v` in `static/r
 
 ## Notes for the engine
 
-- T1.5 must ask `discoverable_v` before it reads `discovered_ctor_t<...>::args`: after a failed discovery the type is `no_ctor_declared`, which has no `args`, so reading it adds a second error. (T1.5 asks `discoverable_v` in its plan and names `discovered_ctor_t` only to report a failure, so it never reads `args` after one.)
+- T1.5 must ask `discoverable_v` before it reads `discovered_ctor_t<...>::args`: after a failed discovery the type is `no_ctor_declared`, which has no `args`, so reading it adds a second error. (T1.5 asks `discoverable_v` in its plan and never names `discovered_ctor_t`: since T1.6 its explain pass reports a failure through `discovery_report`.)
 - A failure is reported once per (T, binding declaration, bound): one greedy type used by two injectors with different `max_ctor_arity` gives two TRL-E004s, one per bound. That is acceptable, since each injector's options are its own.
 
 ## The compiler workarounds
