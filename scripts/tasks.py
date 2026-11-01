@@ -22,8 +22,11 @@ import argparse
 import datetime
 import hashlib
 import json
+import os
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -50,18 +53,29 @@ def git(*args):
 
 
 def tree_fingerprint():
-    """Hash of HEAD plus every uncommitted change outside the bookkeeping files."""
-    excludes = [f":(exclude){path}" for path in BOOKKEEPING]
-    h = hashlib.sha256()
-    h.update(git("rev-parse", "HEAD"))
-    h.update(git("diff", "HEAD", "--binary", "--", ".", *excludes))
-    untracked = git("ls-files", "--others", "--exclude-standard", "-z").decode().split("\0")
-    for name in sorted(n for n in untracked if n and n not in BOOKKEEPING):
-        h.update(name.encode())
-        path = ROOT / name
-        if path.is_file():
-            h.update(path.read_bytes())
-    return h.hexdigest()
+    """The git tree of the working copy's content outside the bookkeeping files: the tracked files
+    as they are on disk, and the untracked files that aren't ignored.
+
+    It names content, not commits: committing a change keeps the fingerprint, and so does a commit
+    that changes only docs/tasks.json or docs/PROGRESS.md (a pass, a progress entry).
+    """
+    with tempfile.TemporaryDirectory() as scratch:
+        index = Path(scratch) / "index"
+        env = {**os.environ, "GIT_INDEX_FILE": str(index)}
+
+        def run(*args):
+            return subprocess.run(["git", *args], cwd=ROOT, env=env, capture_output=True,
+                                  check=True).stdout
+
+        # A copy of the real index keeps its file stats, so `add` hashes only changed files.
+        real_index = ROOT / git("rev-parse", "--git-path", "index").decode().strip()
+        if real_index.is_file():
+            shutil.copyfile(real_index, index)
+        else:
+            run("read-tree", "HEAD")
+        run("add", "--all", "--", ".", *(f":(exclude){path}" for path in BOOKKEEPING))
+        run("rm", "--cached", "--quiet", "--ignore-unmatch", "--", *BOOKKEEPING)
+        return run("write-tree").decode().strip()
 
 
 def passed_ids(tasks):

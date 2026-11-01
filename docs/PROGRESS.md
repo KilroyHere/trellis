@@ -125,6 +125,14 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - `next --all` lists every ready task.
 - **docs/agent/PROMPTS.md:** Prompt H, the orchestrator's prompt. Prompt B and the habits no longer ask for one builder at a time.
 - **Unchanged:** the session-start hook still says "one task", which holds for each builder. Hooks are the owner's to edit.
+- **Later the same day: the verify fingerprint is content-based.**
+  - It is now the git tree of the working copy's content without the bookkeeping files, not HEAD's commit plus the diff. So committing verified work, or committing a pass or a progress entry, keeps the verify records and cached results valid.
+  - It was tested in a throwaway clone:
+    - bookkeeping commits keep it;
+    - code changes change it, and committing them keeps it;
+    - ignored files don't count, while untracked files and deletions do;
+    - the real index is untouched.
+  - A call takes 0.16 s.
 
 ## 2026-11-01: T1.14 v0.1 budgets, with T1.9's benchmarks (landed; two Clang budgets await the owner)
 
