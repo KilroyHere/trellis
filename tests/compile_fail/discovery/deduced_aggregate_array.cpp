@@ -3,6 +3,9 @@
 // expect-regex: TRL-E004: ambiguous constructor: an aggregate with an array member
 // expect-regex: E004<app::ports>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E004: ambiguous constructor: an aggregate with an array member
+// expect-regex-msvc: E004<T>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +T=app::ports(?:,|$)
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 20
 //
 // GCC and Clang would count the array's two elements as two fields and MSVC the array as one

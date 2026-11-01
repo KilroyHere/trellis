@@ -4,6 +4,10 @@
 // expect-regex: E002<app::endpoint,
 // expect-regex: trellis::(v1::)?ctor<double, double> ?>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E002: type not constructible: .*brace-initialize the aggregate
+// expect-regex-msvc: E002<app::endpoint,
+// expect-regex-msvc: E002<app::endpoint,trellis::v1::ctor<double,double>>
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 20
 //
 // The static engine builds an aggregate with braces (ADR-0003), and the check follows suit, so

@@ -3,6 +3,9 @@
 // expect-regex: TRL-E002: type not constructible: it is incomplete here
 // expect-regex: E002<app::pending, trellis::(v1::)?detail::no_ctor_declared ?>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E002: type not constructible: it is incomplete here
+// expect-regex-msvc: E002<T,trellis::v1::detail::no_ctor_declared>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +T=app::pending(?:,|$)
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 20
 //
 // Every probe and type trait that deduction uses needs the class's definition, and without the

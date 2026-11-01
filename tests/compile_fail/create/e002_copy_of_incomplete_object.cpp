@@ -3,6 +3,9 @@
 // expect-regex: TRL-E002: type not constructible: a by-value request takes a copy of the bound object
 // expect-regex: trellis::error::E002<app::opaque, ?trellis::error::request<app::opaque> ?>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E002: type not constructible: a by-value request takes a copy of the bound object
+// expect-regex-msvc: trellis::error::E002<app::opaque,trellis::error::request<R>>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +R=app::opaque(?:,|$)
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
 //
 // A binding of an object whose type is only declared serves its pointer and reference requests

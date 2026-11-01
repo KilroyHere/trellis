@@ -3,6 +3,9 @@
 // expect-regex: TRL-E002: type not constructible: deduction found no public, non-deleted, unambiguous constructor
 // expect-regex: E002<app::client, trellis::(v1::)?detail::no_ctor_declared ?>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E002: type not constructible: deduction found no public, non-deleted, unambiguous constructor
+// expect-regex-msvc: E002<T,trellis::v1::detail::no_ctor_declared>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +T=app::client(?:,|$)
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 20
 //
 // std::optional's converting constructor template accepts the placeholder itself, which competes

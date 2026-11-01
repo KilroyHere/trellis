@@ -3,6 +3,10 @@
 // expect-regex: app::b
 // expect-regex: \A(?![\s\S]*(?:recursive template instantiation exceeded|template instantiation depth exceeds|too many errors emitted))
 // expect-regex: \A(?!(?:[\s\S]*?(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: ){7})
+// expect-regex-msvc: error C7608: atomic constraint should be a constant expression|error C2131: expression did not evaluate to a constant
+// expect-regex-msvc: app::b
+// expect-regex-msvc: \A(?![\s\S]*(?:recursive template instantiation exceeded|template instantiation depth exceeds|too many errors emitted|\bC1202\b|\bC2999\b|\bC1003\b))
+// expect-regex-msvc: \A(?!(?:[\s\S]*?(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: ){7})
 // expect-max-lines: 217
 //
 // make_injector checks every singleton first and runs the explain pass for the first that can't

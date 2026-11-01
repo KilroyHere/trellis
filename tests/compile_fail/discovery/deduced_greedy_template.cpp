@@ -3,6 +3,9 @@
 // expect-regex: TRL-E004: ambiguous constructor: a constructor template or variadic constructor
 // expect-regex: E004<app::greedy>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E004: ambiguous constructor: a constructor template or variadic constructor
+// expect-regex-msvc: E004<T>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +T=app::greedy(?:,|$)
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 20
 //
 // The only constructor is a template that takes anything, so the one argument it would get says

@@ -2,6 +2,9 @@
 // expect-regex: a member alias trellis_ctor must name trellis::ctor<Args\.\.\.>
 // expect-regex: member_ctor<app::service>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: a member alias trellis_ctor must name trellis::ctor<Args\.\.\.>
+// expect-regex-msvc: member_ctor<T>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +T=app::service(?:,|$)
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 20
 //
 // Without the check, an alias that names a class other than a ctor would be ignored without a

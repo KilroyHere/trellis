@@ -4,6 +4,10 @@
 // expect-regex: trellis::error::E013<app::gear, ?trellis::error::request<app::gear> ?>
 // expect-regex: trellis::error::path<app::car, ?app::engine>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E013: unbound concrete type requested in strict mode
+// expect-regex-msvc: trellis::error::E013<app::gear,trellis::error::request<R>>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +R=app::gear(?:,|$)
+// expect-regex-msvc: trellis::error::path<app::truck,app::engine>
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
 //
 // Strict mode turns off the implicit unique binding, so engine's declared parameter gear, which

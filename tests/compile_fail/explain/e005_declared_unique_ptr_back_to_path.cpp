@@ -4,6 +4,10 @@
 // expect-regex: trellis::error::E005<app::a, ?trellis::error::request<std::unique_ptr<app::a(, ?std::default_delete<app::a> ?)?> ?>, ?trellis::(v1::)?singleton_t ?>
 // expect-regex: trellis::error::path<app::a, ?app::b>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E005: request form incompatible with the lifetime: std::unique_ptr would duplicate ownership of a shared object
+// expect-regex-msvc: trellis::error::E005<app::a,trellis::error::request<R>,trellis::v1::singleton_t>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +R=std::unique_ptr<app::a,std::default_delete<app::a>>(?:,|$)
+// expect-regex-msvc: trellis::error::path<app::a, ?app::b>
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
 //
 // As explain/e005_unique_ptr_back_to_path.cpp, with b's constructor declared, which the explain

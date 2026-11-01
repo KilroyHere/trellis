@@ -2,6 +2,9 @@
 // expect-regex: (use of deleted function|invokes a deleted function)
 // expect-regex: (T = int|to 'int')
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: error C2280: 'trellis::v1::detail::any_arg<app::pool,Ctx>::operator T\(void\)<int>': attempting to reference a deleted function
+// expect-regex-msvc: error C2280: [^\n]*[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +T=int(?:,|$)
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 30
 //
 // Deduction counts the defaulted int, so the arity is 2 and the int is requested, never left to

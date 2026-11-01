@@ -4,6 +4,10 @@
 // expect-regex: did you mean trellis::bind\?
 // expect-regex: trellis::error::E009<app::clock, ?trellis::(v1::)?binding<app::clock, ?app::fake_clock
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E009: override without an existing binding
+// expect-regex-msvc: did you mean trellis::bind\?
+// expect-regex-msvc: trellis::error::E009<app::clock,Override>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +Override=main::override_binding(?:,|$)
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
 //
 // An override replaces the binding of its key that the injector's other bindings provide (plan

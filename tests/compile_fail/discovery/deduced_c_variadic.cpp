@@ -3,6 +3,9 @@
 // expect-regex: TRL-E004: ambiguous constructor: a constructor template or variadic constructor
 // expect-regex: E004<app::c_variadic>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E004: ambiguous constructor: a constructor template or variadic constructor
+// expect-regex-msvc: E004<T>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +T=app::c_variadic(?:,|$)
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 20
 //
 // An ellipsis accepts any arguments, as a variadic template does (spike S1 §3.5). The entry point
