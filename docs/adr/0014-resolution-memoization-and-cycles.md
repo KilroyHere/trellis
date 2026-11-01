@@ -129,6 +129,7 @@ Spike S2 measured three strategies on S1's injector stub, with identical creatio
     | clang-20 | 241 (stack) | 305 (stack) |
 
   - NFR-09 holds on Apple Clang, with 13 hops to spare for aggregates.
+  - GCC 13 and 14 reach 296–298 hops in every request form and 298 for aggregates. These were re-recorded in `tests/chain_depth/deepest.json` on 88c0eda, with Clang 18 and 20 as in the table.
 - **2026-11-01, MSVC measured.** These are after the Apple fix: run 41349651148 for the deepest chains, run 41352149959 for the 200- and 150-hop tests.
   - The deepest chains:
 
