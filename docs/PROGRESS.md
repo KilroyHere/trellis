@@ -21,6 +21,11 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - **D5, runtime container in 1.0: yes.** Phase 5 (plugins and registration at run time) is in the 1.0 scope, and T5.0 expands it normally. Recorded in ADR-0002 and plan §16.
   - **Error vocabulary namespace:** the compile-error types live in `trellis::error`, outside `inline namespace v1`, as one documented exception. Recorded in ADR-0006 and CLAUDE.md.
   - **Scope of the 2026-10-30 acceptance:** read as covering every recommendation in the S1 and S4 reports, including R004 detection in all builds, retry on throw, both teardown-ordering rules, and T&& treated as T. Say so if any of these should be revisited.
+- **2026-11-01, Phase 1 decisions**, answered in the session with the recommended options:
+  - **NFR-07 (1A):** the 40 lines are counted without the include chain and the user's call-site excerpt. T1.6's acceptance is amended (docs/task-amendments.md), and plan §3.2 and ADR-0006 are updated.
+  - **NFR-03 on Clang (2a):** +0.38 s is accepted for v0.1, and a Phase 2 task brings it within +0.3 s.
+  - **NFR-06 on Clang (3a):** +8,240 B is accepted, as libstdc++'s `atomic::wait` floor. The acceptance and verify lines of T1.9 and T1.14 are amended; budgets.json is unchanged and stays strict.
+  - **MSVC compile-fail expectations (4a):** approved: add MSVC alternatives to the protected compile-fail tests that expect GCC/Clang wording, keeping the same strictness on GCC and Clang.
 - **Defaults taken from plan §16**, unchanged so far:
   - D2: C++20 baseline.
   - D3: Boost Software License 1.0.
@@ -35,20 +40,10 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - (a) keep NFR-13's minimum, 19.38, and use a 150-hop bound on MSVC before 19.50: the provisional text, measured to give exactly one TRL-E007 on cl 19.44;
   - (b) raise NFR-13's MSVC minimum to 19.51. 19.45 to 19.50 can't be measured on GitHub's image, so 19.50 is only an assumed boundary.
   Not blocking until the cycle check lands in Phase 2.
-- **NFR-07, error length (T1.6), blocks marking T1.6 passing.** Common layouts give 14–33 lines. A chain alternating by-value and by-reference requests reaches 41–49 lines on GCC 14 and 39–43 on Clang, which is inherent to ADR-0003's two-operator design. Options:
-  - (A) don't count lines the user's own layout produces: the include chain and the call-site excerpt. Every measured case then meets 40. Recommended;
-  - (B) raise the limit to 50 for such chains;
-  - (C) keep 40 and redesign constructor discovery.
-  Asked on 2026-11-01.
-- **Performance budgets missed (T1.9).** NFR-04 (1.68× / 1.78× against 1.3×), NFR-06 on Clang (+12,352 B against +8 KB) and NFR-03 on Clang (+0.31 s against +0.3 s). These are Phase 1 exit criteria. The plan is T1.14: generate less code per binding and per singleton, then re-measure on a quiet machine. Budgets stay unchanged unless you decide otherwise. Also: is NFR-06's "KB" 1,000 or 1,024 bytes? GCC lands exactly on +8,192 B.
 - **New error IDs TRL-E013 and TRL-E014 (T1.5), provisional.** ADR-0006 says an ID never changes meaning, and the catalog's process gives a new mistake the next free number. So these are new IDs, not wider meanings for E001 and E005:
   - TRL-E013: an unbound concrete type requested under `options{.strict = true}`;
   - TRL-E014: a `unique_ptr<I>` request that would delete an implementation through a non-virtual `~I`.
   Both are recorded in plan §7.8 and ADR-0006's History. Confirm them, or rename or fold them.
-- **Compile-fail expectations on MSVC (platform fixes).** 28 compile-fail tests encode GCC/Clang output that cl never prints: the error type in the static_assert condition, `, ` inside template argument lists, and deleted-function wording. They are protected, so changing them is your decision. Options:
-  - (a) approve compiler-scoped alternatives in those tests, such as MSVC's `error C2338: static_assert failed: 'TRL-E0xx: ...'` form, as T1.4's tests already do;
-  - (b) keep them red on Windows until Phase 4 implements ADR-0006's MSVC mitigation, which names the error type in the first instantiation note.
-  Recommendation: (a) for the ID and the one-error line budget now, and (b) for the error type. The platforms run stays red on Windows until you decide. T1.10's release gate needs it green or an explicit exception.
 - **T1.3's amendments to ADR-0003, provisional.**
   - An abstract type is TRL-E002 at discovery; E001 stays with the engine for an unbound abstract key.
   - An aggregate member that no placeholder can initialize is TRL-E004, where S1 silently value-initialized the rest.
