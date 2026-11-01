@@ -6,7 +6,7 @@ Trellis is a header-only C++20 dependency injection library (pre-alpha). The des
 
 The project runs across many sessions. The task list, the progress log and the git history are the only memory between them, so keep them accurate.
 
-1. **Orient.** Run `pwd`, `git log --oneline -15` and `git status`, and read the newest entries of `docs/PROGRESS.md`. Then run `scripts/tasks.py next`, which names the task to work on. Work on that one task only. If the log and git history say something is done, trust them; don't redo it.
+1. **Orient.** Run `pwd`, `git log --oneline -15` and `git status`, and read the newest entries of `docs/PROGRESS.md`. Then run `scripts/tasks.py next`, which names the task to work on. A builder works on that one task only; an orchestrator running a team (see Parallel team) takes every task `scripts/tasks.py next --all` lists. If the log and git history say something is done, trust them; don't redo it.
 2. **Smoke test.** Run `scripts/init.sh` before changing anything (it arrives with T0.1). If something is already broken, fixing it comes first.
 3. **Plan.** Read only the plan and ADR sections the task cites. For anything beyond a small change, write a short plan first: files to touch, tests to add, and the commands that will prove the task is done. Where the plan is ambiguous, pick the simplest reading, mark it `[NEEDS CLARIFICATION: ...]` in the progress entry, and carry on.
 4. **Test first.** Add tests that encode the acceptance criteria. These can be unit tests, compile-fail tests or golden tests. Run them and confirm they fail for the right reason before you implement.
@@ -14,7 +14,18 @@ The project runs across many sessions. The task list, the progress log and the g
 6. **Verify.** `scripts/tasks.py verify <id>` runs the task's verify commands and saves the evidence. Quote its summary lines.
 7. **Review.** Ask the `reviewer` subagent to review the change. Fix blocking issues, then verify again.
 8. **Record.** `scripts/tasks.py pass <id>` (it refuses unless the last verify passed on the current tree). Then add a `docs/PROGRESS.md` entry: what changed, the evidence, follow-ups, and benchmark numbers if any. Then commit and push.
-9. **Stop.** The next task gets a fresh session.
+9. **Stop.** The next task gets a fresh builder: a new session, or a new worktree subagent when an orchestrator runs the team.
+
+## Parallel team
+
+Parallel work is the default. One orchestrator session runs several builders at once and keeps the shared memory consistent.
+
+- **Roles.** A builder is a subagent in its own git worktree (`isolation: worktree`) with one task and a written brief. It follows steps 2–7 and commits on its branch. The orchestrator writes the briefs, runs the reviewer on each finished branch (subagents can't start subagents), squash-lands it on main, then verifies, passes, records and pushes. Only the orchestrator changes main, `docs/tasks.json` and `docs/PROGRESS.md`.
+- **What runs at once.** Every task that `scripts/tasks.py next --all` lists, plus any task whose dependency is written but not yet landed. Branch it from the dependency's head, and once that lands, `git rebase --onto main <old-head>`. Prefer tasks that touch different files; when two must share one, land the smaller first.
+- **Machine.** At most three builders, each with `-j2` and its own worktree's build directories. The benchmarks time wall clock, so run `bench-compile.sh`, `bench-runtime.sh` and the verifies that include them only on a quiet machine (1-minute load under 1.5): before the builders start, or while they wait on CI.
+- **One verify per tree.** Land a batch, then verify each of its tasks on that one tree. `tasks.py verify` reuses a command that already passed on the same tree, so one `check-full.sh` serves them all. Pass them in dependency order, then commit the bookkeeping once: `docs/tasks.json` and `docs/PROGRESS.md` are outside the fingerprint, but a commit changes HEAD, which is inside it.
+- **CI.** Platform runs are slow and billed by the minute. Batch the fixes, dispatch only the platform a change affects (`gh workflow run platforms.yml --ref <branch> -f os=windows`), and give each platform to one builder at a time.
+- **Restarts.** A container restart kills every builder. Builders commit as they go; the orchestrator pushes finished work at once and schedules a check-in (`send_later`) before a long wait.
 
 ## Commands
 
@@ -30,7 +41,8 @@ The project runs across many sessions. The task list, the progress log and the g
 - Compile-time budgets: `scripts/bench-compile.sh --quick`. Runtime: `scripts/bench-runtime.sh`
 - CI status and the first errors of failed jobs: `scripts/ci-status.sh`. MSVC and macOS run only in CI.
 - Lint changed lines: `scripts/tidy.sh`. Formatting is automatic: a hook runs clang-format-18 on edited files.
-- Tasks: `scripts/tasks.py next | show <id> | list [--phase N] | verify <id> | pass <id> | add <file.json>`
+- Tasks: `scripts/tasks.py next [--all] | show <id> | list [--phase N] | verify <id> [--fresh] | pass <id> | add <file.json>`
+- `tasks.py verify` runs its commands against the build directories as they are, so configure and build the presets they name first (after landing or pulling, `scripts/init.sh` covers clang-18-debug); a stale directory makes ctest find no tests. A command that already passed on the same tree, for any task, passes again without running; `--fresh` runs it.
 
 Build output is long. Scripts write full logs to `build/logs/` and print a summary. Read the log only for the first error, not all of it.
 
@@ -63,6 +75,7 @@ The skeletons for these arrive with T1.12.
 - Every public header compiles on its own. Code is warning-free under the project warning set with `-Werror`.
 - Every metaprogramming trick gets a comment saying what it does and why, plus a test.
 - Errors use the stable IDs in plan §7.8 (`TRL-E0xx`, `TRL-R0xx`). Each root cause produces exactly one `static_assert`. Never report misuse through warnings, deprecation or link errors.
+- Raise an error from a function read through `decltype`, or from a constructor, not from a class template's body: Clang marks a class template whose `static_assert` failed as invalid and reports every later use again. Give each error a compile-fail test that writes the misuse twice, which catches this.
 
 ## Compile-time performance (plan §8.1)
 

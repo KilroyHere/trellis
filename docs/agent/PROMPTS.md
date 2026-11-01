@@ -1,6 +1,6 @@
 # Building Trellis with Claude Code: prompts and setup
 
-This repository is set up for the multi-session pattern from Anthropic's "Effective harnesses for long-running agents": a one-time setup session, then one task per session, with state on disk. It also follows the verification and review practices from the Claude Code best-practices guide. The research behind each choice is in `research/research_notes/Claude Code implementation practices/`.
+This repository is set up for the multi-session pattern from Anthropic's "Effective harnesses for long-running agents": a one-time setup session, then one task per builder, with state on disk. Several builders run at once under one orchestrating session (Prompt H), which alone writes main and the bookkeeping. It also follows the verification and review practices from the Claude Code best-practices guide. The research behind each choice is in `research/research_notes/Claude Code implementation practices/`.
 
 ## What the kit contains
 
@@ -30,7 +30,7 @@ This repository is set up for the multi-session pattern from Anthropic's "Effect
 
 ## Prompt A: every work session
 
-Start a fresh session, then type `/next-task`, or paste this:
+Start a fresh session, then type `/next-task`, or paste this. To work through several tasks at once, use Prompt H instead.
 
 > You're continuing work on Trellis, a header-only C++20 dependency injection library. The project runs across many sessions, and the task list, the progress log and the git history are the only memory between them, so keep them accurate. Follow the session protocol in CLAUDE.md for exactly one task.
 >
@@ -56,7 +56,7 @@ claude -w s1-discovery
 
 > Run task T0.4 (spike S1) with the /spike skill. Answer only the spike's question, keep compiler output in log files, run compiles one at a time under the memory cap, and end with a recommendation in docs/spikes/. Don't change include/. Commit only spikes/ and docs/spikes/, then stop.
 
-Run independent spikes in parallel (S1, S3 and S4 have no dependencies on each other). Keep the core library work sequential, in one session at a time. Several agents editing one tightly coupled codebase overwrite each other's fixes.
+Run independent spikes in parallel (S1, S3 and S4 have no dependencies on each other). Core library tasks run in parallel too, under Prompt H: each builder works in its own worktree and only the orchestrator lands on main, so builders can't overwrite each other's fixes.
 
 ## Prompt C: independent review, in a fresh session
 
@@ -96,6 +96,23 @@ This is how the repository was set up, and how you'd set up a similar project fr
 >
 > Don't write library code. Commit the setup, then stop.
 
+## Prompt H: orchestrating a parallel team
+
+Start one session at high effort and paste this. It takes the place of Prompt A for as long as it runs.
+
+> You're the orchestrator for Trellis, a header-only C++20 dependency injection library. Run the team as the "Parallel team" section of CLAUDE.md describes, and keep the task list, the progress log and main accurate: they are the only memory between sessions.
+>
+> Orient as in step 1 of the session protocol, run `scripts/init.sh`, then `scripts/tasks.py next --all`. Give each ready task to a builder subagent in its own worktree, up to three at once; a task whose dependency is written but not yet landed can start from the dependency's branch if their files don't overlap. Write each brief yourself: the task id, the plan and ADR sections to read, what already exists, the follow-ups earlier tasks left for it, and the rules that bite (test first, protected tests, one error per root cause). Builders don't change docs/tasks.json, docs/PROGRESS.md or main.
+>
+> When a builder finishes, run the reviewer subagent on its branch, send blocking findings back to the builder, and land the branch on main as one commit once the review passes. Then build the presets, verify each landed task on main with `scripts/tasks.py verify` (one `check-full.sh` serves every task on the same tree), pass them in dependency order, add the progress entries, commit the bookkeeping once and push. Run benchmarks only on a quiet machine, and dispatch platform CI only for the platform a change affects.
+>
+> Ask me only for the decisions the plan reserves for the owner, batched, with your recommendation first. Keep commits free of AI attribution and session links. Tell me when a phase is ready for its gate.
+
+Why it's written this way:
+- Only the orchestrator writes main and the bookkeeping, so parallel builders can't overwrite each other's fixes or race on the task list.
+- The reviewer stays independent: it reads the diff, not the builder's account, and the orchestrator starts it because subagents can't start subagents.
+- The verify cache and one verify per landed batch keep the full matrix, the slowest check, to one run per tree.
+
 ## Tools: what to use and what to skip
 
 Recommended, all wired into tasks T0.1 and T0.2:
@@ -132,5 +149,5 @@ Optional:
 - **Ask for evidence:** the command and its output, not "done". `scripts/tasks.py verify` makes that the default.
 - **Fix rules with hooks, not emphasis.** If you keep adding emphasis to a CLAUDE.md line and it's still missed, turn the line into a hook.
 - **Grow CLAUDE.md one line per repeated mistake.** Keep it under 200 lines, and keep progress notes in the log, not in CLAUDE.md.
-- **Keep one builder at a time.** Use subagents for reading logs and reviewing, and parallel sessions only for independent work.
+- **Run the team in parallel.** One orchestrator, up to three builders in worktrees and a reviewer for each finished branch. The orchestrator alone lands on main and keeps the task list and the log. Pipeline a task behind an unlanded dependency rather than wait for it.
 - **Run a cleanup task after each phase,** and track the 6,000-line core budget (NFR-12).

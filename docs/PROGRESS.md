@@ -63,6 +63,25 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev clang-tools-18 clang-tools-20` (`clang-tools-*` gives `clang-scan-deps`, which the C++20 module build needs, T1.8) so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
 
+## 2026-11-01: the kit runs a parallel team (the owner's request; not a task)
+
+- **Why:** the owner asked for the kit to allow parallel work and for the team to work as efficiently as possible.
+- **CLAUDE.md:**
+  - A new "Parallel team" section:
+    - one orchestrator lands, verifies, records and pushes;
+    - up to three builders work in worktrees at `-j2`;
+    - benchmarks run only on a quiet machine;
+    - one verify per landed tree;
+    - platform CI runs only for the platform a change affects;
+    - a check-in is scheduled before a long wait.
+  - Steps 1 and 9 now cover builders and the orchestrator.
+  - New notes: verify needs built presets, and Clang has a rule for where an error is raised.
+- **scripts/tasks.py:**
+  - `verify` reuses a command that already passed on the same tree fingerprint, for any task; `--fresh` runs it again.
+  - `next --all` lists every ready task.
+- **docs/agent/PROMPTS.md:** Prompt H, the orchestrator's prompt. Prompt B and the habits no longer ask for one builder at a time.
+- **Unchanged:** the session-start hook still says "one task", which holds for each builder. Hooks are the owner's to edit.
+
 ## 2026-11-01: T1.14 v0.1 budgets, with T1.9's benchmarks (landed; two Clang budgets await the owner)
 
 - **What changed:** T1.9's benchmarks landed as 91ddbdf (the Trellis variants, the oracle, docs/benchmarks/v0.1.md). T1.14's optimization landed as ef5b6e9:

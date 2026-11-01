@@ -30,6 +30,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 TASKS = ROOT / "docs" / "tasks.json"
 RECORDS = ROOT / ".verify"
+CACHE = RECORDS / "cache"
 LOGS = ROOT / "build" / "logs" / "verify"
 REQUIRED = ("id", "phase", "title", "description", "acceptance", "verify", "depends_on")
 # Files that `pass` and the progress log change; excluded from the tree fingerprint.
@@ -71,10 +72,15 @@ def ready(task, done):
     return not task.get("passes") and all(dep in done for dep in task["depends_on"])
 
 
-def next_task(tasks):
+def ready_tasks(tasks):
+    """Every task that doesn't pass yet and whose dependencies all pass, in phase order."""
     done = passed_ids(tasks)
     order = sorted(range(len(tasks)), key=lambda i: (tasks[i]["phase"], i))
-    return next((tasks[i] for i in order if ready(tasks[i], done)), None)
+    return [tasks[i] for i in order if ready(tasks[i], done)]
+
+
+def next_task(tasks):
+    return next(iter(ready_tasks(tasks)), None)
 
 
 def find(tasks, task_id):
@@ -114,12 +120,30 @@ def first_error(text):
     return lines[-1].strip()[:200] if lines else ""
 
 
-def verify(task):
+def cache_entry(fingerprint, command):
+    """Where verify keeps the result of COMMAND on the tree FINGERPRINT."""
+    key = hashlib.sha256(f"{fingerprint}\0{command}".encode()).hexdigest()
+    return CACHE / f"{key}.json"
+
+
+def verify(task, fresh=False):
     LOGS.mkdir(parents=True, exist_ok=True)
     RECORDS.mkdir(exist_ok=True)
+    CACHE.mkdir(exist_ok=True)
     fingerprint = tree_fingerprint()
     results = []
     for index, command in enumerate(task["verify"], start=1):
+        # A command that already passed on this exact tree, for any task, passes again:
+        # tasks often share commands such as scripts/check-full.sh, and the tree
+        # fingerprint covers every file that could change the outcome. --fresh re-runs.
+        cached = cache_entry(fingerprint, command)
+        if not fresh and cached.exists():
+            earlier = json.loads(cached.read_text())
+            results.append({"command": command, "exit": 0, "seconds": earlier["seconds"],
+                            "log": earlier["log"], "reused_from": earlier["task"]})
+            print(f"[PASS] {command}  (passed on this tree for {earlier['task']} at {earlier['time']},"
+                  f" log {earlier['log']}; --fresh re-runs it)")
+            continue
         log = LOGS / f"{task['id']}-{index}.log"
         started = time.monotonic()
         proc = subprocess.run(["bash", "-c", command], cwd=ROOT, capture_output=True, text=True)
@@ -128,6 +152,11 @@ def verify(task):
         ok = proc.returncode == 0
         results.append({"command": command, "exit": proc.returncode, "seconds": round(seconds, 1),
                         "log": str(log.relative_to(ROOT))})
+        if ok and tree_fingerprint() == fingerprint:
+            cached.write_text(json.dumps({"task": task["id"], "seconds": round(seconds, 1),
+                                          "log": str(log.relative_to(ROOT)),
+                                          "time": datetime.datetime.now(datetime.timezone.utc)
+                                          .isoformat(timespec="seconds")}) + "\n")
         line = f"[{'PASS' if ok else 'FAIL'}] {command}  ({seconds:.1f} s, log {log.relative_to(ROOT)})"
         if not ok:
             line += f"\n       exit {proc.returncode}: {first_error(proc.stdout + proc.stderr)}"
@@ -259,10 +288,16 @@ def amend(data, task_id, field, value_json, reason, approved_by):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("next").add_argument("--brief", action="store_true")
+    next_parser = sub.add_parser("next")
+    next_parser.add_argument("--brief", action="store_true")
+    next_parser.add_argument("--all", action="store_true",
+                             help="list every ready task, one line each, for a parallel team")
     sub.add_parser("show").add_argument("id")
     sub.add_parser("list").add_argument("--phase", type=int)
-    sub.add_parser("verify").add_argument("id")
+    verify_parser = sub.add_parser("verify")
+    verify_parser.add_argument("id")
+    verify_parser.add_argument("--fresh", action="store_true",
+                               help="re-run commands that already passed on this tree")
     sub.add_parser("pass").add_argument("id")
     sub.add_parser("add").add_argument("file")
     amend_parser = sub.add_parser("amend")
@@ -277,7 +312,10 @@ def main(argv=None):
     tasks = data["tasks"]
     if args.cmd == "next":
         task = next_task(tasks)
-        if task is None:
+        if task is not None and args.all:
+            for each in ready_tasks(tasks):
+                print(f"{each['id']} {each['title']}")
+        elif task is None:
             print("All tasks pass." if all(t.get("passes") for t in tasks) else "No task is ready; check depends_on.")
         elif args.brief:
             print(f"{task['id']} {task['title']}")
@@ -295,7 +333,7 @@ def main(argv=None):
                 print(f"{status}  {task['id']:<6} {task['title']}{owner}")
         return 0
     if args.cmd == "verify":
-        return verify(find(tasks, args.id))
+        return verify(find(tasks, args.id), fresh=args.fresh)
     if args.cmd == "pass":
         return mark_passing(data, find(tasks, args.id))
     if args.cmd == "amend":
