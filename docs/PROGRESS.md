@@ -46,6 +46,7 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
     - Aggregates with an `X&&` member dangle.
     - GCC gives its own error for an aggregate with a non-movable base.
   - **The tag:** tag and push v0.1.0 once the final check-full, the full benchmark sweep and CI pass, with docs/gates/phase-1.md written.
+- **2026-11-02, NFR-01 at the tag**, answered in the session with the recommended option: tag v0.1.0 with NFR-01 on GCC noted at its limit (1.10× by instructions, 1.11× by wall clock; unchanged since T1.14), and give Phase 2 a task to bring GCC's resolve under 1.1×.
 - **Defaults taken from plan §16**, unchanged so far:
   - D2: C++20 baseline.
   - D3: Boost Software License 1.0.
