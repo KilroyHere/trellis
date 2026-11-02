@@ -1,7 +1,7 @@
 # TRL-E013: Unbound concrete type requested in strict mode
 
 - **Detected:** at compile time
-- **Since:** T1.5 (unreleased; v0.1); with the path from the root since T1.6. The ID is provisional until the owner confirms it ([ADR-0006](../adr/0006-diagnostics-contract.md), History).
+- **Since:** T1.5 (unreleased; v0.1); with the path from the root since T1.6. The owner confirmed the ID on 2026-11-02, and it is stable from v0.1 ([ADR-0006](../adr/0006-diagnostics-contract.md), History).
 - **Raised by:** `injector::create<T>()`, for its request and for every constructor parameter below it, and `trellis::make_injector` with `options{.eager = true}`, for the first singleton it can't build, when the injector has `options{.strict = true}`
 - **Tests:** [`tests/compile_fail/create/e013_strict_unbound.cpp`](../../tests/compile_fail/create/e013_strict_unbound.cpp), whose failing request two roots make, with one error line allowed; which requests strict mode rejects, in [`tests/unit/create_test.cpp`](../../tests/unit/create_test.cpp) ("strict mode"); with the path and NFR-07's 40 lines, [`tests/compile_fail/explain/e013_strict_two_roots.cpp`](../../tests/compile_fail/explain/e013_strict_two_roots.cpp). The `explain/` tests have goldens for gcc-13, gcc-14, clang-18 and clang-20, in `tests/diagnostics_golden/<compiler>/explain/`.
 

@@ -284,6 +284,8 @@ auto app_module(const Config& cfg) {
 }
 ```
 
+A module is a `trellis::module`, a type you rarely need to name: `auto` deduces it, as here. If you name it, write it qualified. In C++20, a line that starts with `module` and a name is a module directive, not a declaration, so after `using namespace trellis;`, a line such as `module m = make_module(...);` at global scope is a directive, which Clang rejects. Write `trellis::module m = make_module(...);` or `auto m = make_module(...);` instead.
+
 `trellis::make_injector(...)` takes bindings, modules and the test overrides of [section 6](#6-testing), in any order, and flattens them into one injector. Its options are a template argument, written with designated initializers:
 
 <!-- snippet: examples/getting_started.cpp -->
@@ -432,8 +434,8 @@ Trellis checks the whole graph at compile time. Apart from the cases that [secti
 | [TRL-E009](errors/TRL-E009.md) | Override without an existing binding |
 | [TRL-E010](errors/TRL-E010.md) | Constructor with more parameters than `max_ctor_arity` |
 | [TRL-E012](errors/TRL-E012.md) | Unbound concrete type requested by reference, pointer or `shared_ptr` |
-| [TRL-E013](errors/TRL-E013.md) | Unbound type requested in strict mode (provisional ID) |
-| [TRL-E014](errors/TRL-E014.md) | `std::unique_ptr<I>` that would delete through a non-virtual destructor (provisional ID) |
+| [TRL-E013](errors/TRL-E013.md) | Unbound type requested in strict mode |
+| [TRL-E014](errors/TRL-E014.md) | `std::unique_ptr<I>` that would delete through a non-virtual destructor |
 
 For example, [`tests/compile_fail/explain/e001_abstract_below_declared.cpp`](../tests/compile_fail/explain/e001_abstract_below_declared.cpp) creates a `front`, which takes a `store&`; `store`'s declared constructor takes a `std::shared_ptr<repository>`, and the abstract `repository` has no binding. Clang 18 says, in the first lines of the test's golden output ([`tests/diagnostics_golden/clang-18/explain/`](../tests/diagnostics_golden/clang-18/explain/e001_abstract_below_declared.txt), where paths start at `<src>` and `L:C` stands for line and column numbers):
 
@@ -485,3 +487,4 @@ Misuse of the binding vocabulary itself, such as `.to<C>()` with a class that do
   - cl's output for one error can be long: 49 to 612 lines in the tests whose line budget it exceeds, where NFR-07 asks GCC and Clang for at most 40.
   - When two roots fail on one request, cl names the second root's path: `path<app::back, app::store>` in the example of [section 7](#7-when-it-doesnt-compile), where GCC and Clang name `path<app::front, app::store>`.
 - **Apple Clang** compiles a chain of aggregates, each holding the next by value, up to 213 hops, close to the 200 that NFR-09 asks for ([plan §3.2](plan.md#32-non-functional-targets)): deeper, it warns that its stack is nearly exhausted (`-Wstack-exhausted`).
+- **`options{.cycle_check = true}`** is accepted and ignored ([section 4](#4-bindings-and-lifetimes)): a dependency cycle gets the compiler's own errors, without a TRL ID, until a later release adds the check.

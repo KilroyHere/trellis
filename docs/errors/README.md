@@ -1,6 +1,8 @@
 # Error catalog
 
-Every mistake Trellis reports has a stable ID: `TRL-E0xx` for errors found at compile time and `TRL-R0xx` for errors found at run time ([plan §7.8](../plan.md#78-diagnostics-engine)). The first error line of a Trellis compile error names its ID (NFR-07), and so does the message of a runtime error, so the ID leads here: the page for `TRL-E001` is `docs/errors/TRL-E001.md`. An ID never changes meaning ([ADR-0006](../adr/0006-diagnostics-contract.md)).
+Every wiring mistake Trellis reports has a stable ID: `TRL-E0xx` for errors found at compile time and `TRL-R0xx` for errors found at run time ([plan §7.8](../plan.md#78-diagnostics-engine)). The first error line of such a compile error names its ID (NFR-07), and so does the message of a runtime error, so the ID leads here: the page for `TRL-E001` is `docs/errors/TRL-E001.md`. An ID never changes meaning ([ADR-0006](../adr/0006-diagnostics-contract.md)).
+
+Misuse of Trellis's own vocabulary has no ID yet: a misused step of `bind<I>`, an argument that `make_module` or `make_injector` doesn't take, `max_ctor_arity` above 32, a malformed `trellis_ctor` and `result<T>` of a reference are each a `static_assert` whose message starts with `trellis:` and says what to change. Phase 4's full catalog gives them IDs (owner decision, 2026-11-02).
 
 Each page gives the cause, a minimal example, the fix and the related errors ([plan §11](../plan.md#11-documentation-plan)). A page is written when the library first emits its ID, starting from [the template](_template.md). Until then, the ID's link below leads nowhere.
 
@@ -20,8 +22,8 @@ Each page gives the cause, a minimal example, the fix and the related errors ([p
 | [TRL-E010](TRL-E010.md) | Constructor arity above `max_ctor_arity` | Emitted by T1.3; through `create<T>()` since T1.5, with the path from the root since T1.6 |
 | [TRL-E011](TRL-E011.md) | Scoped binding requested outside its scope | Not yet emitted; planned in Phase 2 |
 | [TRL-E012](TRL-E012.md) | Unbound concrete type requested by reference, pointer or `shared_ptr` | Emitted by T1.4; by `create<T>()` since T1.5, with the path from the root since T1.6 |
-| [TRL-E013](TRL-E013.md) | Unbound concrete type requested in strict mode (provisional ID) | Emitted by T1.5, by `create<T>()` under `options{.strict = true}`; with the path from the root since T1.6 |
-| [TRL-E014](TRL-E014.md) | Owning request would delete the implementation through a base class whose destructor isn't virtual (provisional ID) | Emitted by T1.5, by `create<T>()`, for `std::unique_ptr<I>`; with the path from the root since T1.6 |
+| [TRL-E013](TRL-E013.md) | Unbound concrete type requested in strict mode | Emitted by T1.5, by `create<T>()` under `options{.strict = true}`; with the path from the root since T1.6 |
+| [TRL-E014](TRL-E014.md) | Owning request would delete the implementation through a base class whose destructor isn't virtual | Emitted by T1.5, by `create<T>()`, for `std::unique_ptr<I>`; with the path from the root since T1.6 |
 
 ## Runtime errors
 

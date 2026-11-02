@@ -1,7 +1,7 @@
 # TRL-E014: Owning request would delete the implementation through a base class whose destructor isn't virtual
 
 - **Detected:** at compile time
-- **Since:** T1.5 (unreleased; v0.1); with the path from the root since T1.6. The ID is provisional until the owner confirms it ([ADR-0006](../adr/0006-diagnostics-contract.md), History).
+- **Since:** T1.5 (unreleased; v0.1); with the path from the root since T1.6. The owner confirmed the ID on 2026-11-02, and it is stable from v0.1 ([ADR-0006](../adr/0006-diagnostics-contract.md), History).
 - **Raised by:** `injector::create<T>()`, for its request and for every constructor parameter below it
 - **Tests:** [`tests/compile_fail/create/e014_unique_ptr_without_virtual_destructor.cpp`](../../tests/compile_fail/create/e014_unique_ptr_without_virtual_destructor.cpp), which makes the failing request at the root and as a constructor parameter, with one error line allowed; the forms that stay allowed, in [`tests/unit/create_test.cpp`](../../tests/unit/create_test.cpp) ("NonVirtualBaseFormsDestroyTheDerivedClass"); with the path and NFR-07's 40 lines, [`tests/compile_fail/explain/e014_parameter_two_roots.cpp`](../../tests/compile_fail/explain/e014_parameter_two_roots.cpp). The `explain/` tests have goldens for gcc-13, gcc-14, clang-18 and clang-20, in `tests/diagnostics_golden/<compiler>/explain/`.
 

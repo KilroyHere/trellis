@@ -1,9 +1,9 @@
 # ADR-0004: Explicit lifetimes and an enforced request-form table
 
-- **Status:** Accepted (plan baseline)
+- **Status:** Accepted (plan baseline; its TRL-E014 amendment by owner decision, 2026-11-02, see History)
 - **Plan:** [§4](../plan.md#4-architecture-decisions) ADR-04; §6.2, §6.3; FR-02, FR-03, FR-04
 - **Spikes:** S1, S2 and S4 confirmed parts of it without changing it. S1 also led to a new rule about how a parameter's spelling maps to a request form, `T&&` as the request `T`. [ADR-0003](0003-constructor-discovery.md) decides that rule and adds a note to §6.3; this ADR's lifetimes and table are unchanged.
-- **Amends:** plan §6.3 (from T1.5's review, provisional: `std::unique_ptr<T>` of a derived implementation needs `T`'s destructor to be virtual) and §12.2 (strict mode takes effect in Phase 1).
+- **Amends:** plan §6.3 (from T1.5's review, confirmed by the owner on 2026-11-02: `std::unique_ptr<T>` of a derived implementation needs `T`'s destructor to be virtual) and §12.2 (strict mode takes effect in Phase 1).
 
 ## Context
 
@@ -50,3 +50,4 @@ A related rule from ADR-0003: a parameter of type `X&&` or `const X&&` is the re
   - **Strict mode** turns the implicit unique binding off, so an owning request (by value or `std::unique_ptr`) whose type has no binding is TRL-E013 there; the other requests of unbound types are TRL-E001 or TRL-E012, as without it (see ADR-0006's History). Strict mode, like eager mode and the threading options (ADR-0012), takes effect in Phase 1 (plan §12.2 amended).
   - **A by-value request** of a unique binding whose implementation is a derived class, `bind<Base>.to<Derived>()`, gets a new `Derived` moved into a `Base`, sliced, as a by-value request of a `.to_value()` of a derived object gets a sliced copy (T1.4); a key that can't be constructed from its implementation is TRL-E002.
 - **2026-11-01, T1.5 review:** where the table allows `std::unique_ptr<T>`, a binding whose implementation derives from `T` needs `T`'s destructor to be virtual, since `std::default_delete<T>` would otherwise delete the implementation through `T`, which is undefined behaviour; such a request is TRL-E014 (plan §6.3 amended, provisional, `[NEEDS CLARIFICATION]` in the progress log). `std::shared_ptr<T>`, singletons and by-value requests stay allowed: they destroy the implementation itself (`tests/unit/create_test.cpp`).
+- **2026-11-02, owner decision (Phase 1 gate):** confirmed the T1.5 review's amendment above, by confirming TRL-E014 as a new ID with exactly this meaning, as recommended (docs/PROGRESS.md, "Owner decisions"; ADR-0006): where the table allows `std::unique_ptr<T>`, an implementation derived from `T` needs `T`'s destructor to be virtual, or the request is TRL-E014. Plan §6.3's marker says "confirmed by the owner, 2026-11-02". The open question on `const std::shared_ptr<T>&` parameters (Consequences) wasn't decided at the gate: it stays under "Waiting for owner", for the API review.
