@@ -74,6 +74,48 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev clang-tools-18 clang-tools-20` (`clang-tools-*` gives `clang-scan-deps`, which the C++20 module build needs, T1.8) so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
 
+## 2026-11-02: the Phase 1 gate's last landings and measurements (T1.10)
+
+- **Landed since the previous entries:**
+  - **01b8593:** MSVC on Phase 1 code. Covers the store layout, a C4702 on cl 19.44, and cl's alias names in diagnostics. Also `expect-regex-msvc`, with cl alternatives in 50 tests.
+  - **3695945:** cl's known limits, per the owner's decisions.
+    - The eight tests 01b8593's squash had left out regain their cl alternatives (ef519b5).
+    - 42 tests get cl line budgets.
+    - `expect-fail-msvc` covers 6 tests.
+    - The chain test reports XFAIL (cl) for `unique_ptr` (C2999, 198 hops on cl 19.51) and aggregates (C1054, 15).
+  - **e3f04e9:** check-full's timetrace preset failed `single_header.main_file` on an unused `-ftime-trace`; the profiler flag is now filtered.
+  - **49522dd:** the cleanup pass. NFR-12 counts 4,406 lines that are neither blank nor comments, and 9,778 in all.
+  - **88c0eda:** stale notes on discovery's entry points.
+  - **ca3f8af:** docs/getting-started.md, with `tools/doc_snippets.py` checking its 16 snippets.
+  - **bcfc9cf:** `deepest.json` re-recorded on the final `include/`. Every shape passes 200 hops on GCC and Clang:
+    - GCC: 296–298 hops;
+    - Clang 18: 310–335;
+    - Clang 20: 305–335, and 241 for aggregates.
+  - **8050fa7:** the owner's decisions are recorded in ADRs 0003, 0004, 0006, 0010 and 0014 and in the plan.
+  - Every landing had a review. 3695945 instead got a replay of cl's real output and a green platforms run.
+- **Platforms run 41372428494 on 3695945:** green on all three jobs.
+  - macOS: 717 of 717.
+  - cl 19.51: 547 of 547, the 6 expected failures included; the chain step has 2 XFAIL.
+  - cl 19.44: the chain step has 1 XFAIL.
+  - This is the first fully green platforms run on Phase 1 code.
+  - ci run 41372428543 on 3695945 passed.
+- **The full compile sweep at bcfc9cf** (log in the session's scratchpad):
+  - **NFR-04 at N = 100 holds:** gcc-13 0.94×, clang-18 about 1.0×.
+  - **Above 250 components, measured for the first time:**
+    - gcc-13 grows superlinearly: 1.40× at 250, 2.72× at 500, and the Trellis compile timed out (over 900 s) at 1,000 with fan-in 1-3 and with fan-in 10;
+    - clang-18 reaches 1.63× at 1,000 with fan-in 1-3;
+    - clang-18 reaches 1.91× at 1,000 with fan-in 10 (one compile per program, as the sweep's last part was rerun alone after the 2-hour limit stopped it).
+  - So NFR-04's 1,000-component checkpoint, a Phase 3 exit criterion, fails on both compilers.
+  - Not a regression from today: with e77b6f5's headers, gcc-13 at N = 250 took 38.9 s, against 38.2 s now.
+  - This is the first follow-up for Phase 2's expansion.
+- **NFR-01 (warm resolve, ≤ 1.1×), four quiet runs on 3695945:**
+  - gcc-13: 1.11× by wall clock (fastest repetitions, 46.4 against 41.9 ns), and 1.10× by cachegrind instructions (457 against 415).
+  - The instruction count is the same 457–458 at ef5b6e9 (T1.14), 3c20302, 9ce6866 and 01b8593, so nothing regressed.
+  - clang-18: 1.05–1.07× by wall clock, 1.03× by instructions (446 against 432).
+  - GCC is at the limit. This goes to the owner before the tag.
+- **The final verify:** check-full for T1.14, T1.15, T1.11 and T1.10 runs on the tree with the gate draft. The final report replaces the draft after the passes, as a docs-only commit.
+- **Nightly 41373551879:** dispatched on main to confirm the release rule ("a red nightly blocks releases") on the final tree.
+
 ## 2026-11-01: T1.11 chain-depth and arity budgets (landed at 06c22c2; passes with the final tree)
 
 - **The chain test:** `tests/chain_depth/check_chain_depth.py`, in ten shapes. CTest's `chain_depth.<shape>` compiles 200 hops on every preset, and 150 on MSVC before 19.50. `--deepest` measures the deepest chain, and `--record` writes `tests/chain_depth/deepest.json`.
