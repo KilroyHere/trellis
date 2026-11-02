@@ -26,6 +26,26 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - **NFR-03 on Clang (2a):** +0.38 s is accepted for v0.1, and a Phase 2 task brings it within +0.3 s.
   - **NFR-06 on Clang (3a):** +8,240 B is accepted, as libstdc++'s `atomic::wait` floor. The acceptance and verify lines of T1.9 and T1.14 are amended; budgets.json is unchanged and stays strict.
   - **MSVC compile-fail expectations (4a):** approved: add MSVC alternatives to the protected compile-fail tests that expect GCC/Clang wording, keeping the same strictness on GCC and Clang.
+- **2026-11-02, Phase 1 gate decisions**, answered in the session with the recommended options:
+  - **The provisional decisions that v0.1 freezes are confirmed as recommended:**
+    - TRL-E013 and TRL-E014 are new IDs.
+    - ADR-0006's T1.6 amendments: one `static_assert` per root cause through `detail::raise`, with the path in the instantiation note.
+    - ADR-0010's overrides amendment: overrides go to `make_injector` only.
+    - ADR-0003's amendments: T1.2's construction rule, T1.3's amendments, the MSVC workarounds, and the Apple Clang refinements (parenthesized aggregate checks, braces on cl).
+    - T1.15's four readings, and the module build's system header on Clang before 20.
+    - `options::cycle_check` stays accepted and ignored until Phase 2, and `make_unique_injector` goes to Phase 2.
+    - For misuse errors without an ID, the catalog's sentence is narrowed now to wiring mistakes, and the misuse is numbered in Phase 4's full catalog.
+    - NFR-12 counts lines that are neither blank nor comments: 4,406 of 6,000.
+    - The `trellis::module` name stays, with qualified use documented.
+  - **MSVC (4a, extended):**
+    - The 42 compile-fail tests that fail on cl only on length get cl's own budget (`expect-max-lines-msvc`, cl's count plus 10%).
+    - The 6 that no expectation fixes are marked as known cl limitations, with the reason shown in each verdict (`expect-fail-msvc`): CWG 2327 (two tests), follow-on errors after a bad bind key (three), and one error per translation unit (one).
+  - **Known issues for v0.1, documented, each with a Phase 2 task:**
+    - NFR-09 on MSVC: `std::unique_ptr` chains reach 198 hops on cl 19.51, and aggregate chains stop at 15 on cl (C1054).
+    - Apple Clang's 6% aggregate margin (213 hops).
+    - Aggregates with an `X&&` member dangle.
+    - GCC gives its own error for an aggregate with a non-movable base.
+  - **The tag:** tag and push v0.1.0 once the final check-full, the full benchmark sweep and CI pass, with docs/gates/phase-1.md written.
 - **Defaults taken from plan §16**, unchanged so far:
   - D2: C++20 baseline.
   - D3: Boost Software License 1.0.
