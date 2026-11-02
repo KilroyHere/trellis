@@ -4,6 +4,7 @@
 // expect-regex: E004<.*greedy>|error C2338:
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 132
 //
 // Deduction can't tell what a constructor template that accepts any argument needs (ADR-0003),
 // so discovery reports TRL-E004, from create<T>() as from its own entry point, once. (Taken by

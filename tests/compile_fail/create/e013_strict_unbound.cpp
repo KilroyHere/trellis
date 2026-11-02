@@ -4,6 +4,7 @@
 // expect-regex: E013<.*clock_part, trellis::error::request<.*clock_part> ?>|error C2338:
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 102
 //
 // Strict mode turns off the implicit unique binding of unbound concrete types (ADR-0004, plan
 // §6.13): every type the injector creates needs a binding, and a missing one is TRL-E013

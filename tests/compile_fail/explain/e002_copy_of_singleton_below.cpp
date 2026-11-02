@@ -5,6 +5,7 @@
 // expect-regex: trellis::error::path<app::server, ?app::worker>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-fail-msvc: CWG 2327: cl can't initialize a by-value parameter of a non-movable class from a conversion function's prvalue, so deduction of the consumer fails
 //
 // .allow_copy() lets a singleton be requested by value, as a copy (plan §6.3), and pool can't be
 // copied: TRL-E002 for the request pool, which worker makes, two classes below create<server>().

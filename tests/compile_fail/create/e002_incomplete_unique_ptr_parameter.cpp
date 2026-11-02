@@ -4,6 +4,7 @@
 // expect-regex: E002<.*database, trellis::(v1::)?detail::no_ctor_declared ?>|error C2338:
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 59
 //
 // database is only declared, so a std::unique_ptr<database> request can't be served: discovery
 // reports the incomplete class, TRL-E002. Nothing else may fail: no std::unique_ptr<database> can

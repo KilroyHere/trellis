@@ -2,6 +2,7 @@
 // expect-regex: bind<I>: I must be an object type without const, volatile or reference
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 20
+// expect-fail-msvc: cl's error recovery adds follow-on errors after bind<I>'s key check
 //
 // The documented testing pattern names a test injector only inside decltype, as in
 // trellis::testing::wireable<decltype(...), App> (plan §6.10), beside a named module whose own

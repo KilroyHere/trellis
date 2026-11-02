@@ -9,6 +9,7 @@
 // expect-regex-msvc: trellis::error::path<app::dial>
 // expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 105
 //
 // meter declares trellis::ctor<int>, but its constructor takes a double and an int. The explain
 // pass reaches meter from create<panel>() as panel's parameter 1, path<panel>, and raises the

@@ -9,6 +9,7 @@
 // expect-regex-msvc: trellis::error::path<app::c0, ?app::c1, ?app::c2,[^<>]*app::c18, ?app::c19>
 // expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines-nfr07: 40
+// expect-max-lines-msvc: 612
 //
 // NFR-07's 40 lines as owner decision 1A counts them, without the include chain and the excerpt
 // of the user's call site (plan §3.2): the two costs of the user's layout together, five levels

@@ -3,6 +3,7 @@
 // expect-regex: TRL-E009[\s\S]*TRL-E009
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 60
+// expect-fail-msvc: cl reports a static_assert that fails in several specializations of one function template only once per translation unit
 //
 // Each override without a binding to replace is a mistake of its own, a root cause, so each gets
 // its error (ADR-0006), and the override that applies gets none.

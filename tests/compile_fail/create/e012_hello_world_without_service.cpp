@@ -4,6 +4,7 @@
 // expect-regex: E012<Service, trellis::error::request<Service ?&>|error C2338:
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 102
 //
 // examples/hello_world.cpp with the line `di::bind<Service>.in(di::singleton),` deleted, and
 // nothing else changed: keep the two in step. Plan §6.1 promises that this is error E012 (Service

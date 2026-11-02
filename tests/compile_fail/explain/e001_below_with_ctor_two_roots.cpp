@@ -4,7 +4,12 @@
 // expect-regex: trellis::error::E001<app::repository, ?trellis::error::request<std::shared_ptr<app::repository> ?> ?>
 // expect-regex: trellis::error::path<app::front, ?app::store>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E001: no binding for an abstract type: bind it to an implementation
+// expect-regex-msvc: trellis::error::E001<app::repository,trellis::error::request<R>>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +R=std::shared_ptr<app::repository>(?:,|$)
+// expect-regex-msvc: trellis::error::path<app::back,app::store>
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 102
 //
 // store's binding declares the constructor that takes std::shared_ptr<repository>, whose abstract
 // key has no binding; deduction would have found store(int, int), which the binding of int serves.

@@ -9,6 +9,7 @@
 // expect-regex-msvc: trellis::error::path<app::c0, ?app::c1, ?app::c2,[^<>]*app::c19, ?app::c20>
 // expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 608
 //
 // NFR-07's 40 lines whatever the layout of the user's code (T1.6 review): GCC 14 quotes every line
 // of the call that starts the chain, and each level of include above <trellis/trellis.hpp> adds a

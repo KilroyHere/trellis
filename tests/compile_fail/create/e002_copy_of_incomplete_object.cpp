@@ -7,6 +7,7 @@
 // expect-regex-msvc: trellis::error::E002<app::opaque,trellis::error::request<R>>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +R=app::opaque(?:,|$)
 // expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 63
 //
 // A binding of an object whose type is only declared serves its pointer and reference requests
 // (tests/unit/create_test.cpp, IncompleteTypesBoundByPointerOrReference). A by-value request

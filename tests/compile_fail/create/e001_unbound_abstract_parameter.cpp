@@ -4,6 +4,7 @@
 // expect-regex: E001<.*IRepository, trellis::error::request<std::shared_ptr<.*IRepository> ?> ?>|error C2338:
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 109
 //
 // The missing binding of plan §7.8's example: Service needs an IRepository, which is abstract
 // and has no binding, so nothing can implement the request (ADR-0004). create<T>() reports

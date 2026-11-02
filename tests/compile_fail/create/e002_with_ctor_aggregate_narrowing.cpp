@@ -3,6 +3,9 @@
 // expect-regex: TRL-E002: type not constructible: its trellis::ctor<\.\.\.> declaration doesn't brace-initialize the aggregate
 // expect-regex: trellis::error::E002<app::endpoint, ?trellis::(v1::)?ctor<double, ?double> ?>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E002: type not constructible: its trellis::ctor<\.\.\.> declaration doesn't brace-initialize the aggregate
+// expect-regex-msvc: trellis::error::E002<T,Declared>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +T=app::endpoint,\n +Declared=trellis::v1::ctor<double,double>(?:,|$)
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
 //
 // An aggregate is checked, and would be built, with braces, as discovery builds one (plan §7.2's

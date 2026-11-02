@@ -3,6 +3,7 @@
 // expect-regex: unbound concrete type requested by reference
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 102
 //
 // trellis::testing::wireable<Injector, Root> asks the check that create<Root>() makes itself
 // (testing/wiring.hpp): an unbound concrete type is built by value, but nothing would own it for

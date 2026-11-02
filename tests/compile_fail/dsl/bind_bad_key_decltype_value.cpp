@@ -2,6 +2,7 @@
 // expect-regex: bind<I>: I must be an object type without const, volatile or reference
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 20
+// expect-fail-msvc: cl's error recovery adds follow-on errors after bind<I>'s key check
 //
 // bind<I> reports the key. The chain, .allow_copy() included, keeps that binding type, whose
 // constructor has already reported its key, so constructing it again adds nothing.

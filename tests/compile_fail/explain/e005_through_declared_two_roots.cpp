@@ -9,6 +9,7 @@
 // expect-regex-msvc: trellis::error::path<app::alarm,app::scheduler>
 // expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 102
 //
 // scheduler declares a constructor that takes timer&, and timer is bound as unique: each request
 // would get a new object that nothing keeps alive (plan §6.3). The explain pass reports the

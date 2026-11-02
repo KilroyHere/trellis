@@ -9,6 +9,7 @@
 // expect-regex-msvc: trellis::error::path<app::back,app::store>
 // expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 102
 //
 // The explain pass (T1.6) follows the first failing request from create<front>() down: front's
 // deduced parameter store&, then store's declared parameter std::shared_ptr<repository>, whose

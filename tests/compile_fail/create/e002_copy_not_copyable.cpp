@@ -4,6 +4,7 @@
 // expect-regex: E002<.*pool, trellis::error::request<.*pool> ?>|error C2338:
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-fail-msvc: CWG 2327: cl can't initialize a by-value parameter of a non-movable class from a conversion function's prvalue, so deduction of the consumer fails
 //
 // .allow_copy() lets a consumer take a copy of a shared object (plan §6.3), so the key must be
 // constructible from the object. pool can't be copied: create<T>() reports TRL-E002, type not

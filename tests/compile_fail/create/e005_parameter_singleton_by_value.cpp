@@ -4,6 +4,7 @@
 // expect-regex: E005<.*settings, trellis::error::request<.*settings>, trellis::(v1::)?singleton_t>|error C2338:
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 102
 //
 // A deduced parameter's request comes from the conversion operator that overload resolution
 // selects, which the failure pass names without enumerating the parameters (static/resolve.hpp,

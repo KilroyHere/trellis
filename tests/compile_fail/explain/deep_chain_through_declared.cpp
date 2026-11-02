@@ -9,6 +9,7 @@
 // expect-regex-msvc: trellis::error::path<app::c0, ?app::c1, ?app::c2, ?app::c3, ?app::c4, ?app::c5, ?app::c6, ?app::c7, ?app::c8, ?app::c9, ?app::c10, ?app::c11, ?app::c12, ?app::c13>
 // expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 380
 //
 // Each deduced class on the failing path costs the error one instantiation note, from one line of
 // explain.hpp, and a declared class none (docs/internals/explain-pass.md): Clang prints that

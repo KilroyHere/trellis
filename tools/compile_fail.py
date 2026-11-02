@@ -26,6 +26,7 @@ Directives, in the comment block at the top of the file:
   // expect-max-lines: <n>        optional, default 60: the output may have at most n lines
   // expect-max-lines-nfr07: <n>  optional: at most n lines by NFR-07's count (below)
   // expect-max-lines-msvc: <n>   optional: MSVC's budget, in place of expect-max-lines (below)
+  // expect-fail-msvc: <reason>   optional: a known cl limitation, which the test misses (below)
 
 NFR-07's count is plan §3.2's, as owner decision 1A amended it (2026-11-01): every line of the
 output except those that the user's own layout produces. It leaves out the include chain, Clang's
@@ -61,12 +62,21 @@ ignore it. Set it as strictly as cl's output allows, by one rule: cl's line coun
 as the CI log of the platforms workflow shows it, plus 10%, rounded up. A test whose output on cl
 fits its expect-max-lines needs none.
 
+expect-fail-msvc marks a known limitation of cl that no expectation can work around, such as an
+error that cl reports once where GCC and Clang report it twice; its reason, why cl misses, is
+required. On cl, the test is expected to miss its expectations. Then it passes, as
+"XFAIL (cl): <reason>", and the verdict still lists what it missed. If it meets every expectation
+on cl, it fails, as "XPASS (cl): <reason>; remove expect-fail-msvc", so that a fixed limitation
+can't hide. It excuses only missed expectations: a snippet that compiles, or a compiler that
+crashes, dies or times out, still fails. GCC and Clang, clang-cl included, ignore it.
+
 A test passes only when the compiler reports an error, without crashing, running out of memory,
-dying by a signal or timing out, and every expectation holds. Regexes are searched (re.MULTILINE)
-in the diagnostics only: the output with colors removed and without the quoted source and caret
-lines, so a word that appears only in the snippet's own code doesn't match. expect-max-lines counts
-every line, as users see them. On timeout the compiler's whole process group is killed, so that
-cc1plus doesn't run on. Each test's full compiler output goes to <build>/compile_fail/<name>.log.
+dying by a signal or timing out, and every expectation holds, or, on cl with expect-fail-msvc, at
+least one misses. Regexes are searched (re.MULTILINE) in the diagnostics only: the output with
+colors removed and without the quoted source and caret lines, so a word that appears only in the
+snippet's own code doesn't match. expect-max-lines counts every line, as users see them. On
+timeout the compiler's whole process group is killed, so that cc1plus doesn't run on. Each test's
+full compiler output goes to <build>/compile_fail/<name>.log.
 
 Exit status: 0 when every test passed, 1 when one failed, 2 for a usage or configuration error.
 """
@@ -93,7 +103,8 @@ DEFAULT_MEMORY_MB = 6000  # address-space cap per compile (POSIX only), as CLAUD
 # "compile" or "expect" in any case and spelling ("expect_regex", "Expect-ID"), then a colon.
 DIRECTIVE_LIKE = re.compile(r"//\s*((?:compile|expect)[\w-]*)\s*:(.*)$", re.IGNORECASE)
 KNOWN_DIRECTIVES = ("compile-fail", "expect-id", "expect-regex", "expect-regex-msvc",
-                    "expect-max-lines", "expect-max-lines-nfr07", "expect-max-lines-msvc")
+                    "expect-max-lines", "expect-max-lines-nfr07", "expect-max-lines-msvc",
+                    "expect-fail-msvc")
 REPEATABLE_DIRECTIVES = ("expect-regex", "expect-regex-msvc")
 ERROR_ID = re.compile(r"^TRL-[ER]\d{3}$")
 # Terminal escapes: colors and other CSI sequences (ESC [ params final, as in GCC's ESC[01m ESC[K),
@@ -205,6 +216,7 @@ class Spec:
         self.max_lines = DEFAULT_MAX_LINES
         self.max_lines_nfr07 = None  # expect-max-lines-nfr07, checked only when given
         self.max_lines_msvc = None  # expect-max-lines-msvc, cl's budget when given
+        self.fail_msvc = None  # expect-fail-msvc's reason: on cl, the test is expected to miss
         self.problems = []
 
     def regexes_for(self, compiler_id):
@@ -222,6 +234,11 @@ class Spec:
         if compiler_id == "MSVC" and self.max_lines_msvc is not None:
             return "expect-max-lines-msvc", self.max_lines_msvc
         return "expect-max-lines", self.max_lines
+
+    def expected_failure_for(self, compiler_id):
+        """expect-fail-msvc's reason when it applies to the compiler whose CMake compiler ID this
+        is, which is only on cl, "MSVC"; otherwise None, as GCC and Clang ignore it."""
+        return self.fail_msvc if compiler_id == "MSVC" else None
 
 
 def parse_directives(text):
@@ -251,7 +268,9 @@ def parse_directives(text):
             continue
         seen.add(name)
         if not value:
-            spec.problems.append(f"line {number}: '{name}' needs a value")
+            what = ("a reason: why cl misses the test's expectations"
+                    if name == "expect-fail-msvc" else "a value")
+            spec.problems.append(f"line {number}: '{name}' needs {what}")
         elif name == "compile-fail":
             spec.summary = value
         elif name == "expect-id":
@@ -283,6 +302,8 @@ def parse_directives(text):
             else:
                 spec.problems.append(f"line {number}: expect-max-lines-msvc needs a positive "
                                      f"number")
+        elif name == "expect-fail-msvc":
+            spec.fail_msvc = value
     if spec.summary is None:
         spec.problems.append("missing the '// compile-fail: <summary>' directive")
     if spec.expect_id is None and not spec.regexes:
@@ -502,14 +523,29 @@ def compile_problem(result, timeout=DEFAULT_TIMEOUT):
 
 
 def evaluate(spec, result, timeout=DEFAULT_TIMEOUT, check_nfr07=True, compiler_id=None):
-    """Every way in which the compile misses the spec; empty when the test passes. check_nfr07:
-    whether expect-max-lines-nfr07 applies to the compiler (nfr07_applies). compiler_id is the
-    build's, from trellis_compiler.json: on cl, "MSVC", expect-regex-msvc lines replace the
-    expect-regex lines (Spec.regexes_for), and expect-max-lines-msvc expect-max-lines
-    (Spec.max_lines_for)."""
+    """Why the test fails; empty when it passes. check_nfr07: whether expect-max-lines-nfr07
+    applies to the compiler (nfr07_applies). compiler_id is the build's, from
+    trellis_compiler.json: on cl, "MSVC", expect-regex-msvc lines replace the expect-regex lines
+    (Spec.regexes_for), and expect-max-lines-msvc expect-max-lines (Spec.max_lines_for).
+
+    A compile that isn't a proper compile error fails (compile_problem). Otherwise the test fails
+    with every expectation it misses (missed_expectations), except where expect-fail-msvc applies
+    (Spec.expected_failure_for): there the misses are expected, so the test passes, as XFAIL, when
+    it has any, and fails, as XPASS, when it has none."""
     problem = compile_problem(result, timeout)
     if problem:
         return [problem]
+    missed = missed_expectations(spec, result, check_nfr07, compiler_id)
+    reason = spec.expected_failure_for(compiler_id)
+    if reason is None:
+        return missed
+    return [] if missed else [f"XPASS (cl): {reason}; remove expect-fail-msvc"]
+
+
+def missed_expectations(spec, result, check_nfr07=True, compiler_id=None):
+    """Every expectation of the spec that the compile misses: expect-id, the regexes and the line
+    budgets, checked as evaluate() checks them, with the same check_nfr07 and compiler_id. Empty
+    when it meets them all. The compile must be a proper compile error (compile_problem)."""
     problems = []
     first_error = error_lines(result.lines)[0]
     if spec.expect_id and not contains_id(first_error, spec.expect_id):
@@ -564,14 +600,23 @@ def run_test(config, source, timeout, memory_mb):
     result = compile_source(config, source, timeout, memory_mb)
     log = write_log(config, name, result)
     check_nfr07 = nfr07_applies(config)
-    problems = evaluate(spec, result, timeout, check_nfr07, config.get("compiler_id"))
+    compiler_id = config.get("compiler_id")
+    problems = evaluate(spec, result, timeout, check_nfr07, compiler_id)
     if not problems:
         counts = f"{len(result.lines)} lines"
         if spec.max_lines_nfr07 is not None and check_nfr07:
             counts += f", {len(nfr07_lines(result.lines))} by NFR-07's count"
         elif spec.max_lines_nfr07 is not None:
             counts += ", expect-max-lines-nfr07 skipped: NFR-07's 40 lines are GCC's and Clang's"
-        print(f"PASS {name} ({compiler}, {counts}): {spec.summary}")
+        reason = spec.expected_failure_for(compiler_id)
+        if reason is None:
+            print(f"PASS {name} ({compiler}, {counts}): {spec.summary}")
+            return True
+        # An expected failure (expect-fail-msvc) passes, and shows the misses it excuses.
+        print(f"PASS {name} ({compiler}, {counts}): XFAIL (cl): {reason}")
+        for problem in missed_expectations(spec, result, check_nfr07, compiler_id):
+            print(f"  - {problem}")
+        print(f"  the test: {spec.summary}")
         return True
     print(f"FAIL {name} ({compiler}): {problems[0]}")
     for problem in problems[1:]:

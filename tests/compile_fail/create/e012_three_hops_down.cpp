@@ -4,6 +4,7 @@
 // expect-regex: E012<.*sensor, trellis::error::request<const .*sensor ?&>|error C2338:
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 50
+// expect-max-lines-msvc: 127
 //
 // The failure pass follows the failing request down, through a singleton with a declared
 // constructor and a unique aggregate, to the cause, and reports only it: the classes above it

@@ -4,6 +4,7 @@
 // expect-regex: E005<.*bus, trellis::error::request<std::shared_ptr<.*bus> ?>, trellis::(v1::)?singleton_inline_t>|error C2338:
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 102
 //
 // singleton_inline stores the object inside the injector, so no std::shared_ptr owns it, and a
 // shared_ptr request is TRL-E005 (ADR-0005 item 3, plan §6.3). The request is a deduced

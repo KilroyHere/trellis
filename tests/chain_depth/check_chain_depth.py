@@ -33,6 +33,16 @@ chain_depth.<shape> (tests/chain_depth/CMakeLists.txt); a passing test also prin
 recorded for this preset and shape, and whether it was measured on this include/. A build whose
 flags set -ftemplate-depth, -fconstexpr-depth or /templateDepth is refused: they move the limits.
 
+Known limits (MSVC_KNOWN_LIMITS), on MSVC only: two shapes stop short of NFR-09 on a limit of cl,
+which the owner accepted as known issues for v0.1 (owner decision 2026-11-02, ADR-0014 History):
+std::unique_ptr chains on cl 19.50 and later, which reach 198 hops (C2999, in <memory>), and
+aggregates on every cl, which stop at 15 (C1054, cl's limit on nested braced initializers). Such a
+shape is still compiled at NFR-09's length. While it stops on that limit, it passes as
+"XFAIL (cl): <reason>"; if it compiles, it fails as "XPASS (cl): <reason>; remove the known limit",
+so that a lifted limit can't hide; any other failure fails as before. The table applies only at
+NFR-09's length, not with another --hops, and GCC, Clang (clang-cl included) and Apple Clang have
+no known limits. --deepest measures these shapes like the others.
+
 --deepest finds, per shape, the longest chain that compiles at the default limits: starting from
 the recorded result if there is one, otherwise from the length the test uses, up by doubling, then
 by bisection, each compile as the test compiles. Only a compiler limit counts as the end: the
@@ -48,7 +58,9 @@ include/trellis/discovery/).
 --self-test compiles, links and runs every shape's chain with the build's flags, at a few hops (37
 for the mixed shape, which then has every request form with every kind of class), and checks the
 line it prints: that every object of the chain was built, so the chains the test compiles are what
-they claim to be. CTest runs it as chain_depth.selftest.
+they claim to be. First it checks the known limits' verdicts in process, on results shaped as cl
+and the other compilers give them (check_known_limits), so that every build checks cl's side.
+CTest runs it as chain_depth.selftest.
 
 --jobs N compiles N shapes at a time. In GitHub Actions a passing shape also prints a notice
 annotation, and a failing one prints a line starting "FAIL", which the problem matchers turn into an
@@ -57,7 +69,9 @@ error annotation (.github/problem-matchers.json).
 Exit status: 0 when every shape passed, 1 when one failed, 2 for a usage or configuration error.
 """
 import argparse
+import contextlib
 import importlib.util
+import io
 import json
 import os
 import re
@@ -393,6 +407,44 @@ def required_hops(config):
     return NFR09_HOPS
 
 
+@dataclass(frozen=True)
+class KnownLimit:
+    """A limit of cl that keeps a shape's chain short of NFR-09, which the owner accepted for v0.1:
+    from cl version `since` on, the chain stops on `code`, the limit's message, for `reason`."""
+    shape: str
+    since: tuple
+    code: str
+    reason: str
+
+    def stops(self, result):
+        """Whether a failed compile stopped on this limit, not on an error or another limit."""
+        return (result.limit
+                and re.search(rf"\b{re.escape(self.code)}\b", result.first_error) is not None)
+
+
+# The known limits, on MSVC only (compiler_id "MSVC"): GCC, Clang, clang-cl included, and Apple
+# Clang have none. The owner accepted both as known issues for v0.1, each with a Phase 2 task
+# (owner decision 2026-11-02, ADR-0014 History). cl 19.51 printed both in platforms run
+# 41352149959, and cl 19.44 the second; its std::unique_ptr chain reaches its own NFR-09 length.
+MSVC_KNOWN_LIMITS = (
+    KnownLimit("unique_ptr", MSVC_TEMPLATE_DEPTH_SWITCH, "C2999",
+               "C2999: std::unique_ptr chains stop at 198 hops on cl 19.50 and later, at the "
+               "template depth limit in <memory>; accepted for v0.1, owner decision 2026-11-02"),
+    KnownLimit("aggregate", (0, 0), "C1054",  # every cl; plain C++ meets it too
+               "C1054: cl's limit on nested braced initializers (15 levels); accepted for v0.1, "
+               "owner decision 2026-11-02"),
+)
+
+
+def known_limit(config, shape):
+    """The known limit of this build's compiler for a shape (MSVC_KNOWN_LIMITS), or None."""
+    if config["compiler_id"] != "MSVC":
+        return None
+    version = version_tuple(config["compiler_version"])
+    return next((limit for limit in MSVC_KNOWN_LIMITS
+                 if limit.shape == shape and version >= limit.since), None)
+
+
 def display(path):
     try:
         return Path(path).resolve().relative_to(ROOT).as_posix()
@@ -620,9 +672,27 @@ def for_each(function, shapes, jobs):
 
 
 def check_shape(build, shape, hops):
-    """The test proper for one shape. Returns True when the chain compiles."""
+    """The test proper for one shape. Returns True when the chain compiles, or when, at NFR-09's
+    length, it stops on its known limit (XFAIL); False when it doesn't compile, or when it
+    compiles in spite of a known limit (XPASS)."""
     result = build.compile(shape, hops)
     name = f"chain_depth.{shape} ({build.label})"
+    known = known_limit(build.config, shape) if hops == required_hops(build.config) else None
+    if known and result.ok:
+        say(f"FAIL {name}: XPASS (cl): {known.reason}; remove the known limit",
+            f"  a chain of {hops} hops compiles at the default template depth "
+            f"({result.seconds:.1f} s); take {shape} out of MSVC_KNOWN_LIMITS in "
+            f"tests/chain_depth/check_chain_depth.py")
+        return False
+    if known and known.stops(result):
+        # The details name the limit's code, not cl's error line, which the problem matchers
+        # would turn into an error annotation on a passing step.
+        say(f"PASS {name}: XFAIL (cl): {known.reason}",
+            f"  a chain of {hops} hops stops on {known.code} ({result.kind}), its known limit; "
+            f"the source and the compiler output: {display(result.log.with_suffix('.cpp'))}, "
+            f"{display(result.log)}")
+        annotate(name, f"XFAIL (cl): {known.reason}")
+        return True
     if result.ok:
         record = recorded(build.record_key, shape)
         if not record:
@@ -637,11 +707,14 @@ def check_shape(build, shape, hops):
         annotate(f"chain_depth.{shape} ({build.label})",
                  f"{hops} hops compile at the default template depth ({result.seconds:.0f} s)")
         return True
-    say(f"FAIL {name}: a chain of {hops} hops doesn't compile at the default template depth "
-        f"({result.kind}): {result.first_error}",
-        f"  {SHAPES[shape].summary}; the source and the compiler output: "
-        f"{display(result.log.with_suffix('.cpp'))}, {display(result.log)}",
-        f"  reproduce: {build.reproduce(shape, hops)}")
+    lines = [f"FAIL {name}: a chain of {hops} hops doesn't compile at the default template depth "
+             f"({result.kind}): {result.first_error}",
+             f"  {SHAPES[shape].summary}; the source and the compiler output: "
+             f"{display(result.log.with_suffix('.cpp'))}, {display(result.log)}",
+             f"  reproduce: {build.reproduce(shape, hops)}"]
+    if known:
+        lines.append(f"  not its known limit on cl: {known.reason}")
+    say(*lines)
     return False
 
 
@@ -722,6 +795,136 @@ def run_self_test(build, shapes, jobs):
     return for_each(one, shapes, jobs)
 
 
+class FakeBuild(Build):
+    """A Build whose compile() hands back given results instead of compiling: the self-test's
+    known-limit checks use it with results shaped as cl and the other compilers give them."""
+
+    def __init__(self, config, results):
+        super().__init__(config, Path(config["binary_dir"]) / CONFIG_NAME)
+        self.results = results
+
+    def compile(self, shape, hops, link=False):
+        return self.results[shape]
+
+
+def fake_config(compiler_id, version, frontend, name):
+    """A build configuration for FakeBuild, in a build directory with no record."""
+    return {"compiler": name, "compiler_id": compiler_id, "compiler_version": version,
+            "frontend": frontend, "golden_name": name, "flags": [],
+            "binary_dir": str(ROOT / "build" / f"{name}-fake")}
+
+
+def check_known_limits():
+    """The known limits' verdicts, in process: check_shape on results shaped as cl and the other
+    compilers give them, with cl's first error lines as platforms run 41352149959 printed them, so
+    that every build checks cl's side without cl. Prints a line per check, never the results' own
+    error lines (the problem matchers would take them for errors), and returns how many failed."""
+    cl51, cl44 = (fake_config("MSVC", f"19.{minor}", "MSVC", "msvc-19") for minor in (51, 44))
+    gcc = fake_config("GNU", "13.3.0", "GNU", "gcc-13")
+    clang = fake_config("Clang", "18.1.3", "GNU", "clang-18")
+    apple = fake_config("AppleClang", "21.0.0", "GNU", "appleclang-21")
+    clang_cl = fake_config("Clang", "18.1.3", "MSVC", "clang-cl-18")  # MSVC's command line
+    c1054 = ("compiler limit", r"include\trellis/discovery/ctor_traits.hpp(243): fatal error "
+             r"C1054: compiler limit: initializers nested too deeply")
+    c2999 = ("depth limit", r"C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools"
+             r"\MSVC\14.51.36231\include\memory(3385): error C2999: maximum template "
+             r"instantiation depth of 1000 exceeded (see '/templateDepth:N')")
+    gcc_depth = ("depth limit", "aggregate-200.cpp:5:3: fatal error: template instantiation "
+                 "depth exceeds maximum of 900 (use '-ftemplate-depth=' to increase the maximum)")
+    error = ("error", r"aggregate-200.cpp(20): error C2512: 'chain::C0': no appropriate default "
+             r"constructor available")
+    timeout = ("timeout", f"timed out after {COMPILE_TIMEOUT_S} s")
+    compiles = ("", "")
+    limits = {limit.shape: limit for limit in MSVC_KNOWN_LIMITS}
+    aggregate, unique_ptr = limits["aggregate"], limits["unique_ptr"]
+
+    def xfail(limit):
+        return True, f"XFAIL (cl): {limit.reason}", None
+
+    def xpass(limit):
+        return False, f"XPASS (cl): {limit.reason}; remove the known limit", None
+
+    def passes(hops):
+        return True, f"a chain of {hops} hops compiles at the default template depth", None
+
+    def fails(hops, kind, limit=None):
+        verdict = (f"a chain of {hops} hops doesn't compile at the default template depth "
+                   f"({kind}): ")
+        note = f"  not its known limit on cl: {limit.reason}" if limit else None
+        return False, verdict, note
+
+    # (label, config, shape, hops or None for NFR-09's, (kind, first error) of the compile, and
+    # what check_shape must give: its return value, the start of its verdict after the test's
+    # name, and a line it must add, or None for none)
+    cases = [
+        ("cl 19.51, aggregate stops on C1054", cl51, "aggregate", None, c1054, xfail(aggregate)),
+        ("cl 19.51, aggregate compiles", cl51, "aggregate", None, compiles, xpass(aggregate)),
+        ("cl 19.51, unique_ptr stops on C2999", cl51, "unique_ptr", None, c2999,
+         xfail(unique_ptr)),
+        ("cl 19.51, unique_ptr compiles", cl51, "unique_ptr", None, compiles, xpass(unique_ptr)),
+        ("cl 19.51, aggregate fails with an error", cl51, "aggregate", None, error,
+         fails(200, "error", aggregate)),
+        ("cl 19.51, aggregate times out", cl51, "aggregate", None, timeout,
+         fails(200, "timeout", aggregate)),
+        ("cl 19.51, unique_ptr stops on C1054", cl51, "unique_ptr", None, c1054,
+         fails(200, "compiler limit", unique_ptr)),
+        ("cl 19.51, value stops on C2999", cl51, "value", None, c2999,
+         fails(200, "depth limit")),
+        ("cl 19.51, value compiles", cl51, "value", None, compiles, passes(200)),
+        ("cl 19.51, aggregate compiles at --hops 10", cl51, "aggregate", 10, compiles, passes(10)),
+        ("cl 19.51, aggregate stops on C1054 at --hops 300", cl51, "aggregate", 300, c1054,
+         fails(300, "compiler limit")),
+        ("cl 19.44, unique_ptr compiles at its 150 hops", cl44, "unique_ptr", None, compiles,
+         passes(150)),
+        ("cl 19.44, aggregate stops on C1054", cl44, "aggregate", None, c1054, xfail(aggregate)),
+        ("GCC 13, aggregate stops on C1054", gcc, "aggregate", None, c1054,
+         fails(200, "compiler limit")),
+        ("GCC 13, unique_ptr stops at the depth limit", gcc, "unique_ptr", None, gcc_depth,
+         fails(200, "depth limit")),
+        ("Clang 18, aggregate compiles", clang, "aggregate", None, compiles, passes(200)),
+        ("Apple Clang 21, aggregate stops on C1054", apple, "aggregate", None, c1054,
+         fails(200, "compiler limit")),
+        ("clang-cl 18, aggregate stops on C1054", clang_cl, "aggregate", None, c1054,
+         fails(200, "compiler limit")),
+        ("clang-cl 18, unique_ptr compiles", clang_cl, "unique_ptr", None, compiles,
+         passes(200)),
+    ]
+    failed = 0
+    for label, config, shape, hops, (kind, first_error), (ok, verdict, note) in cases:
+        hops = hops or required_hops(config)
+        log = (Path(config["binary_dir"]) / "chain_depth" / compiler_label(config)
+               / f"{shape}-{hops}.log")
+        build = FakeBuild(config, {shape: Result(not kind, 2.0, kind, first_error, log)})
+        captured = io.StringIO()
+        with contextlib.redirect_stdout(captured):
+            returned = check_shape(build, shape, hops)
+        lines = captured.getvalue().splitlines()
+        start = f"{'PASS' if ok else 'FAIL'} chain_depth.{shape} ({build.label}): {verdict}"
+        notes = [line for line in lines if line.startswith("  not its known limit")]
+        if returned == ok and lines and lines[0].startswith(start) and notes == (
+                [note] if note else []):
+            outcome = verdict.split(":")[0] if verdict.startswith("X") else "PASS" if ok else "FAIL"
+            say(f"PASS chain_depth.selftest known limits, {label}: {outcome}, the test "
+                f"{'passes' if ok else 'fails'}")
+        else:
+            failed += 1
+            say(f"FAIL chain_depth.selftest known limits, {label}: expected {ok}, a verdict "
+                f"starting '{start}' and the note {note!r}; got {returned}:",
+                *(f"    {line}" for line in lines))
+    table = all(limit.shape in SHAPES and limit.reason.startswith(f"{limit.code}: ")
+                and "owner decision" in limit.reason for limit in MSVC_KNOWN_LIMITS)
+    if table:
+        say("PASS chain_depth.selftest known limits: each names a shape, and its reason starts "
+            "with its code and names the owner's decision")
+    else:
+        failed += 1
+        say(f"FAIL chain_depth.selftest known limits: an entry of MSVC_KNOWN_LIMITS names no shape "
+            f"or gives a reason without its code or decision: {MSVC_KNOWN_LIMITS}")
+    total = len(cases) + 1
+    say(f"chain_depth --self-test known limits: {total - failed} of {total} checks passed")
+    return failed
+
+
 def parse_shapes(text):
     names = list(SHAPES) if text == "all" else [s.strip() for s in text.split(",") if s.strip()]
     unknown = [n for n in names if n not in SHAPES]
@@ -783,7 +986,9 @@ def main(argv=None):
         print(f"check_chain_depth.py: error: {error}", file=sys.stderr)
         return 2
 
+    known_failed = 0  # the known limits' checks, with --self-test
     if args.self_test:
+        known_failed = check_known_limits()
         failed = run_self_test(build, shapes, args.jobs)
     elif args.deepest:
         failed = run_deepest(build, shapes, args.hops or required_hops(build.config), args.jobs,
@@ -795,7 +1000,7 @@ def main(argv=None):
         what = "--deepest" if args.deepest else "--self-test" if args.self_test else "test"
         say(f"chain_depth {what} ({build.label}): {len(shapes) - failed} of {len(shapes)} shapes "
             f"passed")
-    return 0 if failed == 0 else 1
+    return 0 if failed == 0 and known_failed == 0 else 1
 
 
 if __name__ == "__main__":

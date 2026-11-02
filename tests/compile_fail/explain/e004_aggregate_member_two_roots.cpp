@@ -4,7 +4,12 @@
 // expect-regex: trellis::error::E004<app::settings>
 // expect-regex: trellis::error::path<app::(service|monitor)>
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
+// expect-regex-msvc: TRL-E004: ambiguous constructor: deduction can't initialize every member
+// expect-regex-msvc: trellis::error::E004<T>[^\n]*\n *with\n *\[\n(?: +\w+=[^\n]*\n)*? +T=app::settings(?:,|$)
+// expect-regex-msvc: trellis::error::path<app::(service|monitor)>
+// expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 104
 //
 // Deduction refuses settings: std::optional ends its deduced members (TRL-E004). service and
 // monitor each hold a settings by value. Their nodes are checked with parentheses, which never

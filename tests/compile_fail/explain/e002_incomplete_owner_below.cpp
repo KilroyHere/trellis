@@ -9,6 +9,7 @@
 // expect-regex-msvc: trellis::error::path<app::server, ?app::store>
 // expect-regex-msvc: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 54
 //
 // database is only declared, so store's parameter std::unique_ptr<database> can't be served, and
 // store can't be built from placeholders either: the parameter's destructor asserts that database

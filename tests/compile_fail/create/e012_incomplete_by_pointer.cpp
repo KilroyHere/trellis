@@ -4,6 +4,7 @@
 // expect-regex: E012<.*database, trellis::error::request<.*database ?\*> ?>|error C2338:
 // expect-regex: \A(?![\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: [\s\S]*(?:^|: )(?:fatal )?error(?: [A-Z]+\d+)?: )
 // expect-max-lines: 40
+// expect-max-lines-msvc: 102
 //
 // database is only declared, as in a header that holds a pointer to it. The check asks whether an
 // unbound key is abstract only once it knows the key is complete (static/validate.hpp,
