@@ -64,3 +64,10 @@ Owner-approved corrections to docs/tasks.json, recorded by `scripts/tasks.py ame
 - **Approved by:** owner, in the session on 2026-11-01, answering the four Phase 1 decisions with the recommended options: "Accept for v0.1 (Recommended)"
 - **Old:** `["scripts/check-full.sh", "scripts/bench-compile.sh --quick"]`
 - **New:** `["scripts/check-full.sh", "scripts/bench-compile.sh --quick --compilers gcc-13", "scripts/bench-compile.sh --quick --compilers clang-18 --no-scenario"]`
+
+## 2026-11-02 03:25 UTC: T1.14.verify
+
+- **Reason:** The gcc-13 quick benchmark's 3-compile medians swing by more than NFR-03's margin on this shared VM. They read +0.32 s and +0.50 s for the scenario, with Trellis compiles alone ranging from 2.21 to 2.65 s in one run, while 9-compile medians gave +0.24 s and +0.23 s twice, as T1.14 recorded. The budget is unchanged; --runs 9 only takes more compiles for its median.
+- **Approved by:** owner, in the session on 2026-11-02, answering 'Amend to 9 compiles (Recommended)' to the question on settling T1.14's verify
+- **Old:** `["scripts/check-full.sh", "scripts/bench-compile.sh --quick --compilers gcc-13", "scripts/bench-compile.sh --quick --compilers clang-18 --no-scenario"]`
+- **New:** `["scripts/check-full.sh", "scripts/bench-compile.sh --quick --compilers gcc-13 --runs 9", "scripts/bench-compile.sh --quick --compilers clang-18 --no-scenario"]`

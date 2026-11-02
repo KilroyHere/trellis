@@ -2,7 +2,7 @@
 
 A header-only C++20 dependency injection library. It builds and connects the objects in a C++ program for you, checks the wiring when the program compiles, and aims to cost no more at run time than wiring by hand.
 
-> **Status: pre-alpha.** Phase 0 (foundations) is complete. Phase 1 (the core injector, v0.1) is in progress: bindings, modules, lifetimes, `create<T>()` with its diagnostics, and test overrides work, as in the example below, and the API may still change before v0.1. Packaging is next.
+> **Status: pre-alpha, v0.1.0.** Phase 1 (the core injector) is complete: bindings, modules, lifetimes, `create<T>()` with its diagnostics, test overrides, the C++20 module and the single header work, as in the example below. Phase 2 (lifetimes and safety) is next, and the API may still change before 1.0. See [the gate report](docs/gates/phase-1.md) and [getting started](docs/getting-started.md).
 
 ## Goals
 

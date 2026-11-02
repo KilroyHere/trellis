@@ -6,7 +6,11 @@ Each user-visible change adds a line under "Unreleased", in the group that fits:
 
 ## [Unreleased]
 
-Phase 0 (foundations) is complete. The v0.1 injector is built: bindings, modules, lifetimes, creating objects (`create<T>()`) and its diagnostics with the path from the root, test overrides, the C++20 module and the single header work, and v0.1 is measured against the budgets; the release gate (T1.10) comes next.
+Nothing yet.
+
+## [0.1.0] - 2026-11-02
+
+The first release: Phase 1 of the plan, the core injector. It has bindings and modules; the lifetimes unique, singleton, singleton_inline, external and value; every request form of the table; `create<T>()` with one error per mistake and the path from the root (TRL-E001 to TRL-E005, E009, E010 and E012 to E014); test overrides; the C++20 module; and the single header. It is measured against the v0.1 budgets, which are met apart from the owner-accepted exceptions under Known issues. It is tested on GCC 13 and 14, Clang 18 and 20, Apple Clang, and MSVC 19.44 and 19.51. See docs/gates/phase-1.md.
 
 ### Added
 
@@ -98,3 +102,5 @@ Known limitations of v0.1, also in the getting-started guide's [section 8](docs/
 - Apple Clang compiles chains of aggregates up to 213 hops, a 6% margin over NFR-09's 200.
 - `options::cycle_check` is accepted but ignored until Phase 2.
 - `make_unique_injector` comes in Phase 2.
+- Compile time grows faster than linearly above about 250 components on GCC. A generated 1,000-component graph didn't compile within 15 minutes on gcc-13, where hand-wiring took 4. On clang-18 it takes 1.63× hand-wiring with fan-in 1-3 and 1.91× with fan-in 10. NFR-04's 1,000-component checkpoint, a Phase 3 target, is missed on both compilers.
+- NFR-01 on GCC is at its limit: a warm resolve costs 1.10× hand-wiring by instruction count and 1.11× by wall clock. On Clang it costs 1.03×.

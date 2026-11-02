@@ -37,7 +37,7 @@ CACHE = RECORDS / "cache"
 LOGS = ROOT / "build" / "logs" / "verify"
 REQUIRED = ("id", "phase", "title", "description", "acceptance", "verify", "depends_on")
 # Files that `pass` and the progress log change; excluded from the tree fingerprint.
-BOOKKEEPING = ("docs/tasks.json", "docs/PROGRESS.md")
+BOOKKEEPING = ("docs/tasks.json", "docs/PROGRESS.md", "docs/task-amendments.md")
 
 
 def load():

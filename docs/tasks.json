@@ -811,7 +811,7 @@
       ],
       "verify": [
         "scripts/check-full.sh",
-        "scripts/bench-compile.sh --quick --compilers gcc-13",
+        "scripts/bench-compile.sh --quick --compilers gcc-13 --runs 9",
         "scripts/bench-compile.sh --quick --compilers clang-18 --no-scenario"
       ],
       "depends_on": [
