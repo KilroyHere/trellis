@@ -87,7 +87,7 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - docs/gates/phase-1.md is the gate report.
   - CHANGELOG.md has `[0.1.0] - 2026-11-02`.
   - README's status says Phase 1 is complete.
-  - v0.1.0 is tagged on this commit.
+  - v0.1.0 is to be tagged on this commit by the owner. This session's git proxy refuses tag pushes ("the remote end hung up") and tag writes through the GitHub API (HTTP 403).
 - **Final CI:** platforms run 41372428494 was green on macOS, MSVC 14.44 and MSVC latest; nightly 41373551879 and Linux CI passed.
 - **Next:** Phase 2 waits for the owner. T2.0's draft and today's follow-ups are listed under "Waiting for owner": GCC's large-graph compile time, NFR-01 on GCC, cl's unique_ptr depth, the X&& member, GCC's non-movable base, and cl 19.44 unit tests in CI.
 

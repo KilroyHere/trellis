@@ -55,7 +55,7 @@ Other work the gate depends on:
 4. Add a `[0.1.0]` section to CHANGELOG.md, with the large-graph compile time added to its known issues.
 5. Replace the draft in `docs/gates/phase-1.md` (ba217dc) with this report.
 6. Add PROGRESS entries for 01b8593, 49522dd, ca3f8af, bcfc9cf, 8050fa7 and 3695945, which have none yet.
-7. Done: tagged `v0.1.0` and pushed. The nightly run on the final code, 41373551879, passed.
+7. Tag `v0.1.0` on the release commit. This session's git proxy refuses tag pushes and tag writes through the API, so the owner pushes the tag. The nightly run on the final code, 41373551879, passed.
 
 ## Reviews
 
