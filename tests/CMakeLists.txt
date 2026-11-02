@@ -87,6 +87,14 @@ add_test(NAME tools.readme_example
 add_test(NAME tools.readme_example_selftest
   COMMAND "${Python3_EXECUTABLE}" -I "${CMAKE_CURRENT_SOURCE_DIR}/tools/readme_example_selftest.py")
 set_tests_properties(tools.readme_example tools.readme_example_selftest PROPERTIES LABELS tools)
+# docs/getting-started.md's C++ blocks are excerpts of the files they name, under examples/ or
+# tests/unit/, which the build compiles and runs (example.getting_started among them). Compiles
+# nothing. Its self-test runs the check on trees where it must fail.
+add_test(NAME tools.doc_snippets
+  COMMAND "${Python3_EXECUTABLE}" -I "${PROJECT_SOURCE_DIR}/tools/doc_snippets.py")
+add_test(NAME tools.doc_snippets_selftest
+  COMMAND "${Python3_EXECUTABLE}" -I "${CMAKE_CURRENT_SOURCE_DIR}/tools/doc_snippets_selftest.py")
+set_tests_properties(tools.doc_snippets tools.doc_snippets_selftest PROPERTIES LABELS tools)
 
 add_subdirectory(unit)
 add_subdirectory(property)
