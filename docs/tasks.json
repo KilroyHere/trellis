@@ -486,7 +486,7 @@
         "T1.9"
       ],
       "review": "owner",
-      "passes": false
+      "passes": true
     },
     {
       "id": "T2.0",
@@ -817,7 +817,7 @@
       "depends_on": [
         "T1.5"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "T1.15",

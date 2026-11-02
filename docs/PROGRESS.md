@@ -75,6 +75,22 @@ Newest entry first. Each entry records the date, the task, what changed, the evi
   - Update `.claude/skills/add-compile-fail-test/SKILL.md`. Proposed text: regexes match diagnostic lines only, not quoted source or carets; expect-id must appear as a whole token in the first error line; every test needs an expect-id or at least one expect-regex; misspelt or late directives are errors; to add a golden, list `<area>/<name> <compiler>-<major> ...` in `tests/golden_manifest.txt`, then run `tools/golden.py --preset <preset> --update --reason "<why>" <area>/<name>`.
 - **Environment setup script:** add `g++-14 clang-20 libc++-18-dev libc++abi-18-dev libgtest-dev libgmock-dev libbenchmark-dev clangd-18 ccache libclang-rt-18-dev clang-tools-18 clang-tools-20` (`clang-tools-*` gives `clang-scan-deps`, which the C++20 module build needs, T1.8) so new containers start with the full toolchain (`libclang-rt-18-dev` is the TSan runtime). Also add `uv tool install actionlint-py shellcheck-py`.
 
+## 2026-11-02: Phase 1 complete, v0.1.0 (T1.14 and T1.10 pass)
+
+- **T1.14 and T1.10 pass** on the release tree 32995e3:
+  - **check-full:** 10 of 10 presets in 1,979 s;
+  - **gcc-13 quick benchmark with 9 compiles** (T1.14's verify, as amended by the owner): NFR-03 +0.20 s, NFR-04 0.97×, NFR-05 0.89×;
+  - **clang-18 quick benchmark:** NFR-04 and NFR-05 within budget.
+  T1.15 and T1.11 passed earlier on the same code. All 15 Phase 1 tasks pass.
+- **T1.10's owner sign-off** is the owner's approval of the tag (2026-11-02: tag when the checks pass, with NFR-01 on GCC noted).
+- **The release:**
+  - docs/gates/phase-1.md is the gate report.
+  - CHANGELOG.md has `[0.1.0] - 2026-11-02`.
+  - README's status says Phase 1 is complete.
+  - v0.1.0 is tagged on this commit.
+- **Final CI:** platforms run 41372428494 was green on macOS, MSVC 14.44 and MSVC latest; nightly 41373551879 and Linux CI passed.
+- **Next:** Phase 2 waits for the owner. T2.0's draft and today's follow-ups are listed under "Waiting for owner": GCC's large-graph compile time, NFR-01 on GCC, cl's unique_ptr depth, the X&& member, GCC's non-movable base, and cl 19.44 unit tests in CI.
+
 ## 2026-11-02: the Phase 1 gate's last landings and measurements (T1.10)
 
 - **Landed since the previous entries:**

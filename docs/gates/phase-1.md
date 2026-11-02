@@ -4,11 +4,11 @@
 |---|---|
 | Date | 2026-11-02 |
 | Code | main at 3695945. ba217dc, after it, only adds this report's draft |
-| Tag | `{{TAG}}` |
+| Tag | `v0.1.0` |
 | Exit criteria | plan §12.2, Phase 1 row, as amended by owner decisions 2a and 3a (2026-11-01) |
 | Targets | plan §3.2; NFR-07 as amended by decision 1A; NFR-09 and NFR-12 as amended by the owner on 2026-11-02 |
 
-**Verdict: PASS, with owner-accepted exceptions,** pending `{{CHECK_FULL}}`. Every Phase 1 exit criterion is met on the latest evidence, except one at its limit: NFR-01 on GCC, 1.10× by instructions and 1.11× by wall clock, against ≤ 1.1×. The instruction count is unchanged since T1.14. The exceptions are:
+**Verdict: PASS, with owner-accepted exceptions.** The final check-full passed 10 of 10 presets on 32995e3, and all 15 Phase 1 tasks pass. Every Phase 1 exit criterion is met, except one at its limit: NFR-01 on GCC, 1.10× by instructions and 1.11× by wall clock, against ≤ 1.1×. Its instruction count is unchanged since T1.14, and the owner chose to tag with it noted. The exceptions are:
 
 - NFR-03 and NFR-06 on Clang 18 (decisions 2a and 3a);
 - NFR-09's known limits on MSVC and Apple Clang (2026-11-02).
@@ -30,12 +30,12 @@ Evidence comes from `.verify/<task>.json`, `build/logs/verify/` and the commits.
 | T1.7 | Test overrides and testing helpers | PASS | T1.6's `check-full`, same tree | bffb420 (1c61096) |
 | T1.8 | C++20 module and single header | PASS | On 8ce2d6f: `-L module` and `amalgamate.py --check` | 320d5ed (1c61096) |
 | T1.9 | v0.1 benchmarks against budgets | PASS | On 9ce6866, quiet machine: 0 budgets missed on gcc-13 or on clang-18 without the scenario; `bench-runtime` 2 of 2 presets; `-L property` 5 of 5 | 91ddbdf (d72ed8d) |
-| T1.10 | v0.1 release | `{{CHECK_FULL}}` | `docs/getting-started.md` and its snippet check; the cleanup pass and the NFR-12 count; this report | ca3f8af, 49522dd, 88c0eda |
-| T1.11 | Chain-depth and arity budgets | `{{CHECK_FULL}}` | `deepest.json` re-recorded on the final `include/`; Apple Clang and MSVC results in ADR-0014's History | 06c22c2, bcfc9cf, 47aa7c6 |
+| T1.10 | v0.1 release | PASS: check-full on 32995e3: 10 of 10 presets in 1,979 s | `docs/getting-started.md` and its snippet check; the cleanup pass and the NFR-12 count; this report | ca3f8af, 49522dd, 88c0eda |
+| T1.11 | Chain-depth and arity budgets | PASS: check-full on 32995e3: 10 of 10 presets in 1,979 s | `deepest.json` re-recorded on the final `include/`; Apple Clang and MSVC results in ADR-0014's History | 06c22c2, bcfc9cf, 47aa7c6 |
 | T1.12 | Documentation scaffold | PASS | `check-fast`; the three files exist | 729e43c, 617c3be, bb5ac78 (3b88961) |
 | T1.13 | Early MSVC check | PASS | both `## Addendum: MSVC` checks | 51fb862 (09322b7) |
-| T1.14 | Meet the v0.1 compile-time and binary-size budgets | `{{CHECK_FULL}}` | Benchmarks as for T1.9. `check-full` on 9ce6866: 9 of 10 presets; timetrace failed only `single_header.main_file`, fixed in e3f04e9 | ef5b6e9, 0788aa9, e3f04e9 |
-| T1.15 | Constructor declared on the binding | `{{CHECK_FULL}}` | — | 3c20302 |
+| T1.14 | Meet the v0.1 compile-time and binary-size budgets | PASS: check-full on 32995e3: 10 of 10 presets in 1,979 s; gcc-13 quick with 9 compiles: NFR-03 +0.20 s, NFR-04 0.97×, NFR-05 0.89×; clang-18 quick passed | Benchmarks as for T1.9. `check-full` on 9ce6866: 9 of 10 presets; timetrace failed only `single_header.main_file`, fixed in e3f04e9 | ef5b6e9, 0788aa9, e3f04e9 |
+| T1.15 | Constructor declared on the binding | PASS: check-full on 32995e3: 10 of 10 presets in 1,979 s | — | 3c20302 |
 
 Other work the gate depends on:
 
@@ -49,13 +49,13 @@ Other work the gate depends on:
 
 ### Left before the tag
 
-1. `{{CHECK_FULL}}`, then pass T1.11, T1.14, T1.15 and T1.10.
+1. Done: check-full on 32995e3: 10 of 10 presets in 1,979 s. T1.11, T1.14, T1.15 and T1.10 pass.
 2. bench-runtime on a quiet machine: done, see NFR-01.
 3. Update README's status line, which still says Phase 1 is in progress.
 4. Add a `[0.1.0]` section to CHANGELOG.md, with the large-graph compile time added to its known issues.
 5. Replace the draft in `docs/gates/phase-1.md` (ba217dc) with this report.
 6. Add PROGRESS entries for 01b8593, 49522dd, ca3f8af, bcfc9cf, 8050fa7 and 3695945, which have none yet.
-7. Tag `{{TAG}}` and push. The last nightly (41298897568, on ba84c6f) passed, but it predates T1.7. The next scheduled nightly runs at 03:37 UTC.
+7. Done: tagged `v0.1.0` and pushed. The nightly run on the final code, 41373551879, passed.
 
 ## Reviews
 
@@ -95,12 +95,12 @@ Plan §12.2, Phase 1: "Scenario warning-free on the pull-request matrix; NFR-01,
 
 | # | Criterion | Target | Evidence | Verdict |
 |---|---|---|---|---|
-| 1 | Scenario warning-free on the pull-request matrix | `tests/unit/scenario_test.cpp`, with the project's warnings, builds clean under `-Werror` on ci.yml's six Linux presets, under `/W4 /WX` on MSVC, and on Apple Clang | ci.yml passed on every push to main, 3695945 included (run 41372428543). Platforms run 41372428494 on 3695945 passed: macOS 717 of 717 tests, cl 19.51 547 of 547. Final confirmation: `{{CHECK_FULL}}` | PASS |
+| 1 | Scenario warning-free on the pull-request matrix | `tests/unit/scenario_test.cpp`, with the project's warnings, builds clean under `-Werror` on ci.yml's six Linux presets, under `/W4 /WX` on MSVC, and on Apple Clang | ci.yml passed on every push to main, 3695945 included (run 41372428543). Platforms run 41372428494 on 3695945 passed: macOS 717 of 717 tests, cl 19.51 547 of 547. Final confirmation: PASS: check-full on 32995e3: 10 of 10 presets in 1,979 s | PASS |
 | 2 | NFR-01 | A warm resolve takes ≤ 1.1× hand-wired | **Wall clock:** four quiet runs on 3695945 (load 0.46–0.72), fastest repetition against fastest. gcc-13: 1.11× (46.4 against 41.9 ns). clang-18: 1.05–1.07×. T1.9's undisturbed runs gave 1.07× and 1.01×. **Instructions per resolve** (cachegrind, the same method at every commit): gcc-13 457 against 415, 1.10×. That is the same 457–458 at ef5b6e9 (T1.14), 3c20302, 9ce6866 and 01b8593, so there's no regression. clang-18: 446 against 432, 1.03×. (T1.14's report gave 432 for gcc-13 by another method.) | **PASS on Clang. At the limit on GCC (1.10× by instructions, 1.11× by wall clock): the owner chose to tag with it noted, with a Phase 2 task (2026-11-02)** |
 | 3 | NFR-03 | The scenario compiles ≤ +0.3 s slower | gcc-13: +0.09 s (T1.9's verify); +0.21 s in the sweep (2.02 against 1.81 s). clang-18: +0.38 s by interleaved CPU medians (T1.14), accepted by 2a. The sweep's 3-compile median gives +0.42 s wall and +0.39 s CPU (2.98 against 2.56 s) **At the gate, gcc-13:** T1.14's verify read +0.32 s and +0.50 s from 3-compile medians (the Trellis compiles alone ranged from 2.21 to 2.65 s in one run). 9-compile medians gave +0.24 s and +0.23 s, the same +0.24 s T1.14 recorded, so the owner amended T1.14's verify to `--runs 9` (docs/task-amendments.md, 2026-11-02). | PASS with owner-accepted exception (2a) |
 | 4 | NFR-06 | The stripped scenario binary is ≤ hand-wired + 8 KB | From the sweep. gcc-13: +4,096 B (22,832 against 18,736). clang-18: +8,240 B (22,984 against 14,744), the figure 3a accepted | PASS with owner-accepted exception (3a) |
 | 5 | NFR-07, as amended by 1A | A missing binding is a compile error without `-Werror`. The first error line names the ID, and the same diagnostic names the type. At most 40 lines on GCC and Clang, not counting the include chain and the user's call-site excerpt | 102 of the 152 compile-fail tests expect an error ID on the first error line: E001 7, E002 32, E003 8, E004 8, E005 16, E009 3, E010 4, E012 20, E013 2, E014 2. Under 1A's count, the five alternating-chain tests take 17 lines on gcc-13, 35 to 37 on gcc-14 and 33 to 35 on Clang; a 21-class chain takes 14 to 33. 20 tests have goldens on four compilers. On cl, the error line names the ID and `raise`'s note names the type. 58 tests carry cl alternatives, 42 carry cl budgets and 6 carry `expect-fail-msvc`. All 152 pass on cl 19.51, 6 of them as known limits (run 41372428494) | PASS |
-| 6 | NFR-10 | 0 warnings under `-Wall -Wextra -Wpedantic -Wshadow -Wconversion` and `/W4` | The project set adds `-Wsign-conversion -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual`, with `-Werror`; MSVC builds with `/W4 /permissive- /WX`. CI and platforms are green on 3695945. T1.15 fixed `-Wmissing-field-initializers`, and `tests/warnings/` checks that `-Wdangling-field` still fires. 01b8593 fixed cl 19.44's C4702. Final: `{{CHECK_FULL}}` | PASS |
+| 6 | NFR-10 | 0 warnings under `-Wall -Wextra -Wpedantic -Wshadow -Wconversion` and `/W4` | The project set adds `-Wsign-conversion -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual`, with `-Werror`; MSVC builds with `/W4 /permissive- /WX`. CI and platforms are green on 3695945. T1.15 fixed `-Wmissing-field-initializers`, and `tests/warnings/` checks that `-Wdangling-field` still fires. 01b8593 fixed cl 19.44's C4702. Final: PASS: check-full on 32995e3: 10 of 10 presets in 1,979 s | PASS |
 | 7 | NFR-04 at N = 100 | ≤ 1.3× hand-wired | T1.9's verify: 1.00× on gcc-13, 0.98× on clang-18. The sweep, fan-in 1-3: 0.94× and 1.01×. Fan-in 10: 1.02× on gcc-13; 1.17× on clang-18, from a single compile | PASS |
 
 Other targets of §3.2. None is a Phase 1 exit criterion.
@@ -143,7 +143,7 @@ Test paths are under `tests/`.
 | Platform | Compiler | Final result | Chain test (NFR-09) |
 |---|---|---|---|
 | Linux, ci.yml | GCC 13 and 14; Clang 18 and 20; Clang 18 with libc++ 18; ASan/UBSan | Passed on every push to main; on 3695945, run 41372428543 | 200 hops, every shape |
-| Linux, `check-full` | the six above, plus two release builds, TSan and timetrace | `{{CHECK_FULL}}`. On 9ce6866, 9 of 10 presets passed; the timetrace failure was fixed in e3f04e9 | as above |
+| Linux, `check-full` | the six above, plus two release builds, TSan and timetrace | check-full on 32995e3: 10 of 10 presets in 1,979 s. In passed and skipped tests: gcc-13 641 and 18; gcc-14 718 and 18; clang-18 776 and 26; clang-20 781 and 20; clang-18 + libc++ 759 and 22; gcc-13 release 641 and 18; clang-18 release 776 and 26; ASan/UBSan, TSan and timetrace 776 and 26 each. On 9ce6866, 9 of 10 presets passed; the timetrace failure was fixed in e3f04e9 | as above |
 | macOS | Apple clang 21.0.0 | 717 of 717 (run 41372428494); 714 of 714 on 47aa7c6 (run 41357148603) | 200 hops; aggregate chains reach 213 (run 41342943535) |
 | Windows | cl 19.51 | 547 of 547 (run 41372428494), 6 compile-fail tests among them as known cl limits | 8 of 10 shapes at 200 hops; `unique_ptr` and `aggregate` XFAIL |
 | Windows | cl 19.44 | Only the chain test, by design | 9 of 10 shapes at 150 hops; `aggregate` XFAIL |
